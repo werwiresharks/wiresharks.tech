@@ -2047,6 +2047,12 @@ body {
   left: 54%;
   width: 46%;
 }
+@media (min-width: 768px) {
+  .hero {
+    height: 820px;
+    min-height: 820px;
+  }
+}
 .hero-bottom {
   padding-top: 15px;
   border-top: 1px solid var(--line);
