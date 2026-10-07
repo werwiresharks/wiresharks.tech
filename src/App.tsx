@@ -147,6 +147,9 @@ function Contact() {
         <a className="email-link" href="mailto:tkosgi@purdue.edu">
           tkosgi@purdue.edu <ArrowUpRight size={19} />
         </a>
+        <a className="email-link" href="mailto:sgunti@purdue.edu">
+          sgunti@purdue.edu <ArrowUpRight size={19} />
+        </a>
       </Reveal>
     </section>
   );
