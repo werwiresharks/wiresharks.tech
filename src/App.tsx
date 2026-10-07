@@ -547,6 +547,22 @@ function ProductDetail() {
           <div>
             <h2>{product.summary}</h2>
             <p className="muted">{product.purpose}</p>
+            {product.researchBrief && (
+              <article className="research-brief" id="research-brief">
+                <p className="eyebrow">Research brief</p>
+                <h3>{product.researchBrief.title}</h3>
+                <p className="muted">{product.researchBrief.summary}</p>
+                <a
+                  className="text-link"
+                  href={product.researchBrief.href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Read research brief (PDF, {product.researchBrief.pages} pages)
+                  <ArrowUpRight size={17} />
+                </a>
+              </article>
+            )}
           </div>
         </div>
       </section>

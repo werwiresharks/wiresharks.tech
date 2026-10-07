@@ -25,6 +25,13 @@ The Devpost images are originals posted by the EveryWay project team, rather tha
 
 ### Fiber-Optic Drone
 
+`public/research/fiber-optic-drone-communication.pdf` is the original user-supplied
+research brief, titled *Fiber-Optic Communication for Small Drones*, by Tarushv
+Kosgi and Siddharth Gunti. It is two pages and describes the proposed system,
+research questions, and staged development plan; it does not report measured
+results. The Wireshark product page links it below the project summary. The PDF
+is published without modifying its contents.
+
 The portfolio describes a co-developed drone with a fiber-optic command and data link, C++ software, fiber deployment/retraction, and reliability testing. It describes intended use in enclosed spaces, underground sites, and areas with heavy electromagnetic interference. The résumé expands its stated design use to RF-denied environments and industrial/disaster-response scenarios. Those are portfolio/resume descriptions, not independently validated performance claims. Details: [portfolio résumé section](https://tarushv.com/resume.html#fiber-optic-drone).
 
 No project-specific repository, image, screenshot, or video was linked from the portfolio or found in the linked GitHub profile's public repository list. Do not use unrelated fiber-drone imagery as if it depicted this project.

@@ -20,6 +20,7 @@ export type Product = {
   story: { visualLabel: string; demo: ProductDemo };
   facts: { title: string; text: string; source?: string }[];
   links: Source[];
+  researchBrief?: { title: string; summary: string; href: string; pages: number };
   image?: { src: string; alt: string; caption: string };
 };
 const portfolio = "https://tarushv.com/resume.html";
@@ -42,6 +43,13 @@ export const products: Product[] = [
     purpose:
       "Wireshark is our flagship hardware project, co-developed to explore a fiber-optic command and data connection in environments where conventional radio links face challenges. Physical engineering and software come together in one tightly coupled system.",
     status: "Research & development",
+    researchBrief: {
+      title: "Fiber-Optic Communication for Small Drones",
+      summary:
+        "Read our proposed command-and-telemetry system, research questions, and development plan, including how we will investigate fiber recovery and reuse.",
+      href: "/research/fiber-optic-drone-communication.pdf",
+      pages: 2,
+    },
     facts: [
       {
         title: "Connected by fiber",

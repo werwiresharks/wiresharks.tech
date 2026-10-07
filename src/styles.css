@@ -583,6 +583,27 @@ p {
   max-width: 680px;
   font-size: 16px;
 }
+.research-brief {
+  margin-top: 36px;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--line);
+  background: #ffffff03;
+  scroll-margin-top: 110px;
+}
+.research-brief .eyebrow {
+  padding-top: 0;
+  margin-bottom: 14px;
+}
+.research-brief h3 {
+  font-size: clamp(22px, 2.5vw, 30px);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
+}
+.research-brief .text-link {
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
 .detail-facts {
   display: grid;
   grid-template-columns: 1fr 2fr;
