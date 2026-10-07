@@ -79,7 +79,7 @@ export default function DroneScene({
       roughness: 0.54,
     });
     const orange = new THREE.MeshStandardMaterial({
-      color: 0xc45a24,
+      color: 0xd52b24,
       metalness: 0.5,
       roughness: 0.48,
     });
@@ -295,7 +295,7 @@ export default function DroneScene({
     ]);
     mesh(
       new THREE.TubeGeometry(fiberCurve, 96, 0.013, 5, false),
-      new THREE.MeshBasicMaterial({ color: 0xb94b1d }),
+      new THREE.MeshBasicMaterial({ color: 0xd52b24 }),
       0,
       0,
       0,

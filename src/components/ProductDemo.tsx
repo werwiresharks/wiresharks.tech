@@ -152,7 +152,7 @@ function ObstructionRoute() {
         <circle cx="500" cy="115" r="7" />
         {blocked && (
           <g className="map-obstacle">
-            <rect x="265" y="92" width="30" height="46" rx="3" />
+            <rect x="265" y="92" width="30" height="46" />
             <path d="M273 108L287 122M287 108L273 122" />
           </g>
         )}
