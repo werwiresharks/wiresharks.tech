@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Link,
   Navigate,
@@ -21,12 +21,12 @@ import {
   motion,
   useReducedMotion,
   useMotionValue,
-  useVelocity,
   useTransform,
-  useMotionValueEvent,
 } from "motion/react";
 import { products } from "./content/products";
 import type { Product } from "./content/products";
+import type { MotionValue } from "motion/react";
+import ProductDemoView from "./components/ProductDemo";
 import DroneVisual from "./components/DroneVisual";
 
 function Reveal({
@@ -185,7 +185,10 @@ function ProductArt({ product }: { product: Product }) {
   if (product.id === "wireshark")
     return (
       <div className="product-art drone-product">
-        <DroneVisual compact paused={paused} />
+        <span className="art-caption">
+          Wireshark · conceptual visualization
+        </span>
+        <DroneVisual paused={paused} />
         <button
           className="motion-toggle product-motion-toggle"
           onClick={() => setPaused(!paused)}
@@ -204,7 +207,22 @@ function ProductArt({ product }: { product: Product }) {
           alt="Sidekick app icon"
           loading="lazy"
         />
+        <div className="sidekick-orbits" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
         <span className="sidekick-art-wordmark">Sidekick</span>
+        <div className="sidekick-wave" aria-hidden="true">
+          {Array.from({ length: 29 }, (_, i) => (
+            <i
+              key={i}
+              style={{
+                height: `${12 + Math.abs(Math.sin(i * 1.9)) * (1 - Math.abs(i - 14) / 18) * 70}px`,
+              }}
+            />
+          ))}
+        </div>
         <span className="art-caption">Native intelligence for macOS</span>
       </div>
     );
@@ -216,237 +234,143 @@ function ProductArt({ product }: { product: Product }) {
       </figure>
     );
   return (
-    <div className={`product-art type-art ${product.id}`}>
-      <span className="type-art-label">{product.category}</span>
-      <span className="type-art-name">
-        {product.name}
-        <span className="type-art-punctuation">.</span>
-      </span>
-      <span className="art-caption">A new direction for curious minds.</span>
+    <div className="product-art">
+      <span className="art-caption">{product.name}</span>
     </div>
   );
 }
-function useMobileLayout() {
-  const [mobile, setMobile] = useState(
-    () => window.matchMedia("(max-width: 767px)").matches,
+function ProductChapter({
+  product,
+  index,
+  flightProgress,
+}: {
+  product: Product;
+  index: number;
+  flightProgress: MotionValue<number>;
+}) {
+  const reduced = useReducedMotion();
+  const opacity = useTransform(flightProgress, [0.35, 0.8], [0.35, 1]);
+  const y = useTransform(flightProgress, [0.35, 0.8], [24, 0]);
+  return (
+    <article
+      className={`product-chapter chapter-${product.id}`}
+      id={`story-${product.id}`}
+    >
+      <div className="chapter-topline">
+        <p className="eyebrow">{product.story.visualLabel}</p>
+        <span className="chapter-status">{product.status}</span>
+      </div>
+      <motion.div
+        className="chapter-heading"
+        style={index === 0 && !reduced ? { opacity, y } : undefined}
+      >
+        <div>
+          <p className="eyebrow">{product.category}</p>
+          <h3>
+            {product.name}
+            <span>.</span>
+          </h3>
+        </div>
+        <p>{product.tagline}</p>
+      </motion.div>
+      <div className="chapter-body">
+        <div className="chapter-visual">
+          <ProductArt product={product} />
+          <span className="chapter-number" aria-hidden="true">
+            0{index + 1}
+          </span>
+        </div>
+        <motion.div
+          className="chapter-copy"
+          style={index === 0 && !reduced ? { opacity, y } : undefined}
+        >
+          <p className="chapter-summary">{product.summary}</p>
+          <p className="muted">{product.purpose}</p>
+          <Link className="text-link" to={`/products/${product.id}`}>
+            Inside {product.name} <ArrowUpRight size={20} />
+          </Link>
+        </motion.div>
+      </div>
+      <ProductDemoView demo={product.story.demo} />
+    </article>
   );
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
-    const update = () => setMobile(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-  return mobile;
 }
-function Work() {
-  const mobile = useMobileLayout();
-  const [active, setActive] = useState(0);
-  const product = products[active];
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  function keySelect(event: KeyboardEvent<HTMLButtonElement>, index: number) {
-    let next = index;
-    if (event.key === (mobile ? "ArrowRight" : "ArrowDown"))
-      next = (index + 1) % products.length;
-    else if (event.key === (mobile ? "ArrowLeft" : "ArrowUp"))
-      next = (index + products.length - 1) % products.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = products.length - 1;
-    else return;
-    event.preventDefault();
-    setActive(next);
-    tabs.current[next]?.focus();
-  }
+function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
+  const reduced = useReducedMotion();
+  const opacity = useTransform(flightProgress, [0.35, 0.8], [0.25, 1]);
+  const y = useTransform(flightProgress, [0.35, 0.8], [32, 0]);
   return (
     <section id="work" className="work section-wrap">
-      <Reveal className="work-intro">
-        <p className="eyebrow">Our work</p>
+      <motion.div
+        className="work-intro"
+        style={reduced ? undefined : { opacity, y }}
+      >
+        <p className="eyebrow">Selected explorations / 01—04</p>
         <h2>
           Different frontiers.
           <br />
           <span className="muted">The same curiosity.</span>
         </h2>
         <p>
-          From the systems we hold
+          Hardware. Software.
           <br />
-          to the intelligence we build.
-          <br />
-          We connect the two.
+          Human experience.
         </p>
-      </Reveal>
-      <Reveal className="work-index">
-        <div
-          className="product-tabs"
-          role="tablist"
-          aria-label="Explore our products"
-          aria-orientation={mobile ? "horizontal" : "vertical"}
-        >
-          {products.map((item, i) => (
-            <button
-              key={item.id}
-              ref={(element) => {
-                tabs.current[i] = element;
-              }}
-              role="tab"
-              id={`tab-${item.id}`}
-              aria-controls="product-panel"
-              aria-selected={active === i}
-              tabIndex={active === i ? 0 : -1}
-              onKeyDown={(event) => keySelect(event, i)}
-              onClick={() => setActive(i)}
-              className={active === i ? "product-tab active" : "product-tab"}
-            >
-              <span className="tab-category">{item.category}</span>
-              <span className="tab-name">
-                {item.name}
-                <ArrowUpRight size={25} weight="light" />
-              </span>
-            </button>
-          ))}
-        </div>
-        <div
-          className="product-panel"
-          role="tabpanel"
-          id="product-panel"
-          aria-labelledby={`tab-${product.id}`}
-          tabIndex={0}
-        >
-          <p className="mobile-product-category">{product.category}</p>
-          <ProductArt product={product} />
-          <div className="panel-copy">
-            <p>{product.summary}</p>
-            <Link className="text-link" to={`/products/${product.id}`}>
-              Explore {product.name} <ArrowRight size={18} />
-            </Link>
-          </div>
-        </div>
-      </Reveal>
+      </motion.div>
+      <nav className="chapter-index" aria-label="Project chapters">
+        {products.map((product, index) => (
+          <Link key={product.id} to={`/#story-${product.id}`}>
+            <span>0{index + 1}</span>
+            {product.name}
+            <ArrowDown size={14} />
+          </Link>
+        ))}
+      </nav>
+      {products.map((product, index) => (
+        <ProductChapter
+          key={product.id}
+          product={product}
+          index={index}
+          flightProgress={flightProgress}
+        />
+      ))}
     </section>
   );
 }
 function Home() {
   const reduced = useReducedMotion();
   const [paused, setPaused] = useState(false);
-  const scrollY = useMotionValue(window.scrollY);
-  const scrollVelocity = useVelocity(scrollY);
   const hero = useRef<HTMLElement>(null);
-  const heroProgress = useMotionValue(0);
+  const flightProgress = useMotionValue(0);
   useEffect(() => {
     const update = () => {
-      scrollY.set(window.scrollY);
       const bounds = hero.current?.getBoundingClientRect();
       if (bounds)
-        heroProgress.set(Math.max(0, Math.min(1, -bounds.top / bounds.height)));
+        flightProgress.set(
+          Math.max(0, Math.min(1, -bounds.top / (bounds.height * 0.88))),
+        );
     };
     const resize = new ResizeObserver(update);
     if (hero.current) resize.observe(hero.current);
     window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
     update();
     return () => {
       window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
       resize.disconnect();
     };
-  }, [scrollY, heroProgress]);
-  const [sceneVisible, setSceneVisible] = useState(true);
-  const returning = useMotionValue(false);
-  const flight = useRef({ previous: 0, exited: false });
-  useMotionValueEvent(heroProgress, "change", (value) => {
-    if (value >= 0.72) flight.current.exited = true;
-    if (value < flight.current.previous && flight.current.exited)
-      returning.set(true);
-    if (value <= 0.01) {
-      flight.current.exited = false;
-      returning.set(false);
-    }
-    flight.current.previous = value;
-    setSceneVisible(value < 0.75);
-  });
-  const droneX = useTransform(() => {
-    const progress = Math.min(heroProgress.get() / 0.72, 1);
-    return returning.get() ? 0 : -window.innerWidth * 1.8 * progress * progress;
-  });
-  const droneY = useTransform(() =>
-    returning.get()
-      ? 0
-      : -window.innerHeight *
-        0.35 *
-        Math.pow(Math.min(heroProgress.get() / 0.72, 1), 2),
-  );
-  const droneScale = useTransform(() =>
-    returning.get() ? 1 : 1 + Math.min(heroProgress.get() / 0.72, 1) * 0.15,
-  );
-  const returnVisibility = useTransform(() =>
-    Math.max(0, Math.min(1, (0.72 - heroProgress.get()) / 0.52)),
-  );
-  const droneOpacity = useTransform(() =>
-    returning.get()
-      ? returnVisibility.get()
-      : heroProgress.get() < 0.75
-        ? 1
-        : 0,
-  );
-  const droneFilter = useTransform(() =>
-    returning.get()
-      ? `url(#drone-dissolve) blur(${(1 - returnVisibility.get()) * 9}px)`
-      : "none",
-  );
-  const grainThreshold = useTransform(() =>
-    returning.get() ? 1 - (1 - returnVisibility.get()) * 8 : 1,
-  );
+  }, [flightProgress]);
+  const opacity = useTransform(flightProgress, [0, 0.82, 1], [1, 1, 0]);
   return (
     <>
-      <svg
-        width="0"
-        height="0"
-        aria-hidden="true"
-        className="drone-filter-definitions"
-      >
-        <defs>
-          <filter
-            id="drone-dissolve"
-            x="-10%"
-            y="-10%"
-            width="120%"
-            height="120%"
-          >
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.75"
-              numOctaves="1"
-              seed="7"
-            />
-            <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.333 0.333 0.333 0 0"
-            />
-            <feComponentTransfer>
-              <motion.feFuncA
-                type="linear"
-                slope="12"
-                intercept={grainThreshold}
-              />
-            </feComponentTransfer>
-            <feComposite in="SourceGraphic" operator="in" />
-          </filter>
-        </defs>
-      </svg>
       <motion.div
-        className={`hero-drone ${reduced ? "static-drone" : ""}`}
-        style={
-          reduced
-            ? undefined
-            : {
-                x: droneX,
-                y: droneY,
-                scale: droneScale,
-                opacity: droneOpacity,
-                filter: droneFilter,
-              }
-        }
+        className={`hero-drone ${reduced || paused ? "static-drone" : ""}`}
+        style={reduced || paused ? undefined : { opacity }}
       >
         <DroneVisual
-          compact
-          scrollVelocity={scrollVelocity}
-          paused={paused || !!reduced || !sceneVisible}
+          flightProgress={flightProgress}
+          paused={paused || !!reduced}
         />
       </motion.div>
       <section className="hero" ref={hero}>
@@ -473,14 +397,14 @@ function Home() {
             <Link className="button" to="/products/wireshark">
               Explore Wireshark <ArrowRight size={18} />
             </Link>
-            <a className="hero-secondary" href="#work">
+            <Link className="hero-secondary" to="/#work">
               All projects <ArrowDown size={16} />
-            </a>
+            </Link>
           </div>
         </motion.div>
         <div className="hero-bottom">
           <span className="visualization-label">
-            Wireshark <span> / Fiber-optic drone visualization</span>
+            Wireshark <span> / Conceptual fiber-optic drone</span>
           </span>
           <button
             className="motion-toggle"
@@ -503,7 +427,7 @@ function Home() {
           </button>
         </div>
       </section>
-      <Work />
+      <Work flightProgress={flightProgress} />
       <section id="approach" className="approach section-wrap">
         <Reveal className="approach-heading">
           <p className="eyebrow">Our approach</p>
@@ -566,6 +490,7 @@ function ProductDetail() {
         <div className="detail-art">
           <ProductArt product={product} />
         </div>
+        <ProductDemoView key={product.id} demo={product.story.demo} />
         <div className="detail-description">
           <p className="eyebrow">{product.status}</p>
           <div>
@@ -678,7 +603,7 @@ function RouteEffects() {
         product?.summary ??
           "Independent engineering across physical and digital frontiers. Explore Wiresharks technology research and development.",
       );
-    requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
       const target = location.hash
         ? document.getElementById(location.hash.slice(1))
         : document.getElementById("main");
@@ -687,10 +612,13 @@ function RouteEffects() {
       if (location.hash) target?.scrollIntoView({ behavior: "instant" });
       else window.scrollTo({ top: 0, behavior: "instant" });
     });
+    return () => cancelAnimationFrame(frame);
   }, [location]);
   return null;
 }
 export default function App() {
+  const location = useLocation();
+  const reduced = useReducedMotion();
   return (
     <>
       <a className="skip-link" href="#main">
@@ -698,7 +626,13 @@ export default function App() {
       </a>
       <RouteEffects />
       <Header />
-      <main id="main">
+      <motion.main
+        id="main"
+        key={location.pathname}
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
@@ -708,7 +642,7 @@ export default function App() {
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
+      </motion.main>
       <Footer />
     </>
   );

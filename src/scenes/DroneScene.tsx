@@ -4,24 +4,23 @@ import * as THREE from "three";
 
 export default function DroneScene({
   paused,
-  compact = false,
-  scrollVelocity,
+  flightProgress,
   onReady,
 }: {
   paused: boolean;
-  compact?: boolean;
-  scrollVelocity?: MotionValue<number>;
+  flightProgress?: MotionValue<number>;
   onReady: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const pause = useRef(paused);
-  const velocity = useRef(scrollVelocity);
+  const progressValue = useRef(flightProgress);
   const requestRender = useRef<() => void>(() => {});
   useEffect(() => {
     pause.current = paused;
-    velocity.current = scrollVelocity;
+    progressValue.current = flightProgress;
     requestRender.current();
-  }, [paused, scrollVelocity]);
+    return flightProgress?.on("change", () => requestRender.current());
+  }, [paused, flightProgress]);
   useEffect(() => {
     const element = host.current!;
     let renderer: THREE.WebGLRenderer;
@@ -44,6 +43,13 @@ export default function DroneScene({
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
     camera.position.set(7, 7.8, 10);
     camera.lookAt(0, 0, 0);
+    const towardCamera = camera.position.clone().normalize();
+    const screenRight = new THREE.Vector3(1, 0, 0).applyQuaternion(
+      camera.quaternion,
+    );
+    const screenUp = new THREE.Vector3(0, 1, 0).applyQuaternion(
+      camera.quaternion,
+    );
     scene.add(new THREE.HemisphereLight(0xe5eee2, 0x27221e, 3));
     const key = new THREE.DirectionalLight(0xffffff, 5);
     key.position.set(-4, 8, 4);
@@ -325,19 +331,29 @@ export default function DroneScene({
       last = time;
       if (!pause.current && !reduced.matches) elapsed += delta;
       const progress =
-        compact || reduced.matches || pause.current
+        reduced.matches || pause.current
           ? 0
-          : Math.min(window.scrollY / (window.innerHeight * 0.9), 1);
-      drone.position.set(
-        progress * 1.8,
-        Math.sin(elapsed * 0.7) * 0.065 - progress * 1.2,
-        progress * 3,
+          : (progressValue.current?.get() ?? 0);
+      const approach = THREE.MathUtils.smoothstep(progress, 0.06, 0.6);
+      const exit = THREE.MathUtils.smoothstep(progress, 0.52, 1);
+      const heroFlight = !!progressValue.current;
+      drone.position.set(0, Math.sin(elapsed * 0.7) * 0.065, 0);
+      if (heroFlight) {
+        drone.position.addScaledVector(towardCamera, approach * 5.2);
+        drone.position.addScaledVector(
+          screenRight,
+          (camera.aspect < 1.2 ? 0.5 : 2.8) - approach * 1.2 + exit * 15,
+        );
+        drone.position.addScaledVector(screenUp, -0.5 + exit * 7);
+      }
+      drone.scale.setScalar(heroFlight && camera.aspect < 1.2 ? 0.78 : 1);
+      drone.rotation.set(
+        0.05 + approach * 0.12,
+        -0.35 + approach * 0.5 - exit * 0.3,
+        -0.14 - Math.sin(progress * Math.PI) * 0.65,
       );
-      drone.rotation.y = -0.35 + progress * 0.35;
-      drone.rotation.z = -0.14 - progress * 0.1;
       if (!pause.current && !reduced.matches) {
-        const scrolling =
-          !!velocity.current && Math.abs(velocity.current.get()) > 4;
+        const scrolling = heroFlight && progress > 0.02 && progress < 0.98;
         rotorState.hold = scrolling
           ? 0.1
           : Math.max(0, rotorState.hold - delta);
@@ -382,7 +398,7 @@ export default function DroneScene({
         rotor.rotation.y = rotorState.angle * direction + i * 0.8;
       });
       renderer.render(scene, camera);
-      if (!pause.current && !reduced.matches)
+      if (!pause.current && !reduced.matches && (!heroFlight || progress < 1))
         frame = requestAnimationFrame(render);
     }
     requestRender.current = () => {
@@ -419,6 +435,6 @@ export default function DroneScene({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [compact, onReady]);
+  }, [onReady]);
   return <div className="drone-canvas" ref={host} aria-hidden="true" />;
 }
