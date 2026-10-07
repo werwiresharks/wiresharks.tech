@@ -34,10 +34,10 @@ export default function DroneScene({
       return;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
-    renderer.setClearColor(0x111411, 0);
+    renderer.setClearColor(0xffffff, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.6;
+    renderer.toneMappingExposure = 1.3;
     element.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
@@ -50,41 +50,41 @@ export default function DroneScene({
     const screenUp = new THREE.Vector3(0, 1, 0).applyQuaternion(
       camera.quaternion,
     );
-    scene.add(new THREE.HemisphereLight(0xe5eee2, 0x27221e, 3));
+    scene.add(new THREE.HemisphereLight(0xf0f1f2, 0x292d30, 3));
     const key = new THREE.DirectionalLight(0xffffff, 5);
     key.position.set(-4, 8, 4);
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0xd38b59, 4);
+    const rim = new THREE.DirectionalLight(0xcdd4dc, 4);
     rim.position.set(3, 2, -5);
     scene.add(rim);
-    const fill = new THREE.DirectionalLight(0xa2b0b4, 2);
+    const fill = new THREE.DirectionalLight(0xd2d8dd, 2);
     fill.position.set(-4, -1, -2);
     scene.add(fill);
     const drone = new THREE.Group();
     scene.add(drone);
     drone.rotation.set(0.05, -0.35, -0.14);
     const carbon = new THREE.MeshStandardMaterial({
-      color: 0x171c1c,
+      color: 0x131517,
       metalness: 0.65,
       roughness: 0.42,
     });
     const edge = new THREE.MeshStandardMaterial({
-      color: 0x333936,
+      color: 0x2c3034,
       metalness: 0.82,
       roughness: 0.34,
     });
     const black = new THREE.MeshStandardMaterial({
-      color: 0x080b0c,
+      color: 0x070809,
       metalness: 0.25,
       roughness: 0.54,
     });
     const orange = new THREE.MeshStandardMaterial({
-      color: 0xa46438,
+      color: 0xc45a24,
       metalness: 0.5,
       roughness: 0.48,
     });
     const glass = new THREE.MeshStandardMaterial({
-      color: 0x1a3640,
+      color: 0x111b21,
       metalness: 0.9,
       roughness: 0.1,
     });
@@ -141,7 +141,7 @@ export default function DroneScene({
           float feather = smoothstep(0.09, 0.22, radius)
             * (1.0 - smoothstep(0.85, 1.0, radius));
           float rings = 0.86 + 0.04 * cos(radius * 18.0);
-          gl_FragColor = vec4(vec3(0.48, 0.52, 0.50),
+          gl_FragColor = vec4(vec3(0.30, 0.32, 0.34),
             strength * feather * rings * 0.23);
         }
       `,
@@ -295,7 +295,7 @@ export default function DroneScene({
     ]);
     mesh(
       new THREE.TubeGeometry(fiberCurve, 96, 0.013, 5, false),
-      new THREE.MeshBasicMaterial({ color: 0xd38b59 }),
+      new THREE.MeshBasicMaterial({ color: 0xb94b1d }),
       0,
       0,
       0,
