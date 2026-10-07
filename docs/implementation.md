@@ -2,9 +2,9 @@
 
 ## Delivered
 
-The homepage includes a cinematic drone hero, accessible product index, approach section, email contact, and an oversized typographic footer. Four dedicated product routes share a typed content registry. Unrecognized routes show an intentional recovery page.
+The homepage includes a cinematic drone hero, accessible product index, email contact, and an oversized typographic footer. The full-width title bar links directly to Wireshark, Sidekick, Munki, and EveryWay. Four dedicated product routes share a typed content registry. Unrecognized routes show an intentional recovery page. The approach section and illustrative interactive demo panels have been removed.
 
-The layout follows direction A with charcoal, warm white, muted orange, sharp geometry, self-hosted Geist, and restrained Geist Mono. Mobile gets a compact keyboard-accessible menu, a stacked hero with a visible CTA, and a vertical product selector. Tabs support arrow keys, Home, and End. Focus indicators and a skip link remain visible. Motion respects reduced-motion settings.
+The layout uses white, charcoal, tactical red, sharp geometry, self-hosted Geist, and restrained Geist Mono. Mobile gets a compact keyboard-accessible menu, a stacked hero with a visible CTA, and a two-column product selector. Tabs support arrow keys, Home, and End. Focus indicators and a skip link remain visible. Motion respects reduced-motion settings.
 
 `src/scenes/DroneScene.tsx` owns a custom procedural conceptual quadcopter with a carbon-style frame, reinforced arms, motor housings, propellers, avionics, camera lens, landing supports, fiber spool, and orange fiber. It is not presented as an image of the real prototype. The scene loads separately, caps DPR at 1.6, pauses offscreen, stops continuous rendering when paused or reduced motion is requested, and disposes geometry, materials, observers, and renderer resources on unmount. A CSS silhouette appears immediately and remains if WebGL initialization fails. The visual layer never receives pointer events. A fixed pointer-transparent layer uses Motion scroll transforms to enlarge and move the drone diagonally across the hero/work boundary, then fades it out and pauses rendering. Hero copy enters once. Route navigation transfers focus to the destination content.
 

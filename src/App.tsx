@@ -26,7 +26,6 @@ import {
 import { products } from "./content/products";
 import type { Product } from "./content/products";
 import type { MotionValue } from "motion/react";
-import ProductDemoView from "./components/ProductDemo";
 import DroneVisual from "./components/DroneVisual";
 
 function Reveal({
@@ -116,8 +115,10 @@ function Header() {
         aria-label="Main navigation"
       >
         <Link to="/products/wireshark">Wireshark</Link>
+        <Link to="/products/sidekick">Sidekick</Link>
+        <Link to="/products/munki">Munki</Link>
+        <Link to="/products/everyway">EveryWay</Link>
         <Link to="/#work">All work</Link>
-        <Link to="/#approach">Approach</Link>
         <Link to="/#contact">
           Let’s talk <ArrowUpRight size={15} />
         </Link>
@@ -299,7 +300,6 @@ function ProductChapter({
             </Link>
           </motion.div>
         </div>
-        <ProductDemoView demo={product.story.demo} />
       </article>
     </div>
   );
@@ -479,40 +479,6 @@ function Home() {
         </div>
       </section>
       <Work flightProgress={flightProgress} />
-      <section id="approach" className="approach section-wrap">
-        <Reveal className="approach-heading">
-          <p className="eyebrow">Our approach</p>
-          <h2>
-            Good ideas deserve
-            <br />
-            to leave the drawing board.
-          </h2>
-        </Reveal>
-        <Reveal className="approach-body">
-          <div className="approach-mark" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-          <div>
-            <p className="approach-lead">
-              The physical and digital worlds don’t exist in isolation. Neither
-              should the way we build.
-            </p>
-            <p className="muted">
-              Wiresharks is a technology R&D company exploring the space between
-              hardware, software, and human experience. We follow a problem
-              across disciplines, from the first question to something you can
-              put to the test.
-            </p>
-            <div className="approach-principles">
-              <span>Think across disciplines.</span>
-              <span>Build to learn.</span>
-              <span>Keep people in the loop.</span>
-            </div>
-          </div>
-        </Reveal>
-      </section>
       <Contact />
     </>
   );
@@ -541,7 +507,6 @@ function ProductDetail() {
         <div className="detail-art">
           <ProductArt product={product} />
         </div>
-        <ProductDemoView key={product.id} demo={product.story.demo} />
         <div className="detail-description">
           <p className="eyebrow">{product.status}</p>
           <div>

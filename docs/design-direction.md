@@ -8,11 +8,11 @@ We rejected fabricated performance specifications, telemetry, and client claims.
 
 The hero drone approaches along the camera direction, banks, and exits diagonally before its geometry can reach the near plane. Home owns one normalized `flightProgress` MotionValue. DroneVisual passes it to DroneScene, and the same value reveals the work introduction and first project heading and copy. Three owns the pose, rotor motion, renderer, and disposal. The scene no longer reads page scroll. Pause replaces the flight with a static hero illustration, stops hover and rotors, and leaves document navigation available.
 
-The registry owns a `ProductDemo` discriminated union. Only ProductDemoView switches on the demo kind. Its four demos illustrate fiber signaling, a prewritten Sidekick conversation, sample flashcard recall, and a preset obstruction reroute. They do not connect to hardware, a microphone, an AI service, or a venue. Their limits are visible beside the controls. Product detail pages reuse the same demos.
+The registry owns project descriptions, artwork references, source links, and the research brief. The illustrative interactive demos have been removed from both the homepage and product detail pages at the user's request. The primary project artwork, actual screenshots, and drone animation remain.
 
-The work section presents four projects as accessible tabs, with Wireshark selected by default and one expanded chapter at a time. Arrow keys move between tabs; Home and End select the first and last project. Each panel retains its large artwork or existing project image, editorial Geist headings, compact Geist Mono labels, and original demo. Sidekick has a custom orbital and waveform composition. Wireshark retains its procedural drone and CSS fallback. Munki and EveryWay retain their actual development and demonstration images. Legacy chapter hashes select the matching tab before the page scrolls to it. Narrow layouts retain a clear two-column project row and stack the selected chapter's visual, copy, and controls.
+The work section presents four projects as accessible tabs, with Wireshark selected by default and one expanded chapter at a time. Arrow keys move between tabs; Home and End select the first and last project. Each panel retains its large artwork or existing project image, editorial Geist headings, and compact Geist Mono labels. Sidekick has angular framing and a waveform composition. Wireshark retains its procedural drone and CSS fallback. Munki and EveryWay retain their actual development and demonstration images. Legacy chapter hashes select the matching tab before the page scrolls to it. Narrow layouts retain a clear two-column project row and stack the selected chapter's visual and copy.
 
-The foreground canvas reaches the dynamic viewport bottom instead of stopping at a 760px height cap. Desktop framing now gives the drone its own right-hand area, while mobile stacks the illustration below the unchanged typography. Browser checks confirmed one panel through every tab selection, retained keyboard focus, working chapter hashes, and canvas coverage on tall desktop and mobile viewports.
+The foreground canvas spans the full viewport width and reaches the dynamic viewport bottom. The decorative right-hand grid does not clip the drone, so the left propeller can fly beyond it. The title bar is flush with the top and spans the screen, with direct links to all four projects. Mobile stacks the illustration below the unchanged typography. The low-substance approach section has been removed, and projects lead directly to contact.
 
 Route entrances fade by pathname. There is no exit delay and no transformed ancestor around the fixed hero canvas. Existing route metadata, hash focus, redirects, contact emails, and source links remain. Reduced motion uses static poses and immediate demo state changes. Decorative canvas layers are pointer-inert. Interactive controls remain semantic HTML buttons and links.
 
@@ -24,7 +24,7 @@ The technical visual update preserves all 197 original typography declarations
 and every font import. The white/charcoal/red balance is an approximate visual
 target rather than a fixed pixel ratio. Navigation and active project tabs use
 charcoal; red is reserved for small indicators, registration marks, focus states,
-and diagrams. Panels use square corners, hard borders, and selective 45-degree
+and technical details. Panels use square corners, hard borders, and selective 45-degree
 button cuts. Gradients, glass blur, orbit rings, and soft panel shadows are replaced
 by flat surfaces and restrained schematic framing. Existing images and physical
 drone geometry remain intact. Desktop and 390 × 844 browser checks covered all

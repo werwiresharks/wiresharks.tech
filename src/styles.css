@@ -1968,7 +1968,10 @@ body {
 
 /* Technical framing. Typography remains defined by the original rules above. */
 .masthead {
-  margin: 16px 20px 0;
+  height: var(--header-height);
+  margin: 0;
+  top: 0;
+  width: 100%;
   border: 1px solid var(--ink);
   border-radius: 0;
   background: var(--ink);
@@ -1990,11 +1993,15 @@ body {
 .nav a {
   border-bottom: 1px solid transparent;
 }
+.nav {
+  gap: clamp(12px, 2vw, 28px);
+}
 .nav a:hover {
   color: var(--paper);
   border-bottom-color: var(--accent);
 }
 .nav a:last-child {
+  margin-left: 12px;
   padding-left: 18px;
   border-left: 1px solid #ffffff45;
 }
@@ -2044,8 +2051,8 @@ body {
   max-width: min(760px, 54vw);
 }
 .hero-drone {
-  left: 54%;
-  width: 46%;
+  left: 0;
+  width: 100%;
 }
 @media (min-width: 768px) {
   .hero {
@@ -2341,7 +2348,7 @@ body {
 }
 @media (max-width: 767px) {
   .masthead {
-    margin: 12px 12px 0;
+    margin: 0;
     border-radius: 0;
   }
   .hero h1 {
@@ -2359,11 +2366,14 @@ body {
     box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    max-height: calc(100dvh - var(--header-height) - 16px);
+    overflow-y: auto;
   }
   .nav a {
     border-bottom-color: #ffffff28;
   }
   .nav a:last-child {
+    margin-left: 0;
     border-left: 0;
     padding-left: 0;
   }

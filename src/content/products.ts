@@ -1,13 +1,4 @@
 export type ProductId = "wireshark" | "sidekick" | "munki" | "everyway";
-export type ProductDemo =
-  | { kind: "fiber-link"; caption: string }
-  | {
-      kind: "voice-flow";
-      caption: string;
-      steps: readonly { label: string; text: string }[];
-    }
-  | { kind: "flashcard"; caption: string; front: string; back: string }
-  | { kind: "obstruction-route"; caption: string };
 type Source = { label: string; href: string };
 export type Product = {
   id: ProductId;
@@ -17,7 +8,7 @@ export type Product = {
   summary: string;
   purpose: string;
   status: string;
-  story: { visualLabel: string; demo: ProductDemo };
+  story: { visualLabel: string };
   facts: { title: string; text: string; source?: string }[];
   links: Source[];
   researchBrief?: { title: string; summary: string; href: string; pages: number };
@@ -29,11 +20,6 @@ export const products: Product[] = [
     id: "wireshark",
     story: {
       visualLabel: "01 / A physical connection",
-      demo: {
-        kind: "fiber-link",
-        caption:
-          "Conceptual command and data over fiber. No live hardware is connected.",
-      },
     },
     name: "Wireshark",
     category: "Flagship fiber-optic drone",
@@ -75,26 +61,6 @@ export const products: Product[] = [
     id: "sidekick",
     story: {
       visualLabel: "02 / Intelligence, close to home",
-      demo: {
-        kind: "voice-flow",
-        caption:
-          "Prewritten example. No microphone, model, or audio playback. Local defaults; cloud transcription is optional.",
-        steps: [
-          { label: "Wake phrase", text: "Hey Sidekick." },
-          {
-            label: "Local transcription",
-            text: "Why does the Moon have phases?",
-          },
-          {
-            label: "Local answer",
-            text: "As the Moon orbits Earth, we see different portions of its sunlit half.",
-          },
-          {
-            label: "Spoken response",
-            text: "The answer would be read aloud. This example is silent.",
-          },
-        ],
-      },
     },
     name: "Sidekick",
     category: "Local intelligence",
@@ -135,12 +101,6 @@ export const products: Product[] = [
     id: "munki",
     story: {
       visualLabel: "03 / Make room for curiosity",
-      demo: {
-        kind: "flashcard",
-        caption: "Sample study interaction. No AI evaluation or grading.",
-        front: "Why does the Moon have phases?",
-        back: "We see different portions of the Moon’s sunlit half as it orbits Earth.",
-      },
     },
     name: "Munki",
     category: "AI & learning",
@@ -175,11 +135,6 @@ export const products: Product[] = [
     id: "everyway",
     story: {
       visualLabel: "04 / A way around the unexpected",
-      demo: {
-        kind: "obstruction-route",
-        caption:
-          "Illustrative floor plan. A preset route change, with no sensor or venue connection.",
-      },
     },
     name: "EveryWay",
     category: "Accessible navigation",
