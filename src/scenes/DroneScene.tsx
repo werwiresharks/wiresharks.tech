@@ -7,12 +7,10 @@ export default function DroneScene({
   paused,
   interactive,
   flightProgress,
-  onReady,
 }: {
   paused: boolean;
   interactive: boolean;
   flightProgress?: MotionValue<number>;
-  onReady: (ready: boolean) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -30,7 +28,6 @@ export default function DroneScene({
   useEffect(() => {
     const element = host.current!;
     setReady(false);
-    onReady(false);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -41,6 +38,8 @@ export default function DroneScene({
     } catch {
       return;
     }
+    let hasRendered = false;
+    let hasSize = false;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
     renderer.setClearColor(0xffffff, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -54,6 +53,7 @@ export default function DroneScene({
     const controls = interactive
       ? new OrbitControls(camera, renderer.domElement)
       : null;
+    if (controls) controls.enabled = false;
     controlsRef.current = controls;
     const controlsChange = () => requestRender.current();
     const controlsStart = () => renderer.domElement.classList.add("is-orbiting");
@@ -362,24 +362,31 @@ export default function DroneScene({
       } else requestRender.current();
     });
     observer.observe(element);
-    const resize = new ResizeObserver(() => {
+    const resizeCanvas = () => {
       const { width, height } = element.getBoundingClientRect();
       if (!width || !height) return;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.render(scene, camera);
-    });
+      hasSize = true;
+      requestRender.current();
+    };
+    const resize = new ResizeObserver(resizeCanvas);
     resize.observe(element);
     function render(time: number) {
       frame = 0;
-      if (!visible || document.hidden || renderer.getContext().isContextLost())
+      if (
+        !hasSize ||
+        !visible ||
+        document.hidden ||
+        renderer.getContext().isContextLost()
+      )
         return;
       const delta = last ? Math.min((time - last) / 1000, 0.05) : 0;
       last = time;
       if (!pause.current && !reduced.matches) elapsed += delta;
       const progress =
-        reduced.matches || pause.current
+        reduced.matches
           ? 0
           : (progressValue.current?.get() ?? 0);
       const approach = THREE.MathUtils.smoothstep(progress, 0.06, 0.6);
@@ -446,6 +453,11 @@ export default function DroneScene({
         rotor.rotation.y = rotorState.angle * direction + i * 0.8;
       });
       renderer.render(scene, camera);
+      if (!hasRendered) {
+        hasRendered = true;
+        if (controls) controls.enabled = true;
+        setReady(true);
+      }
       if (!pause.current && !reduced.matches && (!heroFlight || progress < 1))
         frame = requestAnimationFrame(render);
     }
@@ -468,25 +480,22 @@ export default function DroneScene({
     reduced.addEventListener("change", motionChange);
     document.addEventListener("visibilitychange", visibilityChange);
     frame = requestAnimationFrame(render);
-    const contextLost = () => {
+    const contextLost = (event: Event) => {
+      event.preventDefault();
+      hasRendered = false;
       cancelAnimationFrame(frame);
       frame = 0;
       last = 0;
       if (controls) controls.enabled = false;
       controlsEnd();
       setReady(false);
-      onReady(false);
     };
     const contextRestored = () => {
-      if (controls) controls.enabled = true;
-      setReady(true);
-      onReady(true);
       requestRender.current();
     };
     renderer.domElement.addEventListener("webglcontextlost", contextLost);
     renderer.domElement.addEventListener("webglcontextrestored", contextRestored);
-    setReady(true);
-    onReady(true);
+    resizeCanvas();
     return () => {
       cancelAnimationFrame(frame);
       requestRender.current = () => {};
@@ -518,10 +527,10 @@ export default function DroneScene({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [interactive, onReady]);
+  }, [interactive]);
   const canvas = (
     <div
-      className="drone-canvas"
+      className={`drone-canvas${ready ? " is-ready" : ""}`}
       ref={host}
       aria-hidden={interactive ? undefined : true}
       tabIndex={interactive && ready ? 0 : undefined}

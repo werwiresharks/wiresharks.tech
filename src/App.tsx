@@ -183,20 +183,34 @@ function Footer() {
 }
 function ProductArt({ product }: { product: Product }) {
   const [paused, setPaused] = useState(false);
+  const reduced = useReducedMotion();
   if (product.id === "wireshark")
     return (
       <div className="product-art drone-product">
         <span className="art-caption">
           Wireshark · conceptual visualization
         </span>
-        <DroneVisual paused={paused} interactive />
+        <DroneVisual paused={paused || !!reduced} interactive />
         <button
           className="motion-toggle product-motion-toggle"
           onClick={() => setPaused(!paused)}
-          aria-label={paused ? "Play drone motion" : "Pause drone motion"}
+          disabled={!!reduced}
+          aria-label={
+            reduced
+              ? "Reduced motion"
+              : paused
+                ? "Play drone motion"
+                : "Pause drone motion"
+          }
         >
-          {paused ? <Play size={13} /> : <Pause size={13} />}
-          <span>{paused ? "Play motion" : "Pause motion"}</span>
+          {paused || reduced ? <Play size={13} /> : <Pause size={13} />}
+          <span>
+            {reduced
+              ? "Reduced motion"
+              : paused
+                ? "Play motion"
+                : "Pause motion"}
+          </span>
         </button>
       </div>
     );
@@ -416,8 +430,8 @@ function Home() {
   return (
     <>
       <motion.div
-        className={`hero-drone ${reduced || paused ? "static-drone" : ""}`}
-        style={reduced || paused ? undefined : { opacity }}
+        className={`hero-drone ${reduced ? "static-drone" : ""}`}
+        style={reduced ? undefined : { opacity }}
       >
         <DroneVisual
           flightProgress={flightProgress}
@@ -462,9 +476,11 @@ function Home() {
             onClick={() => setPaused(!paused)}
             disabled={!!reduced}
             aria-label={
-              paused || reduced
-                ? "Play background motion"
-                : "Pause background motion"
+              reduced
+                ? "Reduced motion"
+                : paused
+                  ? "Play background motion"
+                  : "Pause background motion"
             }
           >
             {paused || reduced ? <Play size={13} /> : <Pause size={13} />}

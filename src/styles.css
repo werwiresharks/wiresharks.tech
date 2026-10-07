@@ -256,6 +256,13 @@ p {
   width: 100%;
   height: 100%;
   display: block;
+  opacity: 0;
+  visibility: hidden;
+}
+.drone-canvas.is-ready canvas {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 350ms ease;
 }
 .hero-bottom {
   position: absolute;
@@ -751,76 +758,6 @@ p {
   font-size: clamp(50px, 7vw, 95px);
   letter-spacing: -0.06em;
   margin: 25px 0 40px;
-}
-.drone-fallback {
-  position: absolute;
-  left: 25%;
-  top: 30%;
-  height: 40%;
-  width: 50%;
-  transform: rotate(-18deg) skewY(12deg);
-  opacity: 0.85;
-  transition: opacity 0.3s;
-}
-.drone-fallback.is-ready {
-  opacity: 0;
-}
-.fallback-arm {
-  position: absolute;
-  left: 0;
-  top: 45%;
-  width: 100%;
-  height: 13px;
-  background: #303438;
-  transform: rotate(35deg);
-  box-shadow: 0 2px 0 #070809;
-}
-.arm-two {
-  transform: rotate(-35deg);
-}
-.fallback-body {
-  position: absolute;
-  width: 27%;
-  height: 32%;
-  left: 37%;
-  top: 34%;
-  background: #131517;
-  border: 2px solid #50555a;
-  box-shadow: 8px 12px 0 #080a0c;
-}
-.fallback-rotor {
-  position: absolute;
-  width: 43%;
-  height: 14%;
-  background: #1a1d20;
-  border-top: 2px solid #60666c;
-  border-radius: 50%;
-}
-.rotor-0 {
-  left: -16%;
-  top: 4%;
-}
-.rotor-1 {
-  right: -16%;
-  top: 4%;
-}
-.rotor-2 {
-  left: -16%;
-  bottom: 4%;
-}
-.rotor-3 {
-  right: -16%;
-  bottom: 4%;
-}
-.fallback-fiber {
-  position: absolute;
-  left: 50%;
-  top: 66%;
-  height: 100%;
-  width: 80%;
-  border-left: 1px solid var(--accent);
-  border-bottom: 1px solid var(--accent);
-  border-radius: 0 0 0 80%;
 }
 @media (min-width: 1600px) {
   .hero {

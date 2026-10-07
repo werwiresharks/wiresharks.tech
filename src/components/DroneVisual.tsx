@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, useCallback, useState } from "react";
+import { Component, lazy, Suspense } from "react";
 import type { ReactNode } from "react";
 import type { MotionValue } from "motion/react";
 const DroneScene = lazy(() => import("../scenes/DroneScene"));
@@ -23,29 +23,14 @@ export default function DroneVisual({
   interactive?: boolean;
   flightProgress?: MotionValue<number>;
 }) {
-  const [ready, setReady] = useState(false);
-  const onReady = useCallback((value: boolean) => setReady(value), []);
   return (
     <div className={`drone-visual${interactive ? " is-interactive" : ""}`}>
-      <div
-        className={`drone-fallback ${ready ? "is-ready" : ""}`}
-        aria-hidden="true"
-      >
-        <div className="fallback-arm arm-one" />
-        <div className="fallback-arm arm-two" />
-        <div className="fallback-body" />
-        {[0, 1, 2, 3].map((i) => (
-          <i key={i} className={`fallback-rotor rotor-${i}`} />
-        ))}
-        <div className="fallback-fiber" />
-      </div>
       <SceneBoundary>
         <Suspense fallback={null}>
           <DroneScene
             paused={paused}
             interactive={interactive}
             flightProgress={flightProgress}
-            onReady={onReady}
           />
         </Suspense>
       </SceneBoundary>
