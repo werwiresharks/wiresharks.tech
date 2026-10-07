@@ -138,7 +138,7 @@ function Contact() {
           </h2>
           <a
             className="contact-arrow"
-            href="mailto:tkosgi@purdue.edu"
+            href="mailto:tkosgi@purdue.edu,sgunti@purdue.edu"
             aria-label="Email Wiresharks"
           >
             <ArrowUpRight weight="light" />

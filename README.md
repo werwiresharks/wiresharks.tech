@@ -28,4 +28,4 @@ The product registry in `src/content/products.ts` owns summaries, capability des
 
 Product pages use browser-history URLs. Production hosting must serve `index.html` for unknown paths so refresh and direct links work. `public/_redirects` includes the common static-host fallback. Configure the equivalent rewrite on hosts that do not support that file. Canonical domain references in robots and sitemap use `https://wiresharks.tech`.
 
-No backend is required. Contact links open email addressed to `tkosgi@purdue.edu`. No deployment, account configuration, or external publication is included.
+No backend is required. Contact sections on the homepage and every product page include matching email links for Tarushv Kosgi (`tkosgi@purdue.edu`) and Siddharth Gunti (`sgunti@purdue.edu`). The main contact button addresses both. No deployment, account configuration, or external publication is included.
