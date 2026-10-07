@@ -189,7 +189,7 @@ function ProductArt({ product }: { product: Product }) {
         <span className="art-caption">
           Wireshark · conceptual visualization
         </span>
-        <DroneVisual paused={paused} />
+        <DroneVisual paused={paused} interactive />
         <button
           className="motion-toggle product-motion-toggle"
           onClick={() => setPaused(!paused)}

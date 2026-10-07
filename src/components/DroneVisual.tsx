@@ -16,15 +16,17 @@ class SceneBoundary extends Component<
 }
 export default function DroneVisual({
   paused = true,
+  interactive = false,
   flightProgress,
 }: {
   paused?: boolean;
+  interactive?: boolean;
   flightProgress?: MotionValue<number>;
 }) {
   const [ready, setReady] = useState(false);
-  const onReady = useCallback(() => setReady(true), []);
+  const onReady = useCallback((value: boolean) => setReady(value), []);
   return (
-    <div className="drone-visual">
+    <div className={`drone-visual${interactive ? " is-interactive" : ""}`}>
       <div
         className={`drone-fallback ${ready ? "is-ready" : ""}`}
         aria-hidden="true"
@@ -41,6 +43,7 @@ export default function DroneVisual({
         <Suspense fallback={null}>
           <DroneScene
             paused={paused}
+            interactive={interactive}
             flightProgress={flightProgress}
             onReady={onReady}
           />

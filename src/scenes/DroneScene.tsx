@@ -1,17 +1,23 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { MotionValue } from "motion/react";
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export default function DroneScene({
   paused,
+  interactive,
   flightProgress,
   onReady,
 }: {
   paused: boolean;
+  interactive: boolean;
   flightProgress?: MotionValue<number>;
-  onReady: () => void;
+  onReady: (ready: boolean) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const [ready, setReady] = useState(false);
+  const instructionsId = useId();
   const pause = useRef(paused);
   const progressValue = useRef(flightProgress);
   const requestRender = useRef<() => void>(() => {});
@@ -23,6 +29,8 @@ export default function DroneScene({
   }, [paused, flightProgress]);
   useEffect(() => {
     const element = host.current!;
+    setReady(false);
+    onReady(false);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -43,6 +51,65 @@ export default function DroneScene({
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
     camera.position.set(7, 7.8, 10);
     camera.lookAt(0, 0, 0);
+    const controls = interactive
+      ? new OrbitControls(camera, renderer.domElement)
+      : null;
+    controlsRef.current = controls;
+    const controlsChange = () => requestRender.current();
+    const controlsStart = () => renderer.domElement.classList.add("is-orbiting");
+    const controlsEnd = () => renderer.domElement.classList.remove("is-orbiting");
+    const focusView = () => element.focus({ preventScroll: true });
+    const keyDown = (event: KeyboardEvent) => {
+      if (
+        !controls?.enabled ||
+        event.target !== element ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey
+      )
+        return;
+      const angle = Math.PI / 24;
+      switch (event.key) {
+        case "ArrowLeft":
+          controls.rotateLeft(angle);
+          break;
+        case "ArrowRight":
+          controls.rotateLeft(-angle);
+          break;
+        case "ArrowUp":
+          controls.rotateUp(angle);
+          break;
+        case "ArrowDown":
+          controls.rotateUp(-angle);
+          break;
+        case "+":
+        case "=":
+          controls.dollyIn(0.9);
+          break;
+        case "-":
+          controls.dollyOut(0.9);
+          break;
+        case "Home":
+          controls.reset();
+          break;
+        default:
+          return;
+      }
+      event.preventDefault();
+    };
+    if (controls) {
+      controls.enableDamping = false;
+      controls.enablePan = false;
+      controls.minDistance = 8;
+      controls.maxDistance = 25;
+      controls.minPolarAngle = Math.PI / 18;
+      controls.maxPolarAngle = Math.PI * 0.85;
+      controls.addEventListener("change", controlsChange);
+      controls.addEventListener("start", controlsStart);
+      controls.addEventListener("end", controlsEnd);
+      renderer.domElement.addEventListener("pointerdown", focusView);
+      element.addEventListener("keydown", keyDown);
+    }
     const towardCamera = camera.position.clone().normalize();
     const screenRight = new THREE.Vector3(1, 0, 0).applyQuaternion(
       camera.quaternion,
@@ -65,8 +132,8 @@ export default function DroneScene({
     drone.rotation.set(0.05, -0.35, -0.14);
     const carbon = new THREE.MeshStandardMaterial({
       color: 0x131517,
-      metalness: 0.65,
-      roughness: 0.42,
+      metalness: 0.15,
+      roughness: 0.62,
     });
     const edge = new THREE.MeshStandardMaterial({
       color: 0x2c3034,
@@ -77,11 +144,6 @@ export default function DroneScene({
       color: 0x070809,
       metalness: 0.25,
       roughness: 0.54,
-    });
-    const orange = new THREE.MeshStandardMaterial({
-      color: 0xd52b24,
-      metalness: 0.5,
-      roughness: 0.48,
     });
     const glass = new THREE.MeshStandardMaterial({
       color: 0x111b21,
@@ -110,12 +172,12 @@ export default function DroneScene({
       z: number,
       material = carbon,
     ) => mesh(new THREE.BoxGeometry(w, h, d), material, x, y, z);
-    box(1.6, 0.25, 2.1, 0, 0, 0);
-    box(1.25, 0.43, 1.35, 0, 0.33, 0.13, black);
-    box(1.42, 0.06, 1.8, 0, 0.59, 0, edge);
-    for (let i = 0; i < 9; i++)
-      box(0.95, 0.04, 0.035, 0, 0.64, -0.6 + i * 0.14, black);
-    box(0.52, 0.07, 0.58, 0, 0.66, 0.53, black);
+    box(1.4, 0.07, 1.65, 0, 0, 0);
+    box(0.72, 0.18, 1.05, 0, 0.16, 0.1, black);
+    for (const z of [-0.2, 0.4])
+      box(0.78, 0.035, 0.12, 0, 0.265, z);
+    box(0.46, 0.045, 0.36, 0, 0.09, -0.58, edge);
+    box(0.13, 0.045, 0.12, 0, 0.135, -0.58, black);
     const rotors: THREE.Group[] = [];
     const blades: THREE.Mesh[] = [];
     const blurs: THREE.Mesh[] = [];
@@ -148,14 +210,14 @@ export default function DroneScene({
     });
     for (const x of [-1, 1])
       for (const z of [-1, 1]) {
-        const arm = box(0.32, 0.18, 2.5, x * 1.14, -0.05, z * 1.12);
+        const arm = box(0.14, 0.07, 2.5, x * 1.14, -0.01, z * 1.12);
         arm.rotation.y = x * z * 0.78;
         const reinforcement = box(
-          0.13,
           0.07,
+          0.025,
           2.65,
           x * 1.14,
-          0.09,
+          0.045,
           z * 1.12,
           edge,
         );
@@ -163,7 +225,7 @@ export default function DroneScene({
         const mx = x * 2.1,
           mz = z * 2.1;
         mesh(
-          new THREE.CylinderGeometry(0.28, 0.29, 0.4, 24),
+          new THREE.CylinderGeometry(0.28, 0.29, 0.25, 24),
           black,
           mx,
           0.13,
@@ -179,7 +241,7 @@ export default function DroneScene({
         for (let i = 0; i < 12; i++) {
           const a = (i * Math.PI) / 6;
           mesh(
-            new THREE.BoxGeometry(0.027, 0.19, 0.04),
+            new THREE.BoxGeometry(0.027, 0.12, 0.04),
             edge,
             mx + Math.cos(a) * 0.276,
             0.16,
@@ -230,72 +292,57 @@ export default function DroneScene({
           0.46,
           mz,
         );
-        const skid = box(0.1, 0.9, 0.12, x * 0.7, -0.55, z * 0.7, edge);
+        const skid = box(0.06, 0.25, 0.08, x * 0.58, -0.14, z * 0.6, edge);
         skid.rotation.z = x * -0.22;
         mesh(
           new THREE.CylinderGeometry(0.045, 0.045, 0.03, 8),
           edge,
           x * 0.58,
-          0.65,
+          0.065,
           z * 0.68,
         );
       }
-    box(0.68, 0.48, 0.52, 0, -0.28, -1.2, black);
+    box(0.4, 0.22, 0.28, 0, -0.1, -0.9, black);
     const lens = mesh(
-      new THREE.CylinderGeometry(0.21, 0.24, 0.16, 32),
+      new THREE.CylinderGeometry(0.13, 0.15, 0.1, 32),
       edge,
       0,
-      -0.27,
-      -1.52,
+      -0.1,
+      -1.07,
     );
     lens.rotation.x = Math.PI / 2;
     const lensGlass = mesh(
-      new THREE.CylinderGeometry(0.155, 0.155, 0.17, 32),
+      new THREE.CylinderGeometry(0.095, 0.095, 0.11, 32),
       glass,
       0,
-      -0.27,
-      -1.55,
+      -0.1,
+      -1.09,
     );
     lensGlass.rotation.x = Math.PI / 2;
-    const spool = mesh(
-      new THREE.CylinderGeometry(0.46, 0.46, 0.63, 40),
-      orange,
-      0,
-      -0.55,
-      0.35,
-    );
-    spool.rotation.z = Math.PI / 2;
-    for (let i = 0; i < 19; i++) {
-      const loop = mesh(
-        new THREE.TorusGeometry(0.455, 0.009, 4, 40),
-        edge,
-        -0.3 + i * 0.033,
-        -0.55,
-        0.35,
-      );
-      loop.rotation.y = Math.PI / 2;
-    }
-    for (const x of [-0.36, 0.36]) {
-      const disc = mesh(
-        new THREE.CylinderGeometry(0.54, 0.54, 0.045, 40),
-        black,
-        x,
-        -0.55,
-        0.35,
-      );
-      disc.rotation.z = Math.PI / 2;
-    }
     const fiberCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.05, -0.9, 0.45),
+      new THREE.Vector3(0.05, -0.035, 0.55),
       new THREE.Vector3(0.4, -1.3, 1.7),
       new THREE.Vector3(2, -1.5, 2.9),
       new THREE.Vector3(4, -1.2, 3.3),
       new THREE.Vector3(5, -1.6, 4.8),
       new THREE.Vector3(8, -2, 5),
     ]);
+    const fiberMaterial = new THREE.MeshBasicMaterial({ color: 0xd52b24 });
     mesh(
       new THREE.TubeGeometry(fiberCurve, 96, 0.013, 5, false),
-      new THREE.MeshBasicMaterial({ color: 0xd52b24 }),
+      fiberMaterial,
+      0,
+      0,
+      0,
+    );
+    const fiberEnd = fiberCurve.getPoint(1);
+    const fiberTail = new THREE.LineCurve3(
+      fiberEnd,
+      fiberEnd.clone().addScaledVector(fiberCurve.getTangent(1), camera.far * 4),
+    );
+    mesh(
+      new THREE.TubeGeometry(fiberTail, 1, 0.013, 5, false),
+      fiberMaterial,
       0,
       0,
       0,
@@ -326,7 +373,8 @@ export default function DroneScene({
     resize.observe(element);
     function render(time: number) {
       frame = 0;
-      if (!visible || document.hidden) return;
+      if (!visible || document.hidden || renderer.getContext().isContextLost())
+        return;
       const delta = last ? Math.min((time - last) / 1000, 0.05) : 0;
       last = time;
       if (!pause.current && !reduced.matches) elapsed += delta;
@@ -402,7 +450,12 @@ export default function DroneScene({
         frame = requestAnimationFrame(render);
     }
     requestRender.current = () => {
-      if (visible && !document.hidden && !frame)
+      if (
+        visible &&
+        !document.hidden &&
+        !renderer.getContext().isContextLost() &&
+        !frame
+      )
         frame = requestAnimationFrame(render);
     };
     const motionChange = () => requestRender.current();
@@ -415,7 +468,25 @@ export default function DroneScene({
     reduced.addEventListener("change", motionChange);
     document.addEventListener("visibilitychange", visibilityChange);
     frame = requestAnimationFrame(render);
-    onReady();
+    const contextLost = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      last = 0;
+      if (controls) controls.enabled = false;
+      controlsEnd();
+      setReady(false);
+      onReady(false);
+    };
+    const contextRestored = () => {
+      if (controls) controls.enabled = true;
+      setReady(true);
+      onReady(true);
+      requestRender.current();
+    };
+    renderer.domElement.addEventListener("webglcontextlost", contextLost);
+    renderer.domElement.addEventListener("webglcontextrestored", contextRestored);
+    setReady(true);
+    onReady(true);
     return () => {
       cancelAnimationFrame(frame);
       requestRender.current = () => {};
@@ -423,6 +494,18 @@ export default function DroneScene({
       document.removeEventListener("visibilitychange", visibilityChange);
       observer.disconnect();
       resize.disconnect();
+      controls?.removeEventListener("change", controlsChange);
+      controls?.removeEventListener("start", controlsStart);
+      controls?.removeEventListener("end", controlsEnd);
+      controls?.dispose();
+      controlsRef.current = null;
+      renderer.domElement.removeEventListener("pointerdown", focusView);
+      element.removeEventListener("keydown", keyDown);
+      renderer.domElement.removeEventListener("webglcontextlost", contextLost);
+      renderer.domElement.removeEventListener(
+        "webglcontextrestored",
+        contextRestored,
+      );
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry.dispose();
@@ -435,6 +518,34 @@ export default function DroneScene({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [onReady]);
-  return <div className="drone-canvas" ref={host} aria-hidden="true" />;
+  }, [interactive, onReady]);
+  const canvas = (
+    <div
+      className="drone-canvas"
+      ref={host}
+      aria-hidden={interactive ? undefined : true}
+      tabIndex={interactive && ready ? 0 : undefined}
+      role={interactive && ready ? "region" : undefined}
+      aria-label={
+        interactive && ready ? "Interactive Wireshark drone view" : undefined
+      }
+      aria-describedby={interactive && ready ? instructionsId : undefined}
+    />
+  );
+  return interactive ? (
+    <div className="drone-interaction">
+      {canvas}
+      {ready && (
+        <div className="drone-view-controls">
+          <p id={instructionsId}>
+            <span>Drag to orbit · Scroll or pinch to zoom</span>
+            <span>Arrow keys orbit · + / − zoom · Home resets</span>
+          </p>
+          <button type="button" onClick={() => controlsRef.current?.reset()}>
+            Reset view
+          </button>
+        </div>
+      )}
+    </div>
+  ) : canvas;
 }

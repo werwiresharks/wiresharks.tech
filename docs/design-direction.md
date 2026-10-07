@@ -12,9 +12,11 @@ The registry owns project descriptions, artwork references, source links, and th
 
 The work section presents four projects as accessible tabs, with Wireshark selected by default and one expanded chapter at a time. Arrow keys move between tabs; Home and End select the first and last project. Each panel retains its large artwork or existing project image, editorial Geist headings, and compact Geist Mono labels. Sidekick has angular framing and a waveform composition. Wireshark retains its procedural drone and CSS fallback. Munki and EveryWay retain their actual development and demonstration images. Legacy chapter hashes select the matching tab before the page scrolls to it. Narrow layouts retain a clear two-column project row and stack the selected chapter's visual and copy.
 
-The foreground canvas spans the full viewport width and reaches the dynamic viewport bottom. The decorative right-hand grid does not clip the drone, so the left propeller can fly beyond it. The title bar is flush with the top and spans the screen, with direct links to all four projects. Mobile stacks the illustration below the unchanged typography. The low-substance approach section has been removed, and projects lead directly to contact.
+The foreground canvas spans the full viewport width and reaches the dynamic viewport bottom. The decorative right-hand grid does not clip the drone, so the left propeller can fly beyond it. The titlebar is an inset, sticky glass bar with charcoal text, direct project links, and an outlined contact action. Its modest rounded corners and translucent white background restore the Palantir reference within the current white, charcoal, and red theme. Mobile uses a matching light dropdown. Mobile stacks the illustration below the unchanged typography. The low-substance approach section has been removed, and projects lead directly to contact.
 
 Route entrances fade by pathname. There is no exit delay and no transformed ancestor around the fixed hero canvas. Existing route metadata, hash focus, redirects, contact emails, and source links remain. Reduced motion uses static poses and immediate demo state changes. Decorative canvas layers are pointer-inert. Interactive controls remain semantic HTML buttons and links.
+
+The Wireshark project panel and product page offer camera orbit controls. Drag rotates the view; scroll and touch pinch zoom within fixed distance limits. A focused viewer supports arrow keys, plus and minus, and Home. Reset view restores the starting camera angle. `ProductArt` opts in with one `interactive` prop, and `DroneScene` owns the camera, controls, and cleanup. Manual input requests a render even while motion is paused or reduced. The CSS fallback shows no orbit instructions or reset control. The hero remains decorative. The model has no onboard spool; the fiber attaches to the underside of the body. The cable continues along its final tangent beyond the camera's far clipping plane, so its endpoint stays hidden from every allowed orbit angle.
 
 One implementation owner changed the application, styles, registry, and scene because their timing is coupled. Independent review found and resolved two issues: pause still allowed scroll flight, and the illustrative detour crossed two walls. Browser inspection also found and resolved mobile overflow from the hidden fallback illustration.
 
@@ -23,9 +25,9 @@ Verification used the T3 browser at 1280 × 800 and 390 × 844. Checks covered f
 The technical visual update preserves all 197 original typography declarations
 and every font import. The white/charcoal/red balance is an approximate visual
 target rather than a fixed pixel ratio. Navigation and active project tabs use
-charcoal; red is reserved for small indicators, registration marks, focus states,
+charcoal; the titlebar uses translucent white. Red is reserved for small indicators, registration marks, focus states,
 and technical details. Panels use square corners, hard borders, and selective 45-degree
-button cuts. Gradients, glass blur, orbit rings, and soft panel shadows are replaced
-by flat surfaces and restrained schematic framing. Existing images and physical
+button cuts. Product panels use flat surfaces and restrained schematic framing;
+the titlebar retains glass blur and a subtle shadow. Existing images and physical
 drone geometry remain intact. Desktop and 390 × 844 browser checks covered all
 four interactive demos, project tabs, mobile navigation, and the research link.

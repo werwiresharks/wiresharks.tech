@@ -2,6 +2,16 @@
 
 Checked on 2026-10-07 through the T3 collaborative preview.
 
+The titlebar restoration and drone interaction update were also checked on this date.
+
+- The floating titlebar fits desktop widths of 768 and 1280 pixels and mobile widths of 320 and 390 pixels. It remains inset while scrolling. The mobile menu retains focus handling and Escape behavior.
+- The Wireshark viewer responds to scripted mouse drag and touch pinch, and native keyboard input changes its rendered camera. Zoom stops at its distance limits. Reset view restores the starting camera.
+- Camera input remains available while paused and with reduced motion. Browser instrumentation confirmed that rendering stops between manual inputs in these states.
+- The homepage flagship panel and product detail both enable the controls. The hero keeps pointer events disabled. Product route changes remount the viewer.
+- Simulated WebGL unavailability shows the CSS fallback without orbit instructions or reset controls. The viewer controls fit narrow layouts without document horizontal overflow.
+- The updated model uses a thin frame, slim arms, a compact center, and short landing feet. Its onboard spool geometry is removed, and the cable attaches directly to the underside. Executing the actual cable construction confirmed that its endpoint lies beyond the full allowed view frustum, including the maximum zoom-out distance.
+- Typecheck, production build, and diff whitespace checks pass. The existing Three.js chunk-size advisory remains.
+
 - Production build and TypeScript check pass.
 - Homepage and all four product pages render. All inspected project images load.
 - Desktop layouts inspected at 1280 and 1440 pixels. Mobile checked at 390 and 320 pixels with no document horizontal overflow.
