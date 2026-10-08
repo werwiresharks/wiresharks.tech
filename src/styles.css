@@ -1328,12 +1328,13 @@ body {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
-.chapter-index button {
+.chapter-index a {
   color: inherit;
   background: transparent;
   border: 0;
   text-align: left;
   font: inherit;
+  text-decoration: none;
   display: flex;
   gap: 16px;
   align-items: center;
@@ -1345,47 +1346,93 @@ body {
     color 180ms ease,
     background-color 180ms ease;
 }
-.chapter-index button:first-child {
+.chapter-index a:first-child {
   padding-left: 0;
 }
-.chapter-index button:last-child {
+.chapter-index a:last-child {
   border: 0;
 }
-.chapter-index button span {
+.chapter-index a span {
   color: var(--accent);
   font:
     10px "Geist Mono",
     monospace;
 }
-.chapter-index button:hover,
-.chapter-index button.active {
+.chapter-index a:hover {
   color: var(--accent);
 }
-.chapter-index button.active {
-  background: var(--surface);
-}
-.chapter-index button:focus-visible {
+.chapter-index a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -3px;
 }
 .product-chapter {
   padding: 80px 0 95px;
   scroll-margin-top: 32px;
-  animation: chapter-enter 240ms ease both;
 }
-@keyframes chapter-enter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.chapter-transition {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 32px;
+  min-height: 190px;
+  overflow: clip;
+  border-bottom: 1px solid var(--line);
+}
+.chapter-transition::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--line);
+}
+.chapter-transition-beam {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--accent);
+  transform-origin: left center;
+}
+.chapter-transition-beam::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -4px;
+  width: 3px;
+  height: 12px;
+  background: var(--accent);
+}
+.chapter-transition-number {
+  justify-self: start;
+  padding: 12px;
+  font-size: clamp(92px, 11vw, 156px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.075em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink);
+}
+.chapter-transition-label {
+  min-width: 0;
+  padding: 24px 0;
+}
+.chapter-transition-label .eyebrow {
+  margin-bottom: 12px;
+  color: var(--accent);
+  font-size: 10px;
+}
+.chapter-transition-label > p:last-child {
+  font-size: clamp(28px, 3.2vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+}
+.chapter-transition-arrow {
+  width: 64px;
+  height: 64px;
+  color: var(--accent);
 }
 @media (prefers-reduced-motion: reduce) {
-  .product-chapter {
-    animation: none;
-  }
-  .chapter-index button {
+  .chapter-index a {
     transition: none;
   }
 }
@@ -1834,22 +1881,42 @@ body {
   .chapter-index {
     grid-template-columns: repeat(2, 1fr);
   }
-  .chapter-index button {
+  .chapter-index a {
     padding: 18px 12px;
     font-size: 13px;
     gap: 10px;
   }
-  .chapter-index button:nth-child(2) {
+  .chapter-index a:nth-child(2) {
     border-right: 0;
   }
-  .chapter-index button:nth-child(n + 3) {
+  .chapter-index a:nth-child(n + 3) {
     border-top: 1px solid var(--line);
   }
-  .chapter-index button:nth-child(odd) {
+  .chapter-index a:nth-child(odd) {
     padding-left: 0;
   }
   .product-chapter {
     padding: 48px 0 54px;
+  }
+  .chapter-transition {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr) auto;
+    min-height: 128px;
+    gap: 12px;
+  }
+  .chapter-transition-number {
+    padding: 8px;
+    font-size: clamp(64px, 19vw, 100px);
+  }
+  .chapter-transition-label .eyebrow {
+    margin-bottom: 8px;
+    font-size: 8px;
+  }
+  .chapter-transition-label > p:last-child {
+    font-size: clamp(23px, 6vw, 32px);
+  }
+  .chapter-transition-arrow {
+    width: 30px;
+    height: 30px;
   }
   .chapter-topline {
     flex-direction: column;
@@ -2128,30 +2195,14 @@ body {
 .chapter-index {
   border: 1px solid var(--ink);
 }
-.chapter-index button,
-.chapter-index button:first-child {
+.chapter-index a,
+.chapter-index a:first-child {
   padding-left: 20px;
   position: relative;
 }
-.chapter-index button:hover {
+.chapter-index a:hover {
   background: var(--surface);
   color: var(--ink);
-}
-.chapter-index button.active {
-  background: var(--ink);
-  color: var(--paper);
-}
-.chapter-index button.active span {
-  color: #ff6259;
-}
-.chapter-index button.active::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 20px;
-  width: 28px;
-  height: 3px;
-  background: var(--accent);
 }
 .chapter-topline {
   border-bottom: 1px solid var(--line);
@@ -2420,12 +2471,9 @@ body {
   .work-intro {
     padding-left: 14px;
   }
-  .chapter-index button,
-  .chapter-index button:nth-child(odd) {
+  .chapter-index a,
+  .chapter-index a:nth-child(odd) {
     padding-left: 12px;
-  }
-  .chapter-index button.active::after {
-    left: 12px;
   }
   .chapter-visual {
     margin: 0;

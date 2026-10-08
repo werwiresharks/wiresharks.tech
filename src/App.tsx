@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Link,
   Navigate,
@@ -21,6 +21,7 @@ import {
   motion,
   useReducedMotion,
   useMotionValue,
+  useScroll,
   useTransform,
 } from "motion/react";
 import { products } from "./content/products";
@@ -181,7 +182,13 @@ function Footer() {
     </footer>
   );
 }
-function ProductArt({ product }: { product: Product }) {
+function ProductArt({
+  product,
+  interactive = true,
+}: {
+  product: Product;
+  interactive?: boolean;
+}) {
   const [paused, setPaused] = useState(false);
   const reduced = useReducedMotion();
   if (product.id === "wireshark")
@@ -190,7 +197,7 @@ function ProductArt({ product }: { product: Product }) {
         <span className="art-caption">
           Wireshark · conceptual visualization
         </span>
-        <DroneVisual paused={paused || !!reduced} interactive />
+        <DroneVisual paused={paused || !!reduced} interactive={interactive} />
         <button
           className="motion-toggle product-motion-toggle"
           onClick={() => setPaused(!paused)}
@@ -254,30 +261,79 @@ function ProductArt({ product }: { product: Product }) {
     </div>
   );
 }
-function ProductChapter({
+function ChapterTransition({
   product,
   index,
-  flightProgress,
-  labelledBy,
 }: {
   product: Product;
   index: number;
-  flightProgress: MotionValue<number>;
-  labelledBy: string;
 }) {
   const reduced = useReducedMotion();
-  const opacity = useTransform(flightProgress, [0.35, 0.8], [0.35, 1]);
-  const y = useTransform(flightProgress, [0.35, 0.8], [24, 0]);
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const beamTransform = useTransform(
+    scrollYProgress,
+    [0.1, 0.6],
+    ["scaleX(0.02)", "scaleX(1)"],
+  );
+  const numberTransform = useTransform(
+    scrollYProgress,
+    [0, 1],
+    ["translate3d(-6%, 12%, 0)", "translate3d(6%, -12%, 0)"],
+  );
   return (
-    <div
-      id="product-panel"
-      role="tabpanel"
-      aria-labelledby={labelledBy}
-      tabIndex={0}
-    >
+    <div ref={ref} className="chapter-transition" aria-hidden="true">
+      <motion.div
+        className="chapter-transition-beam"
+        style={{ transform: reduced ? "none" : beamTransform }}
+      />
+      <motion.span
+        className="chapter-transition-number"
+        style={{ transform: reduced ? "none" : numberTransform }}
+      >
+        0{index + 1}
+      </motion.span>
+      <div className="chapter-transition-label">
+        <p className="eyebrow">Next exploration / 0{index + 1}</p>
+        <p>{product.name}</p>
+      </div>
+      <ArrowDown className="chapter-transition-arrow" weight="light" />
+    </div>
+  );
+}
+function ProductChapter({
+  product,
+  index,
+}: {
+  product: Product;
+  index: number;
+}) {
+  const reduced = useReducedMotion();
+  const visual = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: visual,
+    offset: ["start end", "end start"],
+  });
+  const artTransform = useTransform(
+    scrollYProgress,
+    [0, 0.4, 0.7, 1],
+    [
+      "translate3d(0, 3%, 0) scale(0.96)",
+      "translate3d(0, 0%, 0) scale(1)",
+      "translate3d(0, 0%, 0) scale(1)",
+      "translate3d(0, -3%, 0) scale(0.98)",
+    ],
+  );
+  return (
+    <>
+      {index > 0 && <ChapterTransition product={product} index={index} />}
       <article
         className={`product-chapter chapter-${product.id}`}
         id={`story-${product.id}`}
+        aria-labelledby={`story-heading-${product.id}`}
       >
         <div className="chapter-topline">
           <p className="eyebrow">{product.story.visualLabel}</p>
@@ -285,11 +341,14 @@ function ProductChapter({
         </div>
         <motion.div
           className="chapter-heading"
-          style={index === 0 && !reduced ? { opacity, y } : undefined}
+          initial={reduced ? false : { transform: "translateY(20px)" }}
+          whileInView={{ transform: "translateY(0px)" }}
+          viewport={{ once: true, margin: "-35px" }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
         >
           <div>
             <p className="eyebrow">{product.category}</p>
-            <h3>
+            <h3 id={`story-heading-${product.id}`}>
               {product.name}
               <span>.</span>
             </h3>
@@ -297,66 +356,39 @@ function ProductChapter({
           <p>{product.tagline}</p>
         </motion.div>
         <div className="chapter-body">
-          <div className="chapter-visual">
-            <ProductArt product={product} />
+          <div className="chapter-visual" ref={visual}>
+            <motion.div style={{ transform: reduced ? "none" : artTransform }}>
+              <ProductArt product={product} interactive={false} />
+            </motion.div>
             <span className="chapter-number" aria-hidden="true">
               0{index + 1}
             </span>
           </div>
-          <motion.div
-            className="chapter-copy"
-            style={index === 0 && !reduced ? { opacity, y } : undefined}
-          >
+          <div className="chapter-copy">
             <p className="chapter-summary">{product.summary}</p>
             <p className="muted">{product.purpose}</p>
             <Link className="text-link" to={`/products/${product.id}`}>
               Inside {product.name} <ArrowUpRight size={20} />
             </Link>
-          </motion.div>
+          </div>
         </div>
       </article>
-    </div>
+    </>
   );
 }
 function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
-  const location = useLocation();
-  const [activeProductId, setActiveProductId] =
-    useState<Product["id"]>("wireshark");
-  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const reduced = useReducedMotion();
   const opacity = useTransform(flightProgress, [0.35, 0.8], [0.25, 1]);
-  const y = useTransform(flightProgress, [0.35, 0.8], [32, 0]);
-  useEffect(() => {
-    const hashProduct = products.find(
-      (product) => location.hash === `#story-${product.id}`,
-    );
-    if (hashProduct) setActiveProductId(hashProduct.id);
-  }, [location.hash]);
-  const activeIndex = products.findIndex(
-    (product) => product.id === activeProductId,
+  const transform = useTransform(
+    flightProgress,
+    [0.35, 0.8],
+    ["translateY(32px)", "translateY(0px)"],
   );
-  const activeProduct = products[activeIndex] ?? products[0];
-  function handleTabKeyDown(
-    event: KeyboardEvent<HTMLButtonElement>,
-    index: number,
-  ) {
-    let nextIndex = index;
-    if (event.key === "ArrowRight") nextIndex = (index + 1) % products.length;
-    else if (event.key === "ArrowLeft")
-      nextIndex = (index + products.length - 1) % products.length;
-    else if (event.key === "Home") nextIndex = 0;
-    else if (event.key === "End") nextIndex = products.length - 1;
-    else return;
-    event.preventDefault();
-    const nextProduct = products[nextIndex];
-    setActiveProductId(nextProduct.id);
-    tabRefs.current[nextIndex]?.focus();
-  }
   return (
     <section id="work" className="work section-wrap">
       <motion.div
         className="work-intro"
-        style={reduced ? undefined : { opacity, y }}
+        style={reduced ? undefined : { opacity, transform }}
       >
         <p className="eyebrow">Selected explorations / 01—04</p>
         <h2>
@@ -370,35 +402,20 @@ function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
           Human experience.
         </p>
       </motion.div>
-      <div className="chapter-index" role="tablist" aria-label="Projects">
+      <nav className="chapter-index" aria-label="Product chapters">
         {products.map((product, index) => (
-          <button
+          <Link
             key={product.id}
-            ref={(element) => {
-              tabRefs.current[index] = element;
-            }}
-            id={`project-tab-${product.id}`}
-            type="button"
-            role="tab"
-            aria-controls="product-panel"
-            aria-selected={activeProduct.id === product.id}
-            tabIndex={activeProduct.id === product.id ? 0 : -1}
-            className={activeProduct.id === product.id ? "active" : ""}
-            onKeyDown={(event) => handleTabKeyDown(event, index)}
-            onClick={() => setActiveProductId(product.id)}
+            to={`/#story-${product.id}`}
           >
             <span>0{index + 1}</span>
             {product.name}
-          </button>
+          </Link>
         ))}
-      </div>
-      <ProductChapter
-        key={activeProduct.id}
-        product={activeProduct}
-        index={activeIndex}
-        flightProgress={flightProgress}
-        labelledBy={`project-tab-${activeProduct.id}`}
-      />
+      </nav>
+      {products.map((product, index) => (
+        <ProductChapter key={product.id} product={product} index={index} />
+      ))}
     </section>
   );
 }
