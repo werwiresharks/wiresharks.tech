@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import { createRef, useEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import {
   Link,
   Navigate,
@@ -261,119 +261,158 @@ function ProductArt({
     </div>
   );
 }
-function ChapterTransition({
-  product,
-  index,
-}: {
-  product: Product;
-  index: number;
-}) {
-  const reduced = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const beamTransform = useTransform(
-    scrollYProgress,
-    [0.1, 0.6],
-    ["scaleX(0.02)", "scaleX(1)"],
-  );
-  const numberTransform = useTransform(
-    scrollYProgress,
-    [0, 1],
-    ["translate3d(-6%, 12%, 0)", "translate3d(6%, -12%, 0)"],
-  );
-  return (
-    <div ref={ref} className="chapter-transition" aria-hidden="true">
-      <motion.div
-        className="chapter-transition-beam"
-        style={{ transform: reduced ? "none" : beamTransform }}
-      />
-      <motion.span
-        className="chapter-transition-number"
-        style={{ transform: reduced ? "none" : numberTransform }}
-      >
-        0{index + 1}
-      </motion.span>
-      <div className="chapter-transition-label">
-        <p className="eyebrow">Next exploration / 0{index + 1}</p>
-        <p>{product.name}</p>
-      </div>
-      <ArrowDown className="chapter-transition-arrow" weight="light" />
-    </div>
-  );
-}
+const PROJECT_STACK_TOP = 104;
+const PROJECT_STACK_BOTTOM = 24;
+
+type ProjectRefs = {
+  anchor: RefObject<HTMLDivElement | null>;
+  surface: RefObject<HTMLDivElement | null>;
+};
+
 function ProductChapter({
   product,
   index,
+  refs,
+  nextAnchor,
+  stacked,
 }: {
   product: Product;
   index: number;
+  refs: ProjectRefs;
+  nextAnchor?: ProjectRefs["anchor"];
+  stacked: boolean;
 }) {
-  const reduced = useReducedMotion();
-  const visual = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
-    target: visual,
-    offset: ["start end", "end start"],
+    target: nextAnchor ?? refs.anchor,
+    offset: ["start end", `start ${PROJECT_STACK_TOP}px`],
   });
-  const artTransform = useTransform(
+  const transform = useTransform(
     scrollYProgress,
-    [0, 0.4, 0.7, 1],
-    [
-      "translate3d(0, 3%, 0) scale(0.96)",
-      "translate3d(0, 0%, 0) scale(1)",
-      "translate3d(0, 0%, 0) scale(1)",
-      "translate3d(0, -3%, 0) scale(0.98)",
-    ],
+    [0, 1],
+    ["scale(1)", "scale(0.95)"],
   );
+  const dim = useTransform(scrollYProgress, [0, 1], [0, 0.12]);
+  const depth = stacked && !!nextAnchor;
   return (
     <>
-      {index > 0 && <ChapterTransition product={product} index={index} />}
+      <div
+        ref={refs.anchor}
+        className="project-flow-anchor"
+        id={`story-${product.id}`}
+        tabIndex={-1}
+        role="group"
+        aria-labelledby={`story-heading-${product.id}`}
+      />
       <article
         className={`product-chapter chapter-${product.id}`}
-        id={`story-${product.id}`}
+        style={{ zIndex: index + 1 }}
         aria-labelledby={`story-heading-${product.id}`}
+        onFocusCapture={(event) => {
+          if (stacked && event.target.matches(":focus-visible")) {
+            refs.anchor.current?.scrollIntoView({
+              behavior: "instant",
+              block: "start",
+            });
+          }
+        }}
       >
-        <div className="chapter-topline">
-          <p className="eyebrow">{product.story.visualLabel}</p>
-          <span className="chapter-status">{product.status}</span>
-        </div>
         <motion.div
-          className="chapter-heading"
-          initial={reduced ? false : { transform: "translateY(20px)" }}
-          whileInView={{ transform: "translateY(0px)" }}
-          viewport={{ once: true, margin: "-35px" }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+          ref={refs.surface}
+          className="project-card-surface"
+          style={{ transform: depth ? transform : "none" }}
         >
-          <div>
-            <p className="eyebrow">{product.category}</p>
-            <h3 id={`story-heading-${product.id}`}>
-              {product.name}
-              <span>.</span>
-            </h3>
+          <div className="chapter-topline">
+            <p className="eyebrow">{product.story.visualLabel}</p>
+            <span className="chapter-status">{product.status}</span>
           </div>
-          <p>{product.tagline}</p>
-        </motion.div>
-        <div className="chapter-body">
-          <div className="chapter-visual" ref={visual}>
-            <motion.div style={{ transform: reduced ? "none" : artTransform }}>
+          <div className="chapter-heading">
+            <div>
+              <p className="eyebrow">{product.category}</p>
+              <h3 id={`story-heading-${product.id}`}>
+                {product.name}
+                <span>.</span>
+              </h3>
+            </div>
+            <p>{product.tagline}</p>
+          </div>
+          <div className="chapter-body">
+            <div className="chapter-visual">
               <ProductArt product={product} interactive={false} />
-            </motion.div>
-            <span className="chapter-number" aria-hidden="true">
-              0{index + 1}
-            </span>
+              <span className="chapter-number" aria-hidden="true">
+                0{index + 1}
+              </span>
+            </div>
+            <div className="chapter-copy">
+              <p className="chapter-summary">{product.summary}</p>
+              <p className="muted">{product.purpose}</p>
+              <Link className="text-link" to={`/products/${product.id}`}>
+                Inside {product.name} <ArrowUpRight size={20} />
+              </Link>
+            </div>
           </div>
-          <div className="chapter-copy">
-            <p className="chapter-summary">{product.summary}</p>
-            <p className="muted">{product.purpose}</p>
-            <Link className="text-link" to={`/products/${product.id}`}>
-              Inside {product.name} <ArrowUpRight size={20} />
-            </Link>
-          </div>
-        </div>
+          <motion.div
+            className="project-card-dim"
+            aria-hidden="true"
+            style={{ opacity: depth ? dim : 0 }}
+          />
+        </motion.div>
       </article>
     </>
+  );
+}
+function ProjectStack() {
+  const reduced = useReducedMotion();
+  const [stacked, setStacked] = useState(false);
+  const [refs] = useState(() =>
+    products.map(() => ({
+      anchor: createRef<HTMLDivElement>(),
+      surface: createRef<HTMLDivElement>(),
+    })),
+  );
+  useEffect(() => {
+    const measure = () => {
+      const viewport = window.visualViewport;
+      const width = Math.min(window.innerWidth, viewport?.width ?? window.innerWidth);
+      const height = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
+      const available = height - PROJECT_STACK_TOP - PROJECT_STACK_BOTTOM;
+      setStacked(
+        !reduced &&
+          width >= 900 &&
+          refs.every(
+            ({ surface }) =>
+              surface.current !== null && surface.current.offsetHeight <= available,
+          ),
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    refs.forEach(({ surface }) => {
+      if (surface.current) observer.observe(surface.current);
+    });
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, [reduced, refs]);
+  return (
+    <div
+      className={`project-stack${stacked ? " is-stacked" : ""}`}
+      style={{ "--project-stack-top": `${PROJECT_STACK_TOP}px` } as CSSProperties}
+    >
+      {products.map((product, index) => (
+        <ProductChapter
+          key={product.id}
+          product={product}
+          index={index}
+          refs={refs[index]}
+          nextAnchor={refs[index + 1]?.anchor}
+          stacked={stacked}
+        />
+      ))}
+    </div>
   );
 }
 function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
@@ -413,9 +452,7 @@ function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
           </Link>
         ))}
       </nav>
-      {products.map((product, index) => (
-        <ProductChapter key={product.id} product={product} index={index} />
-      ))}
+      <ProjectStack />
     </section>
   );
 }
@@ -668,16 +705,26 @@ function RouteEffects() {
         product?.summary ??
           "Independent engineering across physical and digital frontiers. Explore Wiresharks technology research and development.",
       );
-    const frame = requestAnimationFrame(() => {
-      const target = location.hash
-        ? document.getElementById(location.hash.slice(1))
-        : document.getElementById("main");
-      target?.setAttribute("tabindex", "-1");
-      target?.focus({ preventScroll: true });
-      if (location.hash) target?.scrollIntoView({ behavior: "instant" });
-      else window.scrollTo({ top: 0, behavior: "instant" });
-    });
-    return () => cancelAnimationFrame(frame);
+    let cancelled = false;
+    let frame = 0;
+    const jump = () => {
+      if (cancelled) return;
+      frame = requestAnimationFrame(() => {
+        const target = location.hash
+          ? document.getElementById(location.hash.slice(1))
+          : document.getElementById("main");
+        target?.setAttribute("tabindex", "-1");
+        target?.focus({ preventScroll: true });
+        if (location.hash) target?.scrollIntoView({ behavior: "instant" });
+        else window.scrollTo({ top: 0, behavior: "instant" });
+      });
+    };
+    if (location.hash) void document.fonts.ready.then(jump);
+    else jump();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
   }, [location]);
   return null;
 }
