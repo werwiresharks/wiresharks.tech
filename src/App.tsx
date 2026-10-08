@@ -337,7 +337,7 @@ function ProductChapter({
           </div>
           <div className="chapter-body">
             <div className="chapter-visual">
-              <ProductArt product={product} interactive={false} />
+              <ProductArt product={product} />
               <span className="chapter-number" aria-hidden="true">
                 0{index + 1}
               </span>
