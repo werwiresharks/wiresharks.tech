@@ -40,10 +40,10 @@ function Reveal({
   return (
     <motion.div
       className={className}
-      initial={reduced ? false : { opacity: 0, y: 25 }}
+      initial={reduced ? false : { opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-35px" }}
-      transition={{ duration: 0.75, ease: [0.2, 0.7, 0.2, 1] }}
+      transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
     >
       {children}
     </motion.div>
@@ -119,7 +119,7 @@ function Header() {
         <Link to="/products/sidekick">Sidekick</Link>
         <Link to="/products/munki">Munki</Link>
         <Link to="/products/everyway">EveryWay</Link>
-        <Link to="/#work">All work</Link>
+        <Link to="/#work">Projects</Link>
         <Link to="/#contact">
           Let’s talk <ArrowUpRight size={15} />
         </Link>
@@ -147,10 +147,18 @@ function Contact() {
           </a>
         </div>
         <a className="email-link" href="mailto:tkosgi@purdue.edu">
-          tkosgi@purdue.edu <ArrowUpRight size={19} />
+          <span>
+            <span className="contact-identifier">01 / Tarushv Kosgi</span>
+            tkosgi@purdue.edu
+          </span>
+          <ArrowUpRight size={19} />
         </a>
         <a className="email-link" href="mailto:sgunti@purdue.edu">
-          sgunti@purdue.edu <ArrowUpRight size={19} />
+          <span>
+            <span className="contact-identifier">02 / Siddharth Gunti</span>
+            sgunti@purdue.edu
+          </span>
+          <ArrowUpRight size={19} />
         </a>
       </Reveal>
     </section>
@@ -172,6 +180,7 @@ function Footer() {
         </a>
         <span>© {new Date().getFullYear()} Wiresharks</span>
       </div>
+      <p className="footer-location">Wiresharks // West Lafayette</p>
       <Link
         className="footer-brand"
         to="/"
@@ -180,6 +189,49 @@ function Footer() {
         <Wordmark large />
       </Link>
     </footer>
+  );
+}
+function SystemStatus() {
+  return (
+    <details className="system-status">
+      <summary>
+        <i aria-hidden="true" /> System online
+      </summary>
+      <div className="status-panel">
+        <span>Website available</span>
+        <span>Projects / {String(products.length).padStart(2, "0")}</span>
+        <Link to="/#work">
+          Explore systems <ArrowUpRight size={12} />
+        </Link>
+      </div>
+    </details>
+  );
+}
+function ProjectMetadata({ product }: { product: Product }) {
+  const proof = product.researchBrief
+    ? { label: "Research brief", href: product.researchBrief.href }
+    : (product.links.find((link) => link.label === "Source code") ?? product.links[0]);
+  return (
+    <div className="project-metadata">
+      <p><span>System / </span>{product.system}</p>
+      {proof && (
+        <a href={proof.href} target="_blank" rel="noreferrer">
+          {proof.label} <ArrowUpRight size={12} />
+        </a>
+      )}
+    </div>
+  );
+}
+function SystemFlow() {
+  return (
+    <figure className="system-flow" aria-label="EveryWay system architecture">
+      <figcaption>System flow / EveryWay</figcaption>
+      <ol>
+        {["Physical world", "Sensors", "World state", "Routing", "Interface"].map((stage) => (
+          <li key={stage}>{stage}</li>
+        ))}
+      </ol>
+    </figure>
   );
 }
 function ProductArt({
@@ -322,8 +374,11 @@ function ProductChapter({
           style={{ transform: depth ? transform : "none" }}
         >
           <div className="chapter-topline">
-            <p className="eyebrow">{product.story.visualLabel}</p>
-            <span className="chapter-status">{product.status}</span>
+            <p className="eyebrow">
+              <span className="project-id">Project {String(index + 1).padStart(3, "0")}</span>
+              {" / "}{product.story.visualLabel.split(" / ")[1]}
+            </p>
+            <span className="chapter-status">Status / {product.status}</span>
           </div>
           <div className="chapter-heading">
             <div>
@@ -345,6 +400,8 @@ function ProductChapter({
             <div className="chapter-copy">
               <p className="chapter-summary">{product.summary}</p>
               <p className="muted">{product.purpose}</p>
+              <ProjectMetadata product={product} />
+              {product.id === "everyway" && <SystemFlow />}
               <Link className="text-link" to={`/products/${product.id}`}>
                 Inside {product.name} <ArrowUpRight size={20} />
               </Link>
@@ -425,6 +482,7 @@ function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
   );
   return (
     <section id="work" className="work section-wrap">
+      <span className="section-registration" aria-hidden="true">A02 / Project index</span>
       <motion.div
         className="work-intro"
         style={reduced ? undefined : { opacity, transform }}
@@ -494,6 +552,10 @@ function Home() {
       </motion.div>
       <section className="hero" ref={hero}>
         <div className="hero-atmosphere" />
+        <div className="hero-technical" aria-label="Engineering disciplines and location">
+          <span>Purdue // West Lafayette</span>
+          <span>Systems / Hardware / Software</span>
+        </div>
         <motion.div
           className="hero-copy"
           initial={reduced ? false : { opacity: 0, y: 22 }}
@@ -522,6 +584,7 @@ function Home() {
           </div>
         </motion.div>
         <div className="hero-bottom">
+          <SystemStatus />
           <span className="visualization-label">
             Wireshark <span> / Conceptual fiber-optic drone</span>
           </span>
@@ -582,6 +645,8 @@ function ProductDetail() {
           <div>
             <h2>{product.summary}</h2>
             <p className="muted">{product.purpose}</p>
+            <ProjectMetadata product={product} />
+            {product.id === "everyway" && <SystemFlow />}
             {product.researchBrief && (
               <article className="research-brief" id="research-brief">
                 <p className="eyebrow">Research brief</p>

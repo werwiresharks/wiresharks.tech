@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { MotionValue } from "motion/react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 export default function DroneScene({
   paused,
@@ -15,6 +16,8 @@ export default function DroneScene({
   const host = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const [ready, setReady] = useState(false);
+  const [batteryReleased, setBatteryReleased] = useState(false);
+  const batteryRelease = useRef(false);
   const instructionsId = useId();
   const pause = useRef(paused);
   const progressValue = useRef(flightProgress);
@@ -172,12 +175,36 @@ export default function DroneScene({
       z: number,
       material = carbon,
     ) => mesh(new THREE.BoxGeometry(w, h, d), material, x, y, z);
-    box(1.4, 0.07, 1.65, 0, 0, 0);
-    box(0.72, 0.18, 1.05, 0, 0.16, 0.1, black);
+    const rounded = (w: number, h: number, d: number, x: number, y: number, z: number,
+      material = carbon, parent: THREE.Object3D = drone) =>
+      mesh(new RoundedBoxGeometry(w, h, d, 2, 0.035), material, x, y, z, parent);
+    rounded(1.4, 0.1, 1.75, 0, 0, 0);
+    rounded(1.04, 0.22, 1.32, 0, 0.16, 0.06, black);
     for (const z of [-0.2, 0.4])
       box(0.78, 0.035, 0.12, 0, 0.265, z);
     box(0.46, 0.045, 0.36, 0, 0.09, -0.58, edge);
     box(0.13, 0.045, 0.12, 0, 0.135, -0.58, black);
+    // The carrier is fixed to the airframe; the keyed pack slides rearward.
+    const battery = new THREE.Group();
+    battery.name = "Hot-swappable battery module";
+    battery.position.set(0, -0.25, 0.05);
+    drone.add(battery);
+    rounded(0.94, 0.29, 1.24, 0, 0, 0, edge, battery);
+    rounded(0.86, 0.03, 1.12, 0, -0.156, 0, black, battery);
+    const latchMaterial = new THREE.MeshStandardMaterial({ color: 0xd52b24, roughness: 0.48, metalness: 0.3 });
+    for (const x of [-0.49, 0.49]) {
+      rounded(0.065, 0.085, 1.35, x, -0.085, 0.04, black);
+      rounded(0.03, 0.045, 1.16, x * 0.94, 0.13, 0, black, battery);
+    }
+    rounded(0.96, 0.065, 0.08, 0, -0.095, -0.63, edge);
+    rounded(0.25, 0.065, 0.055, 0, 0.065, 0.646, latchMaterial, battery);
+    // Recessed pull grip and casing seam make the separate pack legible.
+    rounded(0.36, 0.08, 0.045, 0, -0.03, 0.642, black, battery);
+    for (const x of [-0.18, 0.18])
+      rounded(0.035, 0.11, 0.055, x, -0.025, 0.65, edge, battery);
+    for (const z of [-0.3, 0, 0.3])
+      for (const x of [-0.476, 0.476])
+        mesh(new THREE.BoxGeometry(0.012, 0.1, 0.018), black, x, -0.015, z, battery);
     const rotors: THREE.Group[] = [];
     const blades: THREE.Mesh[] = [];
     const blurs: THREE.Mesh[] = [];
@@ -210,20 +237,16 @@ export default function DroneScene({
     });
     for (const x of [-1, 1])
       for (const z of [-1, 1]) {
-        const arm = box(0.14, 0.07, 2.5, x * 1.14, -0.01, z * 1.12);
-        arm.rotation.y = x * z * 0.78;
-        const reinforcement = box(
-          0.07,
-          0.025,
-          2.65,
-          x * 1.14,
-          0.045,
-          z * 1.12,
-          edge,
-        );
-        reinforcement.rotation.y = x * z * 0.78;
         const mx = x * 2.1,
           mz = z * 2.1;
+        const rootX = x * 0.55, rootZ = z * 0.63;
+        const armLength = Math.hypot(mx - rootX, mz - rootZ);
+        const armAngle = Math.atan2(mx - rootX, mz - rootZ);
+        const arm = rounded(0.2, 0.1, armLength, (mx + rootX) / 2, -0.015, (mz + rootZ) / 2);
+        arm.rotation.y = armAngle;
+        const reinforcement = box(0.075, 0.025, armLength, (mx + rootX) / 2, 0.047, (mz + rootZ) / 2, edge);
+        reinforcement.rotation.y = armAngle;
+        mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.075, 24), carbon, mx, -0.045, mz);
         mesh(
           new THREE.CylinderGeometry(0.28, 0.29, 0.25, 24),
           black,
@@ -274,9 +297,10 @@ export default function DroneScene({
           rotor,
         );
         blade.rotation.x = -Math.PI / 2;
+        blade.scale.set(0.9, 0.9, 1);
         blades.push(blade);
         const blur = mesh(
-          new THREE.CircleGeometry(1.515, 64),
+          new THREE.CircleGeometry(1.365, 64),
           blurMaterial,
           mx,
           0.4125,
@@ -292,8 +316,14 @@ export default function DroneScene({
           0.46,
           mz,
         );
-        const skid = box(0.06, 0.25, 0.08, x * 0.58, -0.14, z * 0.6, edge);
-        skid.rotation.z = x * -0.22;
+        // Splayed supports are mounted below the motors, clear of rotor discs.
+        const legTop = new THREE.Vector3(mx, -0.08, mz);
+        const legBottom = new THREE.Vector3(mx + x * 0.14, -0.82, mz + z * 0.14);
+        const legAxis = legBottom.clone().sub(legTop);
+        const legCenter = legTop.clone().add(legBottom).multiplyScalar(0.5);
+        const leg = mesh(new THREE.CylinderGeometry(0.047, 0.035, legAxis.length(), 10), edge, legCenter.x, legCenter.y, legCenter.z);
+        leg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), legAxis.normalize());
+        rounded(0.22, 0.08, 0.3, legBottom.x, -0.85, legBottom.z, black);
         mesh(
           new THREE.CylinderGeometry(0.045, 0.045, 0.03, 8),
           edge,
@@ -320,8 +350,8 @@ export default function DroneScene({
     );
     lensGlass.rotation.x = Math.PI / 2;
     const fiberCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.05, -0.035, 0.55),
-      new THREE.Vector3(0.4, -1.3, 1.7),
+      new THREE.Vector3(0.74, -0.015, 0.58),
+      new THREE.Vector3(1.15, -1.3, 1.7),
       new THREE.Vector3(2, -1.5, 2.9),
       new THREE.Vector3(4, -1.2, 3.3),
       new THREE.Vector3(5, -1.6, 4.8),
@@ -353,6 +383,7 @@ export default function DroneScene({
       elapsed = 0;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const rotorState = { throttle: 0, throttleVelocity: 0, angle: 0, hold: 0 };
+    let batteryTravel = 0;
     const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       if (!visible) {
@@ -386,12 +417,16 @@ export default function DroneScene({
       last = time;
       if (!pause.current && !reduced.matches) elapsed += delta;
       const progress =
-        reduced.matches
+        reduced.matches || pause.current
           ? 0
           : (progressValue.current?.get() ?? 0);
       const approach = THREE.MathUtils.smoothstep(progress, 0.06, 0.6);
       const exit = THREE.MathUtils.smoothstep(progress, 0.52, 1);
       const heroFlight = !!progressValue.current;
+      const batteryTarget = batteryRelease.current ? 1.65 : 0;
+      batteryTravel = reduced.matches ? batteryTarget : THREE.MathUtils.damp(batteryTravel, batteryTarget, 12, delta);
+      if (Math.abs(batteryTarget - batteryTravel) < 0.001) batteryTravel = batteryTarget;
+      battery.position.z = 0.05 + batteryTravel;
       drone.position.set(0, Math.sin(elapsed * 0.7) * 0.065, 0);
       if (heroFlight) {
         drone.position.addScaledVector(towardCamera, approach * 5.2);
@@ -458,7 +493,7 @@ export default function DroneScene({
         if (controls) controls.enabled = true;
         setReady(true);
       }
-      if (!pause.current && !reduced.matches && (!heroFlight || progress < 1))
+      if ((!pause.current && !reduced.matches && (!heroFlight || progress < 1)) || batteryTravel !== batteryTarget)
         frame = requestAnimationFrame(render);
     }
     requestRender.current = () => {
@@ -552,6 +587,13 @@ export default function DroneScene({
           </p>
           <button type="button" onClick={() => controlsRef.current?.reset()}>
             Reset view
+          </button>
+          <button type="button" aria-pressed={batteryReleased} onClick={() => {
+            batteryRelease.current = !batteryRelease.current;
+            setBatteryReleased(batteryRelease.current);
+            requestRender.current();
+          }}>
+            {batteryReleased ? "Latch battery" : "Slide battery out"}
           </button>
         </div>
       )}

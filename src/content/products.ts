@@ -8,6 +8,7 @@ export type Product = {
   summary: string;
   purpose: string;
   status: string;
+  system: string;
   story: { visualLabel: string };
   facts: { title: string; text: string; source?: string }[];
   links: Source[];
@@ -29,6 +30,7 @@ export const products: Product[] = [
     purpose:
       "Wireshark is our flagship hardware project, co-developed to explore a fiber-optic command and data connection in environments where conventional radio links face challenges. Physical engineering and software come together in one tightly coupled system.",
     status: "Research & development",
+    system: "Hardware / C++ / Fiber optics",
     researchBrief: {
       title: "Fiber-Optic Communication for Small Drones",
       summary:
@@ -69,6 +71,7 @@ export const products: Product[] = [
     purpose:
       "Sidekick brings voice interaction and local models into a native SwiftUI experience for Apple Silicon Macs. Its documented default pipeline uses local transcription and answers. An optional cloud transcription mode is available in the source; no public app release is currently listed.",
     status: "Development project",
+    system: "SwiftUI / Local AI",
     facts: [
       {
         title: "A natural conversation",
@@ -110,6 +113,7 @@ export const products: Product[] = [
     purpose:
       "Munki brings flashcards, guided lessons, and an interactive study canvas into one learning experience. Practice recalling an idea, work it through, then explain it back to Munki. The app is an unpublished development project.",
     status: "In development · unpublished",
+    system: "Lessons / Spaced review",
     image: {
       src: "/assets/munki/munki-feed-desktop.png",
       alt: "Munki development app showing a physics flashcard, spaced review controls, and study navigation",
@@ -144,6 +148,7 @@ export const products: Product[] = [
     purpose:
       "A route is only useful if it reflects the world around it. EveryWay connects sensor-observed changes to a shared digital twin, so an obstruction can become a new accessible route.",
     status: "HackGT 13 demonstration",
+    system: "ESP32-C3 / Digital twin",
     image: {
       src: "/assets/everyway/digital-twin.jpeg",
       alt: "EveryWay digital twin showing an obstacle and the route through a miniature venue",
