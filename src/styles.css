@@ -1542,7 +1542,7 @@ body {
   padding: 0;
 }
 .chapter-everyway .image-art img {
-  object-fit: cover;
+  object-fit: contain;
 }
 .image-art.everyway .art-caption {
   background: #fffffff0;
