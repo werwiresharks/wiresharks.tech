@@ -1501,6 +1501,10 @@ body {
     monospace;
   color: var(--muted);
 }
+.chapter-wireshark .chapter-number {
+  top: auto;
+  bottom: 64px;
+}
 .chapter-copy {
   padding: 8px 0;
   min-width: 0;
