@@ -1,4 +1,4 @@
-export type ProductId = "wireshark" | "sidekick" | "munki" | "everyway";
+export type ProductId = "wireshark" | "sidekick" | "munki" | "everyway" | "meditrack";
 type Source = { label: string; href: string };
 export type Product = {
   id: ProductId;
@@ -181,6 +181,46 @@ export const products: Product[] = [
         href: "https://devpost.com/software/everyway",
       },
       { label: "Source code", href: "https://github.com/useEveryWay" },
+    ],
+  },
+  {
+    id: "meditrack",
+    story: {
+      visualLabel: "05 / Small changes, made visible",
+    },
+    name: "MediTrack",
+    category: "Passive medication sensing",
+    tagline: "Small changes. A clearer signal.",
+    summary:
+      "An Arduino prototype that detects likely pill removal through changes in weight.",
+    purpose:
+      "MediTrack uses a load cell and HX711 to detect sustained weight changes, reporting likely pill removal or addition over USB serial. Interactive calibration establishes a reference for monitoring. A detected removal does not confirm ingestion.",
+    status: "Research prototype",
+    system: "Arduino / C++ / HX711",
+    image: {
+      src: "/assets/meditrack/prototype-preview.jpg",
+      alt: "MediTrack load-cell prototype holding pills beneath an Arduino IDE serial monitor",
+      caption: "MediTrack · bench prototype demonstration",
+    },
+    facts: [
+      {
+        title: "Sense small changes",
+        text: "A load cell and HX711 measure weight changes against a calibrated reference.",
+        source: "https://github.com/AliPeera0120/MediTrack/blob/main/docs/hardware.md",
+      },
+      {
+        title: "Confirm a sustained signal",
+        text: "The firmware confirms changes of at least 0.03 g sustained for 4.5 seconds, then reports likely removal or addition over USB serial.",
+        source: "https://github.com/AliPeera0120/MediTrack/blob/main/docs/firmware.md",
+      },
+      {
+        title: "A research starting point",
+        text: "The repository includes prototype firmware and a research paper. Removal is a proxy for medication use; ingestion and field performance are not established.",
+        source: "https://github.com/AliPeera0120/MediTrack/blob/main/docs/validation.md",
+      },
+    ],
+    links: [
+      { label: "Source code", href: "https://github.com/AliPeera0120/MediTrack" },
     ],
   },
 ];

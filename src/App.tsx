@@ -119,6 +119,7 @@ function Header() {
         <Link to="/products/sidekick">Sidekick</Link>
         <Link to="/products/munki">Munki</Link>
         <Link to="/products/everyway">EveryWay</Link>
+        <Link to="/products/meditrack">MediTrack</Link>
         <Link to="/#work">Projects</Link>
         <Link to="/#contact">
           Let’s talk <ArrowUpRight size={15} />
@@ -487,7 +488,7 @@ function Work({ flightProgress }: { flightProgress: MotionValue<number> }) {
         className="work-intro"
         style={reduced ? undefined : { opacity, transform }}
       >
-        <p className="eyebrow">Selected explorations / 01—04</p>
+        <p className="eyebrow">Selected explorations / 01—{String(products.length).padStart(2, "0")}</p>
         <h2>
           Different frontiers.
           <br />

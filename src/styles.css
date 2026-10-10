@@ -1324,7 +1324,7 @@ body {
 }
 .chapter-index {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }

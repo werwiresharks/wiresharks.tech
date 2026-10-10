@@ -4,6 +4,18 @@ Research checked 2026-10-07 against [tarushv.com](https://tarushv.com/), its lin
 
 ## Downloaded originals
 
+MediTrack's `public/assets/meditrack/prototype-preview.jpg` is copied unchanged
+from `media/prototype-preview.jpg` at commit
+`0d38b9a4049d70a5781f59080e654dcc62783fef` in
+[AliPeera0120/MediTrack](https://github.com/AliPeera0120/MediTrack).
+It is an 888 × 1000 still from the original bench demonstration, showing the
+Arduino serial monitor and physical load-cell prototype. The shared image
+component contains the full image within the existing frame. Project copy and
+the Arduino / C++ / HX711 system label are based on the README, firmware, and
+hardware/validation documentation. No app, BLE transport, adherence alerts,
+or ingestion verification is claimed. The source repository retains ownership
+of its original project materials.
+
 | Local file | What it depicts | Source |
 | --- | --- | --- |
 | `public/assets/everyway/digital-twin.jpeg` | EveryWay 3D twin with a sensor and route obstruction. | Portfolio-owned asset, [tarushv.com source](https://tarushv.com/assets/everyway/digital-twin.jpeg). |
