@@ -335,16 +335,18 @@ function ProductChapter({
   refs,
   nextAnchor,
   stacked,
+  stackTop,
 }: {
   product: Product;
   index: number;
   refs: ProjectRefs;
   nextAnchor?: ProjectRefs["anchor"];
   stacked: boolean;
+  stackTop: number;
 }) {
   const { scrollYProgress } = useScroll({
     target: nextAnchor ?? refs.anchor,
-    offset: ["start end", `start ${PROJECT_STACK_TOP}px`],
+    offset: ["start end", `start ${stackTop}px`],
   });
   const transform = useTransform(
     scrollYProgress,
@@ -428,6 +430,7 @@ function ProductChapter({
 function ProjectStack() {
   const reduced = useReducedMotion();
   const [stacked, setStacked] = useState(false);
+  const [stackTop, setStackTop] = useState(PROJECT_STACK_TOP);
   const [refs] = useState(() =>
     products.map(() => ({
       anchor: createRef<HTMLDivElement>(),
@@ -439,15 +442,16 @@ function ProjectStack() {
       const viewport = window.visualViewport;
       const width = Math.min(window.innerWidth, viewport?.width ?? window.innerWidth);
       const height = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
-      const available = height - PROJECT_STACK_TOP - PROJECT_STACK_BOTTOM;
-      setStacked(
-        !reduced &&
-          width >= 900 &&
-          refs.every(
-            ({ surface }) =>
-              surface.current !== null && surface.current.offsetHeight <= available,
-          ),
+      const surfaces = refs.map(({ surface }) => surface.current);
+      const ready = surfaces.every((surface) => surface !== null);
+      const tallest = Math.max(
+        ...surfaces.map((surface) => surface?.offsetHeight ?? 0),
       );
+      // Taller panels scroll through before pinning instead of disabling the whole stack.
+      setStackTop(
+        Math.min(PROJECT_STACK_TOP, height - PROJECT_STACK_BOTTOM - tallest),
+      );
+      setStacked(!reduced && width >= 900 && ready);
     };
     const observer = new ResizeObserver(measure);
     refs.forEach(({ surface }) => {
@@ -465,7 +469,7 @@ function ProjectStack() {
   return (
     <div
       className={`project-stack${stacked ? " is-stacked" : ""}`}
-      style={{ "--project-stack-top": `${PROJECT_STACK_TOP}px` } as CSSProperties}
+      style={{ "--project-stack-top": `${stackTop}px` } as CSSProperties}
     >
       {products.map((product, index) => (
         <ProductChapter
@@ -475,6 +479,7 @@ function ProjectStack() {
           refs={refs[index]}
           nextAnchor={refs[index + 1]?.anchor}
           stacked={stacked}
+          stackTop={stackTop}
         />
       ))}
     </div>
