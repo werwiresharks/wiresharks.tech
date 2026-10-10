@@ -2079,7 +2079,6 @@ body {
 }
 .hero-atmosphere {
   background: var(--paper);
-  border-bottom: 1px solid var(--line);
 }
 .hero-atmosphere::before {
   content: "";
@@ -2131,7 +2130,6 @@ body {
 }
 .hero-bottom {
   padding-top: 15px;
-  border-top: 1px solid var(--line);
 }
 .visualization-label {
   border-left: 3px solid var(--accent);
