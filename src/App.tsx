@@ -451,7 +451,7 @@ function ProjectStack() {
       setStackTop(
         Math.min(PROJECT_STACK_TOP, height - PROJECT_STACK_BOTTOM - tallest),
       );
-      setStacked(!reduced && width >= 900 && ready);
+      setStacked(!reduced && width >= 768 && ready);
     };
     const observer = new ResizeObserver(measure);
     refs.forEach(({ surface }) => {

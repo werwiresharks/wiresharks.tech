@@ -1403,7 +1403,7 @@ body {
   background: var(--ink);
   pointer-events: none;
 }
-@media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .project-stack.is-stacked .product-chapter {
     position: sticky;
     top: var(--project-stack-top);
