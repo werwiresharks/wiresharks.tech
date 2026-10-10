@@ -12,6 +12,7 @@ export type Product = {
   story: { visualLabel: string };
   facts: { title: string; text: string; source?: string }[];
   links: Source[];
+  contacts?: string[];
   researchBrief?: { title: string; summary: string; href: string; pages: number };
   image?: { src: string; alt: string; caption: string };
 };
@@ -189,6 +190,11 @@ export const products: Product[] = [
       visualLabel: "05 / Small changes, made visible",
     },
     name: "MediTrack",
+    contacts: [
+      "alipeera2009@gmail.com",
+      "aayushnerkar19@gmail.com",
+      "shishirdhana@gmail.com",
+    ],
     category: "Passive medication sensing",
     tagline: "Small changes. A clearer signal.",
     summary:

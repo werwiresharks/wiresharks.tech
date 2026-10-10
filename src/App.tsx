@@ -161,6 +161,13 @@ function Contact() {
           </span>
           <ArrowUpRight size={19} />
         </a>
+        <a className="email-link" href="mailto:apeera@engineering.upenn.edu">
+          <span>
+            <span className="contact-identifier">03 / Ali Peera</span>
+            apeera@engineering.upenn.edu
+          </span>
+          <ArrowUpRight size={19} />
+        </a>
       </Reveal>
     </section>
   );
@@ -686,6 +693,19 @@ function ProductDetail() {
               )}
             </Reveal>
           ))}
+          {product.contacts && (
+            <Reveal className="fact">
+              <h3>Team / Contact</h3>
+              {product.contacts.map((email) => (
+                <p key={email}>
+                  <a className="text-link" href={`mailto:${email}`}>
+                    {email}
+                    <ArrowUpRight size={17} />
+                  </a>
+                </p>
+              ))}
+            </Reveal>
+          )}
           {product.links.length > 0 && (
             <div className="source-links">
               {product.links.map((link) => (
