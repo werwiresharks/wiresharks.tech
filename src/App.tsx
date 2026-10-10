@@ -1,4 +1,4 @@
-import { createRef, useEffect, useRef, useState } from "react";
+import { createRef, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import {
   Link,
@@ -12,6 +12,7 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
+  CaretDown,
   Pause,
   Play,
   X,
@@ -59,23 +60,77 @@ function Wordmark({ large = false }: { large?: boolean }) {
 }
 function Header() {
   const [open, setOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const header = useRef<HTMLElement>(null);
+  const projectsMenu = useRef<HTMLDivElement>(null);
+  const projectsToggle = useRef<HTMLButtonElement>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pinned = useRef(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLElement>(null);
   const location = useLocation();
+  const clearHoverTimer = useCallback(() => {
+    if (hoverTimer.current !== null) clearTimeout(hoverTimer.current);
+    hoverTimer.current = null;
+  }, []);
+  const closeProjects = useCallback(() => {
+    clearHoverTimer();
+    pinned.current = false;
+    setProjectsOpen(false);
+  }, [clearHoverTimer]);
+  const closeNavigation = useCallback(() => {
+    closeProjects();
+    setOpen(false);
+  }, [closeProjects]);
   useEffect(() => {
     setOpen(false);
-  }, [location]);
+    setProjectsOpen(false);
+    pinned.current = false;
+    clearHoverTimer();
+  }, [location, clearHoverTimer]);
   useEffect(() => {
-    if (!open) return;
-    menu.current?.querySelector<HTMLAnchorElement>("a")?.focus();
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const onResize = () => closeNavigation();
+    desktop.addEventListener("change", onResize);
+    return () => {
+      desktop.removeEventListener("change", onResize);
+      clearHoverTimer();
+    };
+  }, [closeNavigation, clearHoverTimer]);
+  useEffect(() => {
+    if (!open && !projectsOpen) return;
+    const onOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!header.current?.contains(target)) closeNavigation();
+      else if (!projectsMenu.current?.contains(target)) closeProjects();
+    };
+    const onEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (projectsOpen) {
+        closeProjects();
+        projectsToggle.current?.focus();
+      } else {
         setOpen(false);
         toggle.current?.focus();
       }
+    };
+    document.addEventListener("pointerdown", onOutside);
+    document.addEventListener("keydown", onEscape);
+    return () => {
+      document.removeEventListener("pointerdown", onOutside);
+      document.removeEventListener("keydown", onEscape);
+    };
+  }, [open, projectsOpen, closeNavigation, closeProjects]);
+  useEffect(() => {
+    if (!open) return;
+    projectsToggle.current?.focus();
+    const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Tab") {
-        const links = menu.current?.querySelectorAll<HTMLAnchorElement>("a");
-        if (!links) return;
+        const links = Array.from(
+          menu.current?.querySelectorAll<HTMLElement>("a, button") ?? [],
+        ).filter((element) => element.getClientRects().length > 0);
+        if (!links.length) return;
         if (event.shiftKey && document.activeElement === links[0]) {
           event.preventDefault();
           toggle.current?.focus();
@@ -95,7 +150,7 @@ function Header() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
   return (
-    <header className="masthead">
+    <header ref={header} className="masthead">
       <Link className="brand-link" to="/" aria-label="Wiresharks home">
         <Wordmark />
       </Link>
@@ -105,7 +160,10 @@ function Header() {
         aria-expanded={open}
         aria-controls="navigation"
         aria-label={open ? "Close menu" : "Open menu"}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          closeProjects();
+          setOpen(!open);
+        }}
       >
         {open ? <X size={23} /> : <List size={23} />}
       </button>
@@ -115,13 +173,90 @@ function Header() {
         className={open ? "nav open" : "nav"}
         aria-label="Main navigation"
       >
-        <Link to="/products/wireshark">Wireshark</Link>
-        <Link to="/products/sidekick">Sidekick</Link>
-        <Link to="/products/munki">Munki</Link>
-        <Link to="/products/everyway">EveryWay</Link>
-        <Link to="/products/meditrack">MediTrack</Link>
-        <Link to="/#work">Projects</Link>
-        <Link to="/#contact">
+        <div
+          ref={projectsMenu}
+          className="nav-projects"
+          onPointerEnter={(event) => {
+            if (
+              event.pointerType !== "mouse" ||
+              !window.matchMedia("(min-width: 768px) and (hover: hover)").matches
+            ) return;
+            clearHoverTimer();
+            setProjectsOpen(true);
+          }}
+          onPointerLeave={() => {
+            clearHoverTimer();
+            hoverTimer.current = setTimeout(() => {
+              if (
+                !pinned.current &&
+                !projectsMenu.current?.contains(document.activeElement)
+              ) {
+                setProjectsOpen(false);
+              }
+            }, 180);
+          }}
+          onBlur={(event) => {
+            if (
+              window.matchMedia("(min-width: 768px)").matches &&
+              !event.currentTarget.contains(event.relatedTarget)
+            ) {
+              closeProjects();
+            }
+          }}
+          onKeyDown={(event) => {
+            const links = Array.from(
+              projectsMenu.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [],
+            );
+            const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              event.preventDefault();
+              pinned.current = true;
+              setProjectsOpen(true);
+              const next = index < 0
+                ? (event.key === "ArrowDown" ? 0 : links.length - 1)
+                : (index + (event.key === "ArrowDown" ? 1 : -1) + links.length) % links.length;
+              requestAnimationFrame(() => links[next]?.focus());
+            } else if (index >= 0 && (event.key === "Home" || event.key === "End")) {
+              event.preventDefault();
+              links[event.key === "Home" ? 0 : links.length - 1]?.focus();
+            }
+          }}
+        >
+          <button
+            ref={projectsToggle}
+            type="button"
+            className="projects-toggle"
+            aria-expanded={projectsOpen}
+            aria-controls="projects-navigation"
+            onClick={(event) => {
+              clearHoverTimer();
+              // The first mouse click pins a hover-open menu; keyboard activation toggles it.
+              if (projectsOpen && (pinned.current || event.detail === 0)) closeProjects();
+              else {
+                pinned.current = true;
+                setProjectsOpen(true);
+              }
+            }}
+          >
+            Projects <CaretDown size={12} aria-hidden="true" />
+          </button>
+          <div
+            id="projects-navigation"
+            className="projects-dropdown"
+            hidden={!projectsOpen}
+          >
+            {products.map((product) => (
+              <Link
+                key={product.id}
+                to={`/#story-${product.id}`}
+                onClick={closeNavigation}
+              >
+                {product.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <Link to="/#contact" onClick={closeNavigation}>
           Let’s talk <ArrowUpRight size={15} />
         </Link>
       </nav>
@@ -782,6 +917,7 @@ function NotFound() {
 }
 function RouteEffects() {
   const location = useLocation();
+  const reduced = useReducedMotion();
   useEffect(() => {
     const product = products.find(
       (item) => location.pathname === `/products/${item.id}`,
@@ -798,16 +934,26 @@ function RouteEffects() {
       );
     let cancelled = false;
     let frame = 0;
+    const projectHash = products.some((item) => location.hash === `#story-${item.id}`);
+    const scrollToTarget = () => {
+      if (cancelled) return;
+      const target = location.hash
+        ? document.getElementById(location.hash.slice(1))
+        : document.getElementById("main");
+      target?.setAttribute("tabindex", "-1");
+      target?.focus({ preventScroll: true });
+      if (location.hash) target?.scrollIntoView({
+        behavior: !reduced && projectHash ? "smooth" : "instant",
+        block: "start",
+      });
+      else window.scrollTo({ top: 0, behavior: "instant" });
+    };
     const jump = () => {
       if (cancelled) return;
       frame = requestAnimationFrame(() => {
-        const target = location.hash
-          ? document.getElementById(location.hash.slice(1))
-          : document.getElementById("main");
-        target?.setAttribute("tabindex", "-1");
-        target?.focus({ preventScroll: true });
-        if (location.hash) target?.scrollIntoView({ behavior: "instant" });
-        else window.scrollTo({ top: 0, behavior: "instant" });
+        // Let the stack's measured sticky layout commit when returning from a detail page.
+        if (projectHash) frame = requestAnimationFrame(scrollToTarget);
+        else scrollToTarget();
       });
     };
     if (location.hash) void document.fonts.ready.then(jump);
@@ -816,7 +962,7 @@ function RouteEffects() {
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [location]);
+  }, [location, reduced]);
   return null;
 }
 export default function App() {
