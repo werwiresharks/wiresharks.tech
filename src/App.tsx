@@ -276,37 +276,37 @@ function Contact() {
           </h2>
           <a
             className="contact-arrow"
-            href="mailto:apeera@engineering.upenn.edu,dasalalitheshwar@gmail.com,sgunti@purdue.edu,tkosgi@purdue.edu"
+            href="mailto:tkosgi@purdue.edu,sgunti@purdue.edu,dasalalitheshwar@gmail.com,apeera@engineering.upenn.edu"
             aria-label="Email Wiresharks"
           >
             <ArrowUpRight weight="light" />
           </a>
         </div>
-        <a className="email-link" href="mailto:apeera@engineering.upenn.edu">
+        <a className="email-link" href="mailto:tkosgi@purdue.edu">
           <span>
-            <span className="contact-identifier">01 / Ali Peera</span>
-            apeera@engineering.upenn.edu
-          </span>
-          <ArrowUpRight size={19} />
-        </a>
-        <a className="email-link" href="mailto:dasalalitheshwar@gmail.com">
-          <span>
-            <span className="contact-identifier">02 / Lalith Dasa</span>
-            dasalalitheshwar@gmail.com
+            <span className="contact-identifier">01 / Tarushv Kosgi</span>
+            tkosgi@purdue.edu
           </span>
           <ArrowUpRight size={19} />
         </a>
         <a className="email-link" href="mailto:sgunti@purdue.edu">
           <span>
-            <span className="contact-identifier">03 / Siddharth Gunti</span>
+            <span className="contact-identifier">02 / Siddharth Gunti</span>
             sgunti@purdue.edu
           </span>
           <ArrowUpRight size={19} />
         </a>
-        <a className="email-link" href="mailto:tkosgi@purdue.edu">
+        <a className="email-link" href="mailto:dasalalitheshwar@gmail.com">
           <span>
-            <span className="contact-identifier">04 / Tarushv Kosgi</span>
-            tkosgi@purdue.edu
+            <span className="contact-identifier">03 / Lalith Dasa</span>
+            dasalalitheshwar@gmail.com
+          </span>
+          <ArrowUpRight size={19} />
+        </a>
+        <a className="email-link" href="mailto:apeera@engineering.upenn.edu">
+          <span>
+            <span className="contact-identifier">04 / Ali Peera</span>
+            apeera@engineering.upenn.edu
           </span>
           <ArrowUpRight size={19} />
         </a>

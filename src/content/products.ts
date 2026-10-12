@@ -191,9 +191,9 @@ export const products: Product[] = [
     },
     name: "MediTrack",
     contacts: [
+      "shishirdhana@gmail.com",
       "alipeera2009@gmail.com",
       "aayushnerkar19@gmail.com",
-      "shishirdhana@gmail.com",
     ],
     category: "Passive medication sensing",
     tagline: "Small changes. A clearer signal.",
