@@ -99,7 +99,8 @@ p {
 }
 .masthead {
   --bar-inset: 16px;
-  --bar-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bar-height: 56px;
+  --bar-motion: 500ms cubic-bezier(0.4, 0, 0.2, 1);
   height: var(--header-height);
   position: sticky;
   top: 0;
@@ -108,6 +109,22 @@ p {
   justify-content: center;
   /* The shell keeps a constant height so the page never shifts; only the bar morphs. */
   pointer-events: none;
+}
+/* Registered so the glass gradient can fade in rather than snap on. */
+@property --glass-top {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --glass-bottom {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --glass-base {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
 }
 .masthead-bar {
   position: relative;
@@ -120,27 +137,37 @@ p {
   align-items: center;
   justify-content: space-between;
   border: 1px solid transparent;
-  border-bottom-color: #181a1b1f;
   border-radius: 0;
   pointer-events: auto;
-  background: #fffffff2;
-  box-shadow: inset 0 1px 0 #ffffff00, 0 0 0 #181a1b00;
+  background:
+    linear-gradient(180deg, var(--glass-top), var(--glass-bottom)),
+    var(--glass-base);
+  box-shadow:
+    inset 0 1px 0 #ffffff00,
+    0 0 0 1px #181a1b00,
+    0 10px 32px #181a1b00;
   transition:
-    max-width 520ms var(--bar-ease),
-    height 520ms var(--bar-ease),
-    margin-top 520ms var(--bar-ease),
-    padding 520ms var(--bar-ease),
-    border-radius 520ms var(--bar-ease),
-    border-color 520ms var(--bar-ease),
-    box-shadow 520ms var(--bar-ease);
+    max-width var(--bar-motion),
+    height var(--bar-motion),
+    margin-top var(--bar-motion),
+    padding var(--bar-motion),
+    border-radius var(--bar-motion),
+    border-color var(--bar-motion),
+    box-shadow var(--bar-motion),
+    --glass-top var(--bar-motion),
+    --glass-bottom var(--bar-motion),
+    --glass-base var(--bar-motion),
+    -webkit-backdrop-filter var(--bar-motion),
+    backdrop-filter var(--bar-motion);
 }
 .masthead.scrolled .masthead-bar {
-  max-width: min(1120px, calc(100% - 2 * var(--bar-inset)));
-  height: calc(100% - var(--bar-inset));
+  --glass-base: #fffffff2;
+  max-width: min(1200px, calc(100% - 2 * var(--bar-inset)));
+  height: var(--bar-height);
   margin-top: var(--bar-inset);
   padding: 0 clamp(14px, 2.2vw, 28px);
   border-color: #ffffffb3;
-  border-radius: 18px;
+  border-radius: 16px;
   box-shadow:
     inset 0 1px 0 #ffffff,
     0 0 0 1px #181a1b14,
@@ -150,13 +177,20 @@ p {
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
   .masthead-bar {
-    background: linear-gradient(180deg, #ffffffb8, #ffffff70), #ffffffa8;
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+    backdrop-filter: blur(0px) saturate(100%);
+  }
+  .masthead.scrolled .masthead-bar {
+    --glass-top: #ffffffb8;
+    --glass-bottom: #ffffff70;
+    --glass-base: #ffffffa8;
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     backdrop-filter: blur(20px) saturate(160%);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .masthead-bar {
+  .masthead-bar,
+  .masthead .nav > a:last-child {
     transition: none;
   }
 }
@@ -846,13 +880,14 @@ p {
   }
   .masthead {
     --bar-inset: 12px;
+    --bar-height: 52px;
   }
   .masthead-bar {
     padding: 0 18px;
   }
   .masthead.scrolled .masthead-bar {
     padding: 0 16px;
-    border-radius: 15px;
+    border-radius: 14px;
   }
   .masthead:not(.scrolled) .nav {
     left: var(--bar-inset);
@@ -2082,7 +2117,13 @@ body {
   transition:
     color 160ms ease,
     border-color 160ms ease,
-    background-color 160ms ease;
+    background-color 160ms ease,
+    padding var(--bar-motion);
+}
+@media (min-width: 768px) {
+  .masthead.scrolled .nav > a:last-child {
+    padding: 6px 11px;
+  }
 }
 .nav > a:last-child:hover {
   border-color: var(--accent);
