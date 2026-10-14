@@ -1369,6 +1369,7 @@ body {
   height: calc(100lvh - var(--header-height));
   pointer-events: none;
   z-index: 5;
+  will-change: opacity;
 }
 .hero-drone.static-drone {
   position: absolute;
@@ -1489,6 +1490,12 @@ body {
   }
   .project-stack.is-stacked .product-chapter:last-child {
     margin-bottom: 80px;
+  }
+  .project-stack.is-stacked .project-card-surface {
+    will-change: transform;
+  }
+  .project-stack.is-stacked .project-card-dim {
+    will-change: opacity;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2752,6 +2759,84 @@ body {
   .chapter-topline .eyebrow { line-height: 1.8; }
   .system-flow ol { gap: 8px; }
   .system-flow li { font-size: 8px; }
+}
+/* Each stacked mobile card fits one screen: pinned under the bar, 24px above the bottom edge. */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .project-stack.is-stacked .project-card-surface {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px);
+    height: calc(100svh - 100px);
+    min-height: 560px;
+    padding: 16px 16px 18px;
+  }
+  .project-stack.is-stacked .chapter-topline {
+    flex-direction: row;
+  }
+  .project-stack.is-stacked .chapter-status {
+    display: none;
+  }
+  .project-stack.is-stacked .chapter-heading {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    margin: 12px 0 14px;
+  }
+  .project-stack.is-stacked .chapter-heading h3 {
+    font-size: clamp(38px, 11vw, 48px);
+    margin-top: 6px;
+  }
+  .project-stack.is-stacked .chapter-heading > p {
+    flex: 0 1 140px;
+    margin: 0;
+    padding-bottom: 4px;
+    font-size: 14px;
+  }
+  .project-stack.is-stacked .chapter-body {
+    flex: 1;
+    min-height: 0;
+  }
+  .project-stack.is-stacked .chapter-visual {
+    flex: 1;
+    min-height: 150px;
+  }
+  .project-stack.is-stacked .chapter-visual .product-art {
+    height: 100%;
+  }
+  .project-stack.is-stacked .chapter-munki .image-art {
+    padding: 14px 14px 40px;
+  }
+  .project-stack.is-stacked .drone-view-controls {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .project-stack.is-stacked .drone-view-controls p {
+    display: none;
+  }
+  .project-stack.is-stacked .chapter-copy {
+    padding: 14px 0 0;
+  }
+  .project-stack.is-stacked .chapter-summary {
+    font-size: 19px;
+    margin-bottom: 8px;
+  }
+  .project-stack.is-stacked .chapter-copy > .muted {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .project-stack.is-stacked .project-metadata {
+    margin-top: 12px;
+  }
+  .project-stack.is-stacked .chapter-copy .system-flow {
+    display: none;
+  }
+  .project-stack.is-stacked .chapter-copy .text-link {
+    margin-top: 12px;
+  }
 }
 @media (max-width: 360px) {
   .system-flow ol { grid-template-columns: 1fr; gap: 8px; }

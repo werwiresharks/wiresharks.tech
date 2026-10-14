@@ -405,10 +405,15 @@ export default function DroneScene({
     );
     batchStaticMeshes(drone, blurMaterial);
     batchStaticMeshes(battery, blurMaterial);
+    // compile() skips hidden meshes; the rotor blur would otherwise compile on the first scroll.
+    blurs.forEach((blur) => (blur.visible = true));
+    renderer.compile(scene, camera);
+    blurs.forEach((blur) => (blur.visible = false));
     let visible = true,
       frame = 0,
       last = 0,
-      elapsed = 0;
+      elapsed = 0,
+      progress = 0;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const rotorState = { throttle: 0, throttleVelocity: 0, angle: 0, hold: 0 };
     let batteryTravel = 0;
@@ -449,10 +454,16 @@ export default function DroneScene({
       const delta = last ? Math.min((time - last) / 1000, 0.05) : 0;
       last = time;
       if (!pause.current && !reduced.matches) elapsed += delta;
-      const progress =
+      const progressTarget =
         reduced.matches || pause.current
           ? 0
           : (progressValue.current?.get() ?? 0);
+      // Easing toward the scroll position hides the gap between compositor scrolling and WebGL frames.
+      progress =
+        reduced.matches
+          ? progressTarget
+          : THREE.MathUtils.damp(progress, progressTarget, 10, delta);
+      if (Math.abs(progressTarget - progress) < 0.0005) progress = progressTarget;
       const approach = THREE.MathUtils.smoothstep(progress, 0.06, 0.6);
       const exit = THREE.MathUtils.smoothstep(progress, 0.52, 1);
       const heroFlight = !!progressValue.current;
@@ -526,7 +537,11 @@ export default function DroneScene({
         if (controls) controls.enabled = true;
         setReady(true);
       }
-      if ((!pause.current && !reduced.matches && (!heroFlight || progress < 1)) || batteryTravel !== batteryTarget)
+      if (
+        (!pause.current && !reduced.matches && (!heroFlight || progress < 1)) ||
+        progress !== progressTarget ||
+        batteryTravel !== batteryTarget
+      )
         frame = requestAnimationFrame(render);
     }
     requestRender.current = () => {
