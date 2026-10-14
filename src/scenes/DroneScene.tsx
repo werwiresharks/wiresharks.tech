@@ -3,6 +3,28 @@ import type { MotionValue } from "motion/react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+
+function batchStaticMeshes(group: THREE.Object3D, skip: THREE.Material) {
+  const buckets = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  for (const child of [...group.children]) {
+    if (!(child instanceof THREE.Mesh) || child.material === skip) continue;
+    child.updateMatrix();
+    const geometry = (
+      child.geometry.index ? child.geometry.toNonIndexed() : child.geometry.clone()
+    ).applyMatrix4(child.matrix);
+    child.geometry.dispose();
+    group.remove(child);
+    const bucket = buckets.get(child.material);
+    if (bucket) bucket.push(geometry);
+    else buckets.set(child.material, [geometry]);
+  }
+  buckets.forEach((geometries, material) => {
+    const merged = mergeGeometries(geometries);
+    geometries.forEach((geometry) => geometry.dispose());
+    if (merged) group.add(new THREE.Mesh(merged, material));
+  });
+}
 
 export default function DroneScene({
   paused,
@@ -43,7 +65,10 @@ export default function DroneScene({
     }
     let hasRendered = false;
     let hasSize = false;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, coarsePointer ? 1.5 : 1.6),
+    );
     renderer.setClearColor(0xffffff, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -107,6 +132,7 @@ export default function DroneScene({
       controls.maxDistance = 25;
       controls.minPolarAngle = Math.PI / 18;
       controls.maxPolarAngle = Math.PI * 0.85;
+      renderer.domElement.style.touchAction = "pan-y";
       controls.addEventListener("change", controlsChange);
       controls.addEventListener("start", controlsStart);
       controls.addEventListener("end", controlsEnd);
@@ -377,6 +403,8 @@ export default function DroneScene({
       0,
       0,
     );
+    batchStaticMeshes(drone, blurMaterial);
+    batchStaticMeshes(battery, blurMaterial);
     let visible = true,
       frame = 0,
       last = 0,
@@ -393,9 +421,14 @@ export default function DroneScene({
       } else requestRender.current();
     });
     observer.observe(element);
+    let canvasWidth = 0,
+      canvasHeight = 0;
     const resizeCanvas = () => {
       const { width, height } = element.getBoundingClientRect();
       if (!width || !height) return;
+      if (width === canvasWidth && height === canvasHeight) return;
+      canvasWidth = width;
+      canvasHeight = height;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();

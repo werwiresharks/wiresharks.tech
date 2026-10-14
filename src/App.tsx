@@ -22,6 +22,7 @@ import {
   motion,
   useReducedMotion,
   useMotionValue,
+  useMotionValueEvent,
   useScroll,
   useTransform,
 } from "motion/react";
@@ -399,9 +400,11 @@ function SystemFlow() {
 function ProductArt({
   product,
   interactive = true,
+  covered = false,
 }: {
   product: Product;
   interactive?: boolean;
+  covered?: boolean;
 }) {
   const [paused, setPaused] = useState(false);
   const reduced = useReducedMotion();
@@ -411,7 +414,10 @@ function ProductArt({
         <span className="art-caption">
           Wireshark · conceptual visualization
         </span>
-        <DroneVisual paused={paused || !!reduced} interactive={interactive} />
+        <DroneVisual
+          paused={paused || !!reduced || covered}
+          interactive={interactive}
+        />
         <button
           className="motion-toggle product-motion-toggle"
           onClick={() => setPaused(!paused)}
@@ -476,6 +482,7 @@ function ProductArt({
   );
 }
 const PROJECT_STACK_TOP = 104;
+const PROJECT_STACK_TOP_MOBILE = 76;
 const PROJECT_STACK_BOTTOM = 24;
 
 type ProjectRefs = {
@@ -490,6 +497,7 @@ function ProductChapter({
   nextAnchor,
   stacked,
   stackTop,
+  nextStackTop,
 }: {
   product: Product;
   index: number;
@@ -497,10 +505,11 @@ function ProductChapter({
   nextAnchor?: ProjectRefs["anchor"];
   stacked: boolean;
   stackTop: number;
+  nextStackTop: number;
 }) {
   const { scrollYProgress } = useScroll({
     target: nextAnchor ?? refs.anchor,
-    offset: ["start end", `start ${stackTop}px`],
+    offset: ["start end", `start ${nextStackTop}px`],
   });
   const transform = useTransform(
     scrollYProgress,
@@ -509,6 +518,10 @@ function ProductChapter({
   );
   const dim = useTransform(scrollYProgress, [0, 1], [0, 0.12]);
   const depth = stacked && !!nextAnchor;
+  const [covered, setCovered] = useState(false);
+  useMotionValueEvent(scrollYProgress, "change", (value) =>
+    setCovered(depth && value >= 1),
+  );
   return (
     <>
       <div
@@ -521,7 +534,12 @@ function ProductChapter({
       />
       <article
         className={`product-chapter chapter-${product.id}`}
-        style={{ zIndex: index + 1 }}
+        style={
+          {
+            zIndex: index + 1,
+            "--project-stack-top": `${stackTop}px`,
+          } as CSSProperties
+        }
         aria-labelledby={`story-heading-${product.id}`}
         onFocusCapture={(event) => {
           if (stacked && event.target.matches(":focus-visible")) {
@@ -556,7 +574,7 @@ function ProductChapter({
           </div>
           <div className="chapter-body">
             <div className="chapter-visual">
-              <ProductArt product={product} />
+              <ProductArt product={product} covered={covered} />
               <span className="chapter-number" aria-hidden="true">
                 0{index + 1}
               </span>
@@ -584,7 +602,9 @@ function ProductChapter({
 function ProjectStack() {
   const reduced = useReducedMotion();
   const [stacked, setStacked] = useState(false);
-  const [stackTop, setStackTop] = useState(PROJECT_STACK_TOP);
+  const [stackTops, setStackTops] = useState(() =>
+    products.map(() => PROJECT_STACK_TOP),
+  );
   const [refs] = useState(() =>
     products.map(() => ({
       anchor: createRef<HTMLDivElement>(),
@@ -592,39 +612,40 @@ function ProjectStack() {
     })),
   );
   useEffect(() => {
+    // Mobile toolbars resize the viewport mid-scroll; the small viewport keeps pinned cards still.
+    const viewportProbe = document.createElement("div");
+    viewportProbe.style.cssText =
+      "position:fixed;top:0;height:100vh;height:100svh;width:0;visibility:hidden;pointer-events:none";
+    document.body.appendChild(viewportProbe);
     const measure = () => {
-      const viewport = window.visualViewport;
-      const width = Math.min(window.innerWidth, viewport?.width ?? window.innerWidth);
-      const height = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
+      const width = window.innerWidth;
+      const height = viewportProbe.offsetHeight || window.innerHeight;
       const surfaces = refs.map(({ surface }) => surface.current);
       const ready = surfaces.every((surface) => surface !== null);
-      const tallest = Math.max(
-        ...surfaces.map((surface) => surface?.offsetHeight ?? 0),
+      const top = width >= 768 ? PROJECT_STACK_TOP : PROJECT_STACK_TOP_MOBILE;
+      // Panels taller than the viewport scroll through, then pin once their bottom edge is visible.
+      const tops = surfaces.map((surface) =>
+        Math.min(top, height - PROJECT_STACK_BOTTOM - (surface?.offsetHeight ?? 0)),
       );
-      // Taller panels scroll through before pinning instead of disabling the whole stack.
-      setStackTop(
-        Math.min(PROJECT_STACK_TOP, height - PROJECT_STACK_BOTTOM - tallest),
+      setStackTops((current) =>
+        current.every((value, index) => value === tops[index]) ? current : tops,
       );
-      setStacked(!reduced && width >= 768 && ready);
+      setStacked(!reduced && ready);
     };
     const observer = new ResizeObserver(measure);
     refs.forEach(({ surface }) => {
       if (surface.current) observer.observe(surface.current);
     });
     window.addEventListener("resize", measure);
-    window.visualViewport?.addEventListener("resize", measure);
     measure();
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", measure);
-      window.visualViewport?.removeEventListener("resize", measure);
+      viewportProbe.remove();
     };
   }, [reduced, refs]);
   return (
-    <div
-      className={`project-stack${stacked ? " is-stacked" : ""}`}
-      style={{ "--project-stack-top": `${stackTop}px` } as CSSProperties}
-    >
+    <div className={`project-stack${stacked ? " is-stacked" : ""}`}>
       {products.map((product, index) => (
         <ProductChapter
           key={product.id}
@@ -633,7 +654,8 @@ function ProjectStack() {
           refs={refs[index]}
           nextAnchor={refs[index + 1]?.anchor}
           stacked={stacked}
-          stackTop={stackTop}
+          stackTop={stackTops[index]}
+          nextStackTop={stackTops[index + 1] ?? stackTops[index]}
         />
       ))}
     </div>
