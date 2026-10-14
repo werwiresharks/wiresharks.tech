@@ -61,6 +61,7 @@ function Wordmark({ large = false }: { large?: boolean }) {
 function Header() {
   const [open, setOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const header = useRef<HTMLElement>(null);
   const projectsMenu = useRef<HTMLDivElement>(null);
   const projectsToggle = useRef<HTMLButtonElement>(null);
@@ -88,6 +89,12 @@ function Header() {
     pinned.current = false;
     clearHoverTimer();
   }, [location, clearHoverTimer]);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 24);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)");
     const onResize = () => closeNavigation();
@@ -150,116 +157,121 @@ function Header() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
   return (
-    <header ref={header} className="masthead">
-      <Link className="brand-link" to="/" aria-label="Wiresharks home">
-        <Wordmark />
-      </Link>
-      <button
-        ref={toggle}
-        className="menu-toggle"
-        aria-expanded={open}
-        aria-controls="navigation"
-        aria-label={open ? "Close menu" : "Open menu"}
-        onClick={() => {
-          closeProjects();
-          setOpen(!open);
-        }}
-      >
-        {open ? <X size={23} /> : <List size={23} />}
-      </button>
-      <nav
-        id="navigation"
-        ref={menu}
-        className={open ? "nav open" : "nav"}
-        aria-label="Main navigation"
-      >
-        <div
-          ref={projectsMenu}
-          className="nav-projects"
-          onPointerEnter={(event) => {
-            if (
-              event.pointerType !== "mouse" ||
-              !window.matchMedia("(min-width: 768px) and (hover: hover)").matches
-            ) return;
-            clearHoverTimer();
-            setProjectsOpen(true);
-          }}
-          onPointerLeave={() => {
-            clearHoverTimer();
-            hoverTimer.current = setTimeout(() => {
-              if (
-                !pinned.current &&
-                !projectsMenu.current?.contains(document.activeElement)
-              ) {
-                setProjectsOpen(false);
-              }
-            }, 180);
-          }}
-          onBlur={(event) => {
-            if (
-              window.matchMedia("(min-width: 768px)").matches &&
-              !event.currentTarget.contains(event.relatedTarget)
-            ) {
-              closeProjects();
-            }
-          }}
-          onKeyDown={(event) => {
-            const links = Array.from(
-              projectsMenu.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [],
-            );
-            const index = links.indexOf(document.activeElement as HTMLAnchorElement);
-            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-              event.preventDefault();
-              pinned.current = true;
-              setProjectsOpen(true);
-              const next = index < 0
-                ? (event.key === "ArrowDown" ? 0 : links.length - 1)
-                : (index + (event.key === "ArrowDown" ? 1 : -1) + links.length) % links.length;
-              requestAnimationFrame(() => links[next]?.focus());
-            } else if (index >= 0 && (event.key === "Home" || event.key === "End")) {
-              event.preventDefault();
-              links[event.key === "Home" ? 0 : links.length - 1]?.focus();
-            }
+    <header
+      ref={header}
+      className={scrolled ? "masthead scrolled" : "masthead"}
+    >
+      <div className="masthead-bar">
+        <Link className="brand-link" to="/" aria-label="Wiresharks home">
+          <Wordmark />
+        </Link>
+        <button
+          ref={toggle}
+          className="menu-toggle"
+          aria-expanded={open}
+          aria-controls="navigation"
+          aria-label={open ? "Close menu" : "Open menu"}
+          onClick={() => {
+            closeProjects();
+            setOpen(!open);
           }}
         >
-          <button
-            ref={projectsToggle}
-            type="button"
-            className="projects-toggle"
-            aria-expanded={projectsOpen}
-            aria-controls="projects-navigation"
-            onClick={(event) => {
+          {open ? <X size={23} /> : <List size={23} />}
+        </button>
+        <nav
+          id="navigation"
+          ref={menu}
+          className={open ? "nav open" : "nav"}
+          aria-label="Main navigation"
+        >
+          <div
+            ref={projectsMenu}
+            className="nav-projects"
+            onPointerEnter={(event) => {
+              if (
+                event.pointerType !== "mouse" ||
+                !window.matchMedia("(min-width: 768px) and (hover: hover)").matches
+              ) return;
               clearHoverTimer();
-              // The first mouse click pins a hover-open menu; keyboard activation toggles it.
-              if (projectsOpen && (pinned.current || event.detail === 0)) closeProjects();
-              else {
+              setProjectsOpen(true);
+            }}
+            onPointerLeave={() => {
+              clearHoverTimer();
+              hoverTimer.current = setTimeout(() => {
+                if (
+                  !pinned.current &&
+                  !projectsMenu.current?.contains(document.activeElement)
+                ) {
+                  setProjectsOpen(false);
+                }
+              }, 180);
+            }}
+            onBlur={(event) => {
+              if (
+                window.matchMedia("(min-width: 768px)").matches &&
+                !event.currentTarget.contains(event.relatedTarget)
+              ) {
+                closeProjects();
+              }
+            }}
+            onKeyDown={(event) => {
+              const links = Array.from(
+                projectsMenu.current?.querySelectorAll<HTMLAnchorElement>("a") ?? [],
+              );
+              const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
                 pinned.current = true;
                 setProjectsOpen(true);
+                const next = index < 0
+                  ? (event.key === "ArrowDown" ? 0 : links.length - 1)
+                  : (index + (event.key === "ArrowDown" ? 1 : -1) + links.length) % links.length;
+                requestAnimationFrame(() => links[next]?.focus());
+              } else if (index >= 0 && (event.key === "Home" || event.key === "End")) {
+                event.preventDefault();
+                links[event.key === "Home" ? 0 : links.length - 1]?.focus();
               }
             }}
           >
-            Projects <CaretDown size={12} aria-hidden="true" />
-          </button>
-          <div
-            id="projects-navigation"
-            className="projects-dropdown"
-            hidden={!projectsOpen}
-          >
-            {products.map((product) => (
-              <Link
-                key={product.id}
-                to={`/#story-${product.id}`}
-                onClick={closeNavigation}
-              >
-                {product.name}
-              </Link>
-            ))}
+            <button
+              ref={projectsToggle}
+              type="button"
+              className="projects-toggle"
+              aria-expanded={projectsOpen}
+              aria-controls="projects-navigation"
+              onClick={(event) => {
+                clearHoverTimer();
+                // The first mouse click pins a hover-open menu; keyboard activation toggles it.
+                if (projectsOpen && (pinned.current || event.detail === 0)) closeProjects();
+                else {
+                  pinned.current = true;
+                  setProjectsOpen(true);
+                }
+              }}
+            >
+              Projects <CaretDown size={12} aria-hidden="true" />
+            </button>
+            <div
+              id="projects-navigation"
+              className="projects-dropdown"
+              hidden={!projectsOpen}
+            >
+              {products.map((product) => (
+                <Link
+                  key={product.id}
+                  to={`/#story-${product.id}`}
+                  onClick={closeNavigation}
+                >
+                  {product.name}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-        <Link to="/#contact" onClick={closeNavigation}>
-          Let’s talk <ArrowUpRight size={15} />
-        </Link>
-      </nav>
+          <Link to="/#contact" onClick={closeNavigation}>
+            Let’s talk <ArrowUpRight size={15} />
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }

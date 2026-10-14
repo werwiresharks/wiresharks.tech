@@ -98,31 +98,66 @@ p {
   line-height: 1.5;
 }
 .masthead {
-  height: calc(var(--header-height) - 16px);
-  margin: 16px 20px 0;
+  --bar-inset: 16px;
+  --bar-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  height: var(--header-height);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  /* The shell keeps a constant height so the page never shifts; only the bar morphs. */
+  pointer-events: none;
+}
+.masthead-bar {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  margin-top: 0;
   padding: 0 clamp(20px, 3vw, 44px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid #ffffffd9;
+  border: 1px solid transparent;
+  border-bottom-color: #181a1b1f;
+  border-radius: 0;
+  pointer-events: auto;
+  background: #fffffff2;
+  box-shadow: inset 0 1px 0 #ffffff00, 0 0 0 #181a1b00;
+  transition:
+    max-width 520ms var(--bar-ease),
+    height 520ms var(--bar-ease),
+    margin-top 520ms var(--bar-ease),
+    padding 520ms var(--bar-ease),
+    border-radius 520ms var(--bar-ease),
+    border-color 520ms var(--bar-ease),
+    box-shadow 520ms var(--bar-ease);
+}
+.masthead.scrolled .masthead-bar {
+  max-width: min(1120px, calc(100% - 2 * var(--bar-inset)));
+  height: calc(100% - var(--bar-inset));
+  margin-top: var(--bar-inset);
+  padding: 0 clamp(14px, 2.2vw, 28px);
+  border-color: #ffffffb3;
   border-radius: 18px;
-  position: sticky;
-  top: 16px;
-  z-index: 20;
-  background: #fafbfcf2;
   box-shadow:
     inset 0 1px 0 #ffffff,
-    inset 0 -1px 0 #142b4308,
-    0 0 0 1px #142b4310,
-    0 8px 28px #142b430d;
+    0 0 0 1px #181a1b14,
+    0 10px 32px #181a1b17;
 }
 @supports (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
-  .masthead {
-    background: linear-gradient(180deg, #ffffff8c, #ffffff26), #fafbfc99;
-    -webkit-backdrop-filter: blur(26px) saturate(160%);
-    backdrop-filter: blur(26px) saturate(160%);
+  .masthead-bar {
+    background: linear-gradient(180deg, #ffffffb8, #ffffff70), #ffffffa8;
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .masthead-bar {
+    transition: none;
   }
 }
 .wordmark {
@@ -810,11 +845,18 @@ p {
     font-size: 21px;
   }
   .masthead {
-    height: calc(var(--header-height) - 12px);
-    margin: 12px 12px 0;
+    --bar-inset: 12px;
+  }
+  .masthead-bar {
     padding: 0 18px;
-    top: 12px;
+  }
+  .masthead.scrolled .masthead-bar {
+    padding: 0 16px;
     border-radius: 15px;
+  }
+  .masthead:not(.scrolled) .nav {
+    left: var(--bar-inset);
+    right: var(--bar-inset);
   }
   .menu-toggle {
     display: grid;
@@ -2018,26 +2060,8 @@ body {
   }
 }
 
-.masthead {
-  height: calc(var(--header-height) - 16px);
-  margin: 16px 16px 0;
-  padding: 0 clamp(14px, 2.2vw, 32px);
-  top: 16px;
-  width: auto;
-  border: 1px solid #181a1b26;
-  border-radius: 9px;
-  background: #fffffff2;
+.masthead-bar {
   color: var(--ink);
-  box-shadow: 0 8px 28px #181a1b12;
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  backdrop-filter: blur(20px) saturate(150%);
-}
-@supports (
-  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
-) {
-  .masthead {
-    background: linear-gradient(180deg, #ffffffb8, #ffffff70), #ffffffa8;
-  }
 }
 .nav > a {
   border-bottom: 1px solid transparent;
@@ -2068,7 +2092,8 @@ body {
   color: var(--accent);
 }
 @media (min-width: 768px) and (max-width: 900px) {
-  .masthead {
+  .masthead-bar,
+  .masthead.scrolled .masthead-bar {
     padding-right: 14px;
     padding-left: 14px;
   }
@@ -2402,13 +2427,6 @@ body {
   border-top-color: var(--ink);
 }
 @media (max-width: 767px) {
-  .masthead {
-    height: calc(var(--header-height) - 12px);
-    margin: 12px 12px 0;
-    padding: 0 18px;
-    top: 12px;
-    border-radius: 9px;
-  }
   .hero h1 {
     max-width: none;
   }
