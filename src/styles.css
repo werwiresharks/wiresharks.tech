@@ -470,47 +470,79 @@ p {
   line-height: 1;
 }
 
-/* Home tiles */
-.tiles {
+/* Home: the two parts */
+.split {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--line);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 0;
-  margin-bottom: clamp(80px, 10vw, 160px);
+  gap: 0 clamp(32px, 5vw, 96px);
+  padding-top: clamp(64px, 8vw, 120px);
+  padding-bottom: clamp(64px, 8vw, 120px);
 }
-.tile {
-  position: relative;
+.split-item {
   display: grid;
-  gap: 14px;
-  padding: clamp(28px, 4vw, 64px);
-  background: var(--bg);
-  transition: background-color 180ms ease;
+  align-content: start;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ink);
 }
-.tile:hover {
-  background: var(--surface);
-}
-.tile h2 {
-  margin-top: clamp(32px, 5vw, 80px);
+.split-item h2 {
   font-size: clamp(40px, 5vw, 80px);
   letter-spacing: -0.05em;
   line-height: 1;
 }
-.tile p {
-  max-width: 440px;
+.split-item p {
+  max-width: 460px;
   color: var(--muted);
 }
-.tile svg {
-  position: absolute;
-  top: clamp(28px, 4vw, 64px);
-  right: clamp(28px, 4vw, 64px);
+.split-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+.split-cta svg {
   color: var(--accent);
   transition: transform 180ms var(--ease);
 }
-.tile:hover svg {
-  transform: translateX(4px);
+.split-item:hover .split-cta svg {
+  transform: translateX(3px);
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.stats > div {
+  display: grid;
+  gap: 10px;
+  padding: clamp(24px, 3vw, 40px) clamp(20px, 2.4vw, 32px) clamp(24px, 3vw, 40px) 0;
+  border-top: 1px solid var(--ink);
+}
+.stats b {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: clamp(34px, 3.6vw, 56px);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.stats span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.domains {
+  padding-top: clamp(64px, 8vw, 120px);
+  padding-bottom: clamp(80px, 10vw, 160px);
+}
+.domains ul {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 32px;
+  font-size: clamp(22px, 2.6vw, 40px);
+  letter-spacing: -0.035em;
+}
+.domains li:nth-child(even) {
+  color: var(--muted);
 }
 
 /* Product pages */
@@ -561,9 +593,13 @@ p {
 .block {
   padding-top: clamp(48px, 6vw, 88px);
 }
+main > .block:last-child {
+  padding-bottom: clamp(80px, 10vw, 160px);
+}
 .block > h2 {
   margin-top: 14px;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
+  max-width: 16ch;
   font-size: clamp(30px, 3.4vw, 52px);
   letter-spacing: -0.045em;
   line-height: 1.05;
@@ -579,6 +615,102 @@ p {
   font-size: clamp(20px, 2.2vw, 30px);
   letter-spacing: -0.03em;
   color: var(--muted);
+}
+.stack {
+  border-top: 1px solid var(--ink);
+}
+.stack li {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) minmax(0, 2fr);
+  gap: 12px clamp(16px, 3vw, 48px);
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+.stack span {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding-top: 5px;
+}
+.stack h3 {
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+.stack p {
+  color: var(--muted);
+  max-width: 560px;
+}
+.pipeline {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--ink);
+}
+.pipeline li {
+  position: relative;
+  padding: 24px 20px 32px 0;
+}
+.pipeline li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 1px;
+  height: 100%;
+  background: var(--line);
+}
+.pipeline li + li {
+  padding-left: 20px;
+}
+.pipeline span {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+.pipeline h3 {
+  margin-top: 28px;
+  font-size: 19px;
+  letter-spacing: -0.03em;
+}
+.pipeline p {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px clamp(32px, 5vw, 96px);
+  align-items: end;
+}
+.two-col > div > h2 {
+  margin-top: 14px;
+  font-size: clamp(30px, 3.4vw, 52px);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+.two-col > div > .muted {
+  margin-top: 18px;
+  max-width: 520px;
+}
+.two-col .lineage {
+  margin-top: 0;
+  display: grid;
+  gap: 0;
+  font-size: 20px;
+}
+.two-col .lineage li {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.release-inline {
+  display: grid;
+  justify-items: start;
+  gap: 24px;
+}
+.release-inline b {
+  font-weight: 500;
+  color: var(--ink);
 }
 .release {
   margin-top: clamp(80px, 10vw, 160px);
@@ -627,24 +759,6 @@ p {
   font-size: 20px;
   letter-spacing: -0.02em;
 }
-.next {
-  padding-top: clamp(64px, 8vw, 120px);
-  padding-bottom: clamp(80px, 10vw, 160px);
-}
-.next p:last-child {
-  margin-top: 12px;
-  font-size: clamp(24px, 2.6vw, 36px);
-  letter-spacing: -0.03em;
-  color: var(--muted);
-}
-.next b {
-  font-weight: 500;
-  color: var(--ink);
-}
-.nav > a.active {
-  border-bottom-color: var(--ink);
-}
-
 /* Footer */
 .footer {
   border-top: 3px solid var(--ink);
@@ -715,6 +829,19 @@ p {
 
 /* Tablet */
 @media (max-width: 1100px) {
+  .pipeline {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pipeline li + li::before {
+    display: none;
+  }
+  .pipeline li + li {
+    padding-left: 0;
+  }
+  .pipeline li {
+    border-bottom: 1px solid var(--line);
+  }
   .features,
   .features-4,
   .spec {
@@ -786,18 +913,25 @@ p {
   .release-large .countdown-live {
     font-size: clamp(36px, 12vw, 56px);
   }
-  .tiles,
   .features,
   .features-4,
-  .spec {
+  .spec,
+  .split,
+  .two-col,
+  .pipeline {
     grid-template-columns: 1fr;
   }
-  .tile {
-    padding: 28px var(--pad);
+  .split-item + .split-item {
+    margin-top: 40px;
   }
-  .tile svg {
-    top: 28px;
-    right: var(--pad);
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stack li {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .stack p {
+    grid-column: 2;
   }
   .release > div {
     align-items: flex-start;
