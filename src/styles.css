@@ -340,7 +340,7 @@ p {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(closest-side, #ffffffd9 30%, #ffffff00 100%);
+  background: radial-gradient(closest-side, #ffffff99 25%, #ffffff00 85%);
 }
 .tpe-canvas {
   display: block;
@@ -363,10 +363,37 @@ p {
   width: min(80vw, 640px);
 }
 .hero-copy {
+  position: relative;
+  isolation: isolate;
   display: grid;
   justify-items: center;
   text-align: center;
   pointer-events: none;
+}
+/* Soft halo behind the text so particles recede where type sits. */
+.hero-copy::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -8% -12%;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    #fffffff0 0%,
+    #ffffffdb 50%,
+    #ffffff80 74%,
+    #ffffff26 90%,
+    #ffffff00 100%
+  );
+}
+.hero .eyebrow,
+.hero .countdown span {
+  color: #4a4e51;
+  text-shadow: 0 0 10px #ffffff, 0 0 2px #ffffff;
+}
+.hero .countdown b,
+.hero h1 {
+  text-shadow: 0 0 18px #ffffffcc;
 }
 .hero-copy a {
   pointer-events: auto;
