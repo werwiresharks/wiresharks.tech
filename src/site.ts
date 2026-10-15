@@ -3,17 +3,9 @@ export const CONTACT_EMAIL = "hello@wiresharks.tech";
 export const CONTACT_HREF = `mailto:${CONTACT_EMAIL}`;
 
 export const NAV = [
-  { id: "talos", label: "Talos" },
-  { id: "autonomy", label: "Autonomy" },
-  { id: "talon", label: "Talon-1" },
-  { id: "philosophy", label: "Philosophy" },
+  { to: "/talos", label: "Talos" },
+  { to: "/talon", label: "Talon-1" },
 ] as const;
 
-export type Status = "implemented" | "development" | "research" | "roadmap";
-
-export const STATUS_LABEL: Record<Status, string> = {
-  implemented: "Implemented",
-  development: "In development",
-  research: "Research",
-  roadmap: "Roadmap",
-};
+/** Talon-1 release: midnight, December 25, 2026, US Eastern. */
+export const RELEASE = new Date("2026-12-25T00:00:00-05:00");

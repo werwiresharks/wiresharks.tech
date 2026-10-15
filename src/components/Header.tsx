@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { ArrowUpRight, List, X } from "@phosphor-icons/react";
-import { NAV } from "../site";
+import { CONTACT_HREF, NAV } from "../site";
 import { Wordmark } from "./Wordmark";
 
 export function Header() {
@@ -79,13 +79,13 @@ export function Header() {
         </button>
         <nav id="navigation" ref={menu} className={open ? "nav open" : "nav"} aria-label="Main navigation">
           {NAV.map((item) => (
-            <Link key={item.id} to={`/#${item.id}`} onClick={() => setOpen(false)}>
+            <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
               {item.label}
-            </Link>
+            </NavLink>
           ))}
-          <Link className="nav-cta" to="/#contact" onClick={() => setOpen(false)}>
+          <a className="nav-cta" href={CONTACT_HREF} onClick={() => setOpen(false)}>
             Contact <ArrowUpRight size={14} />
-          </Link>
+          </a>
         </nav>
       </div>
     </header>

@@ -3,38 +3,15 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
 import { Header } from "./components/Header";
 import { Wordmark } from "./components/Wordmark";
-import { Hero } from "./sections/Hero";
-import { TalosSection } from "./sections/TalosSection";
-import { AutonomySection } from "./sections/AutonomySection";
-import { TalonSection } from "./sections/TalonSection";
-import { PhilosophySection } from "./sections/PhilosophySection";
-import { CompanySection } from "./sections/CompanySection";
+import { Home } from "./pages/Home";
+import { Talos } from "./pages/Talos";
+import { Talon } from "./pages/Talon";
 import { CONTACT_EMAIL, CONTACT_HREF, NAV } from "./site";
 
-const TITLE = "Wiresharks | Talos. Autonomy you can inspect.";
-
-function Home() {
-  return (
-    <>
-      <Hero />
-      <TalosSection />
-      <AutonomySection />
-      <TalonSection />
-      <PhilosophySection />
-      <CompanySection />
-    </>
-  );
-}
-
 function NotFound() {
-  useEffect(() => {
-    document.title = "Page not found | Wiresharks";
-    return () => {
-      document.title = TITLE;
-    };
-  }, []);
   return (
     <section className="not-found section-wrap">
+      <title>Page not found | Wiresharks</title>
       <p className="eyebrow">404</p>
       <h1>This page does not exist.</h1>
       <Link className="button" to="/">
@@ -50,7 +27,7 @@ function Footer() {
       <div className="footer-top">
         <nav aria-label="Footer">
           {NAV.map((item) => (
-            <Link key={item.id} to={`/#${item.id}`}>
+            <Link key={item.to} to={item.to}>
               {item.label}
             </Link>
           ))}
@@ -65,31 +42,16 @@ function Footer() {
       </Link>
       <p className="footer-meta">
         <span>© {new Date().getFullYear()} Wiresharks</span>
-        <span>West Lafayette, Indiana</span>
       </p>
     </footer>
   );
 }
 
-/** Scroll to hash targets after navigation, and to the top otherwise. */
-function ScrollManager() {
-  const location = useLocation();
+function ScrollToTop() {
+  const { pathname } = useLocation();
   useEffect(() => {
-    let frame = requestAnimationFrame(() => {
-      frame = 0;
-      if (location.hash) {
-        const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
-        if (target) {
-          target.setAttribute("tabindex", "-1");
-          target.focus({ preventScroll: true });
-          target.scrollIntoView({ block: "start" });
-          return;
-        }
-      }
-      window.scrollTo({ top: 0, behavior: "instant" });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [location]);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
   return null;
 }
 
@@ -99,12 +61,13 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <ScrollManager />
+      <ScrollToTop />
       <Header />
       <main id="main">
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* The former project portfolio now lives in repository history only. */}
+          <Route path="/talos" element={<Talos />} />
+          <Route path="/talon" element={<Talon />} />
           <Route path="/products/*" element={<Navigate to="/" replace />} />
           <Route path="/research/*" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
