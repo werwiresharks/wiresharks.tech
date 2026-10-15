@@ -56,15 +56,15 @@ export function Home() {
         <TalosStage engine={engine} frame={frame} interactive className="hero-stage" />
         <div className="hero-copy">
           <Reveal as="h1">The world's most dangerous AI.</Reveal>
-          <Reveal as="p" delay={70}>
+          <Reveal as="p" delay={70} className="hero-glass">
             A local, open-weight cybersecurity model and the autonomous agent built around it.
           </Reveal>
           <Reveal className="hero-links" delay={140}>
-            <Link className="learn" to="/talon">
-              Talon-1<span aria-hidden="true"> ›</span>
+            <Link className="hero-cta primary" to="/talon">
+              Talon-1<span className="arrow" aria-hidden="true">→</span>
             </Link>
-            <Link className="learn" to="/talos">
-              Talos<span aria-hidden="true"> ›</span>
+            <Link className="hero-cta ghost" to="/talos">
+              Talos<span className="arrow" aria-hidden="true">→</span>
             </Link>
           </Reveal>
         </div>

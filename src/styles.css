@@ -1888,3 +1888,80 @@ main > .block:last-of-type {
 .spec dd {
   text-align: right;
 }
+
+/* ---- Hero: frosted-glass description + pill CTAs (client-requested,
+        intentionally overrides the no-glass house rule) ---- */
+.hero-glass {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 22px;
+  box-shadow: 0 8px 32px rgba(24, 26, 27, 0.06);
+  padding: 18px 30px;
+  color: #181a1b;
+  text-shadow: none;
+}
+.hero-links {
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 54px;
+  padding: 0 26px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease),
+    background-color 0.2s var(--ease);
+}
+.hero-cta .arrow {
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.2s var(--ease);
+}
+.hero-cta:hover .arrow {
+  transform: translateX(3px);
+}
+.hero-cta.primary {
+  background: #171717;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(24, 26, 27, 0.16);
+}
+.hero-cta.primary .arrow {
+  color: #ff5a4d;
+}
+.hero-cta.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(24, 26, 27, 0.22);
+}
+.hero-cta.ghost {
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(24, 26, 27, 0.14);
+  color: #171717;
+  box-shadow: 0 6px 20px rgba(24, 26, 27, 0.05);
+}
+.hero-cta.ghost .arrow {
+  color: var(--accent);
+}
+.hero-cta.ghost:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-cta,
+  .hero-cta .arrow {
+    transition: none;
+  }
+  .hero-cta:hover {
+    transform: none;
+  }
+}
