@@ -225,6 +225,11 @@ p {
     transition: none;
   }
 }
+.brand-link {
+  display: inline-flex;
+  padding: 5px 9px 6px 10px;
+  border: 2px solid var(--accent);
+}
 .wordmark {
   font-weight: 600;
   letter-spacing: -1px;
