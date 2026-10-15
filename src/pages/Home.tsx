@@ -8,14 +8,8 @@ import { useIdleEngine } from "../talos/react/hooks.ts";
 export function Home() {
   const engine = useIdleEngine();
   const frame = useCallback((w: number, h: number) => {
-    if (w >= 768) {
-      const top = 80;
-      const usable = h - top - 40;
-      const radius = Math.min(w * 0.19, usable * 0.36);
-      return { x: w * 0.7, y: top + usable * 0.5, radius };
-    }
-    const radius = Math.min(w * 0.33, h * 0.21);
-    return { x: w / 2, y: radius * 1.55 + 12, radius };
+    const top = w >= 768 ? 80 : 64;
+    return { x: w / 2, y: top + (h - top) / 2, radius: Math.min(w * 0.4, (h - top) * 0.38) };
   }, []);
 
   return (
