@@ -229,8 +229,6 @@ p {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 5px 9px 6px 8px;
-  border: 2px solid var(--accent);
 }
 .logo-mark {
   width: 31px;
