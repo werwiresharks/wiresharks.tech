@@ -40,8 +40,12 @@ export function Home() {
   const engine = useIdleEngine();
   const frame = useCallback((w: number, h: number) => {
     const top = w >= 768 ? 96 : 64;
-    const radius = Math.min(w * (w < 768 ? 0.4 : 0.22), (h - top) * 0.34);
-    return { x: w / 2, y: top + (h - top) * 0.72, radius };
+    const avail = h - top;
+    // The authority ring is ~1.24x the orb radius; keep the whole ring inside
+    // the hero with a margin so it never clips at the bottom edge.
+    const byHeight = (avail * 0.82) / 2 / 1.24;
+    const radius = Math.min(w * (w < 768 ? 0.4 : 0.22), byHeight);
+    return { x: w / 2, y: top + avail * 0.52, radius };
   }, []);
 
   return (
