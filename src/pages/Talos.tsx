@@ -34,7 +34,6 @@ export function Talos() {
       <title>Talos | Wiresharks</title>
       <header className="page-head section-wrap">
         <div>
-          <p className="eyebrow eyebrow-rule">Talos · The agent</p>
           <h1>The world's most capable harness.</h1>
           <p className="page-lede">
             Talos is a model-independent autonomous agent platform. It keeps the strongest parts
@@ -46,8 +45,6 @@ export function Talos() {
       </header>
 
       <Feature
-        index="01"
-        eyebrow="Engines"
         title="Three engines. One workspace."
         panel={
           <Registry
@@ -69,8 +66,6 @@ export function Talos() {
       </Feature>
 
       <Feature
-        index="02"
-        eyebrow="Swarms"
         title="Parallel workers. Durable checkpoints."
         flip
         panel={
@@ -97,8 +92,6 @@ export function Talos() {
       </Feature>
 
       <Feature
-        index="03"
-        eyebrow="Skills and memory"
         title="Skills on demand. Memory that lasts."
         panel={
           <Registry
@@ -124,8 +117,6 @@ export function Talos() {
       </Feature>
 
       <Feature
-        index="04"
-        eyebrow="First vertical"
         title="Authorized repository security review."
         flip
         panel={
@@ -153,9 +144,8 @@ export function Talos() {
       >
         <p>The first thing Talos ships end to end.</p>
         <ol className="steps">
-          {STEPS.map(([name, text], i) => (
+          {STEPS.map(([name, text]) => (
             <li key={name}>
-              <span className="mono">{String(i + 1).padStart(2, "0")}</span>
               <b>{name}</b>
               <span>{text}</span>
             </li>
@@ -164,12 +154,10 @@ export function Talos() {
       </Feature>
 
       <section className="block section-wrap" aria-labelledby="arch-title">
-        <p className="eyebrow">Architecture</p>
         <h2 id="arch-title">Eight layers. One system.</h2>
         <ol className="stack">
-          {LAYERS.map(([name, text], i) => (
+          {LAYERS.map(([name, text]) => (
             <li key={name}>
-              <span>{String(i + 1).padStart(2, "0")}</span>
               <h3>{name}</h3>
               <p>{text}</p>
             </li>
@@ -178,7 +166,6 @@ export function Talos() {
       </section>
 
       <section className="block section-wrap" aria-labelledby="lineage-title">
-        <p id="lineage-title" className="eyebrow">Inherits from</p>
         <ul className="lineage">
           {LINEAGE.map((name) => (
             <li key={name}>{name}</li>

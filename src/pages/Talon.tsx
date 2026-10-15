@@ -41,7 +41,6 @@ export function Talon() {
       <title>Talon-1 | Wiresharks</title>
       <header className="page-head section-wrap">
         <div>
-          <p className="eyebrow eyebrow-rule">Talon-1 · The model</p>
           <h1>The world's most dangerous model.</h1>
           <p className="page-lede">
             A locally runnable, fine-tuned, abliterated open-weight model built for frontier-level
@@ -52,8 +51,6 @@ export function Talon() {
       </header>
 
       <Feature
-        index="01"
-        eyebrow="Abliterated"
         title="Nothing held back."
         panel={
           <Compare
@@ -76,8 +73,6 @@ export function Talon() {
       </Feature>
 
       <Feature
-        index="02"
-        eyebrow="Local"
         title="Runs on your machine. Stays there."
         flip
         panel={
@@ -107,8 +102,6 @@ export function Talon() {
       </Feature>
 
       <Feature
-        index="03"
-        eyebrow="Specialized"
         title="Six disciplines. One model."
         panel={
           <Registry
@@ -125,9 +118,8 @@ export function Talon() {
         }
       >
         <ol className="steps">
-          {DOMAINS.map(([name, text], i) => (
+          {DOMAINS.map(([name, text]) => (
             <li key={name}>
-              <span className="mono">{String(i + 1).padStart(2, "0")}</span>
               <b>{name}</b>
               <span>{text}</span>
             </li>
@@ -140,12 +132,10 @@ export function Talon() {
       </Feature>
 
       <section className="block section-wrap" aria-labelledby="pipeline-title">
-        <p className="eyebrow">How it is made</p>
         <h2 id="pipeline-title">Not trained from scratch. Sharpened.</h2>
         <ol className="pipeline">
-          {PIPELINE.map(([name, text], i) => (
+          {PIPELINE.map(([name, text]) => (
             <li key={name}>
-              <span>{String(i + 1).padStart(2, "0")}</span>
               <h3>{name}</h3>
               <p>{text}</p>
             </li>
@@ -153,9 +143,34 @@ export function Talon() {
         </ol>
       </section>
 
+      <Feature
+        title="Benchmarked in the open."
+        tone="tint"
+        flip
+        panel={
+          <Console
+            title="talon-1 / eval"
+            lines={[
+              "$ talos eval talon-1 --suite cyber-bench --compare base,abliterated",
+              "running 1,200 tasks · vuln-id, re, secure-coding, soc",
+              "",
+              "talon-1        ███████████████████  topline",
+              "abliterated    ████████████▌        base + no refusals",
+              "base model     ███████████▏         foundation",
+              "",
+              "results publish with the weights · reproducible harness",
+            ]}
+          />
+        }
+      >
+        <p>
+          Talon-1 ships with reproducible benchmarks against its base, its abliterated variant,
+          leading open-weight models and frontier models. The harness is public.
+        </p>
+      </Feature>
+
       <section className="block two-col section-wrap" aria-labelledby="spec-title">
         <div>
-          <p className="eyebrow">Specification</p>
           <h2 id="spec-title">Frontier-class is the target, not the claim.</h2>
           <p className="muted">
             Talon-1 ships with reproducible benchmarks against its base, its abliterated variant,

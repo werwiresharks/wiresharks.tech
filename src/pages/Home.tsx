@@ -1,36 +1,17 @@
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "@phosphor-icons/react";
 import { Countdown } from "../components/Countdown";
-import { Feature } from "../components/Feature";
+import { Tile } from "../components/Tile";
+import { Reveal } from "../components/Reveal";
 import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
-import { Stack } from "../components/Stack";
-import { Compare } from "../components/mock/Compare";
 import { Console } from "../components/mock/Console";
 import { TaskGraph } from "../components/mock/TaskGraph";
+import { Compare } from "../components/mock/Compare";
+import { Registry } from "../components/mock/Registry";
 import { TalosStage } from "../talos/react/TalosStage";
 import { useIdleEngine } from "../talos/react/hooks.ts";
-
-const PRIVACY: [string, string][] = [
-  ["Prompts", "Never leave the machine"],
-  ["Weights", "Yours, on disk"],
-  ["Network", "Not required"],
-  ["Logs", "Local only"],
-];
-
-const STACK: [string, string][] = [
-  ["Runtime", "Hermes"],
-  ["Engine", "Claude Code"],
-  ["Engine", "Codex"],
-  ["Inference", "llama.cpp"],
-  ["Inference", "vLLM"],
-  ["Inference", "Apple Silicon"],
-  ["Protocol", "MCP"],
-  ["OS", "macOS"],
-  ["OS", "Windows"],
-  ["OS", "Linux"],
-];
+import { CONTACT_HREF } from "../site";
 
 const FAQ: [string, string][] = [
   [
@@ -58,56 +39,44 @@ const FAQ: [string, string][] = [
 export function Home() {
   const engine = useIdleEngine();
   const frame = useCallback((w: number, h: number) => {
-    if (w < 1024) {
-      const radius = Math.min(w * 0.3, 140);
-      return { x: w / 2, y: 80 + radius, radius };
-    }
-    return { x: w * 0.74, y: h * 0.5, radius: Math.min(w * 0.17, h * 0.34) };
+    const top = w >= 768 ? 96 : 64;
+    const radius = Math.min(w * (w < 768 ? 0.4 : 0.22), (h - top) * 0.34);
+    return { x: w / 2, y: top + (h - top) * 0.72, radius };
   }, []);
 
   return (
     <>
       <title>Wiresharks | The world's most dangerous AI.</title>
+
       <section className="hero" aria-labelledby="hero-title">
         <TalosStage engine={engine} frame={frame} interactive className="hero-stage" />
-        <div className="hero-copy section-wrap">
-          <p className="eyebrow eyebrow-rule">Wiresharks / Talos · Talon-1</p>
-          <h1 id="hero-title">The world's most dangerous AI.</h1>
-          <p className="hero-sub">
+        <div className="hero-copy">
+          <Reveal as="h1">The world's most dangerous AI.</Reveal>
+          <Reveal as="p" delay={70}>
             A local, open-weight cybersecurity model and the autonomous agent built around it.
-            For red teams, security researchers and defense. No cloud. No refusals.
-          </p>
-          <div className="hero-actions">
-            <Link className="button" to="/talon">
-              Talon-1 <ArrowRight size={14} />
+          </Reveal>
+          <Reveal className="hero-links" delay={140}>
+            <Link className="learn" to="/talon">
+              Talon-1<span aria-hidden="true"> ›</span>
             </Link>
-            <Link className="button button-ghost" to="/talos">
-              Talos <ArrowRight size={14} />
+            <Link className="learn" to="/talos">
+              Talos<span aria-hidden="true"> ›</span>
             </Link>
-          </div>
+          </Reveal>
+        </div>
+        <div className="hero-foot">
           <Countdown />
         </div>
       </section>
 
-      <section className="section-wrap lead-panel" aria-label="Example">
-        <Compare
-          prompt="Reproduce CVE-2024-3094 (xz-utils backdoor) in a sandboxed lab so we can validate the production patch."
-          answer={[
-            "Built lab/ with xz 5.6.0 and 5.6.1 from source.",
-            "Wrote repro.sh: triggers the sshd hook via the planted ifunc.",
-            "Wrote MITIGATION.md with the patch diff and a YARA rule.",
-            "Verified: patched build no longer resolves RSA_public_decrypt.",
-          ]}
-          refusal="I can't help with creating proof-of-concept exploits or offensive tooling, even for publicly disclosed vulnerabilities."
-        />
-      </section>
-
-      <Feature
-        index="01"
-        eyebrow="The model"
-        title="Answers what other models won't."
-        cta={{ to: "/talon", label: "Explore Talon-1" }}
-        panel={
+      <Tile
+        id="talon"
+        tone="ink"
+        size="tall"
+        name="Talon-1"
+        tagline="The world's most dangerous model. Local, open-weight, and done refusing."
+        links={[{ to: "/talon", label: "Learn more" }]}
+        visual={
           <Console
             title="talon-1 / local"
             lines={[
@@ -116,33 +85,25 @@ export function Home() {
               "loaded in 3.1s on Apple M4 Max (metal)",
               "context 128k · tools on · network off",
               "",
-              "$ talos ask \"triage the findings in scan.json by exploitability\"",
-              "reading scan.json (142 findings)",
+              "$ talos ask \"triage scan.json by exploitability\"",
               "3 critical · 11 high · 128 informational",
               "critical/1  CVE-2024-3094  reachable from sshd",
-              "critical/2  CWE-78         unsanitized exec in deploy.sh:41",
-              "critical/3  CWE-502        pickle.loads on user upload",
+              "critical/2  CWE-78         exec in deploy.sh:41",
+              "critical/3  CWE-502        pickle.loads on upload",
             ]}
           />
         }
-      >
-        <p>
-          Talon-1 is a 27B open-weight model, abliterated and then fine-tuned on vulnerability
-          research, reverse engineering, secure coding, SOC analysis and authorized red teaming.
-        </p>
-        <p>
-          It runs on one machine, offline, inside Talos or behind any OpenAI-compatible endpoint
-          you host yourself.
-        </p>
-      </Feature>
+      />
 
-      <Feature
-        index="02"
-        eyebrow="The agent"
-        title="Every engine. One harness."
-        cta={{ to: "/talos", label: "Explore Talos" }}
-        flip
-        panel={
+      <Tile
+        id="talos"
+        tone="tint"
+        size="tall"
+        name="Talos"
+        tagline="The world's most capable harness. Every engine, one workspace, nothing merged unreviewed."
+        links={[{ to: "/talos", label: "Learn more" }]}
+        visualFirst
+        visual={
           <TaskGraph
             root={{ name: "Security review · acme/api", model: "talon-1" }}
             workers={[
@@ -155,41 +116,69 @@ export function Home() {
             ]}
           />
         }
-      >
-        <p>
-          Talos is built on Hermes Agent and adds first-class engines for Claude Code and Codex.
-          It splits a task across parallel workers, each in its own worktree, and verifies every
-          result with a second model before it lands.
-        </p>
-        <p>Skills load on demand. Memory persists across sessions. Nothing merges unreviewed.</p>
-      </Feature>
+      />
 
-      <section className="statement section-wrap" aria-labelledby="statement-title">
-        <p className="eyebrow">Local by design</p>
-        <h2 id="statement-title">
-          Runs here.
-          <br />
-          Stays here.
-        </h2>
-        <dl className="privacy">
-          {PRIVACY.map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
+      <Tile
+        tone="light"
+        name="Skills on demand. Memory that lasts."
+        tagline="A versioned skill registry and durable, source-aware memory, so every run starts smarter than the last."
+        visual={
+          <Registry
+            title="talos / registry"
+            rows={[
+              { key: "sec", name: "Repository security review", meta: "v4 · 20 evals · active", active: true },
+              { key: "swarm", name: "Fan-out coverage", meta: "v2 · 12 evals" },
+              { key: "review", name: "Cross-model review", meta: "v3 · 9 evals", active: true },
+              { key: "mem", name: "Durable memory · 1,284 entries", meta: "provenance · confidence · expiry" },
+            ]}
+          />
+        }
+      />
+
+      <section className="bento section-wrap" aria-label="What makes it different">
+        <Reveal className="bento-cell cell-wide" delay={0}>
+          <div className="bento-text">
+            <h3>Runs here. Stays here.</h3>
+            <p>Prompts, outputs and weights never leave your machine. No network after install, no telemetry to turn off.</p>
+          </div>
+        </Reveal>
+        <Reveal className="bento-cell cell-dark" delay={70}>
+          <div className="bento-text">
+            <h3>Answers what others won't.</h3>
+            <p>Abliterated, so it stops refusing, then fine-tuned so it actually helps with real security work.</p>
+          </div>
+        </Reveal>
+        <Reveal className="bento-cell cell-tint" delay={140}>
+          <div className="bento-text">
+            <h3>Open weights.</h3>
+            <p>The model, its evaluations and the Talos harness ship together, for you to run and inspect.</p>
+          </div>
+        </Reveal>
+        <Reveal className="bento-cell cell-release" delay={210}>
+          <div className="bento-text">
+            <h3>December 25, 2026.</h3>
+            <Countdown />
+          </div>
+        </Reveal>
       </section>
 
-      <section className="block section-wrap" aria-labelledby="stack-title">
-        <p className="eyebrow">Integrations</p>
-        <h2 id="stack-title">Fits the tools you already run.</h2>
-        <p className="block-lede">
-          Keep the coding tools you already use. Talos drives them. Talon-1 runs under any
-          inference backend you prefer.
-        </p>
-        <Stack items={STACK} />
-      </section>
+      <Tile
+        tone="light"
+        name="One prompt. Two answers."
+        tagline="The same request to Talon-1 and to a typical hosted model."
+        visual={
+          <Compare
+            prompt="Reproduce CVE-2024-3094 (xz-utils backdoor) in a sandboxed lab so we can validate the production patch."
+            answer={[
+              "Built lab/ with xz 5.6.0 and 5.6.1 from source.",
+              "Wrote repro.sh: triggers the sshd hook via the planted ifunc.",
+              "Wrote MITIGATION.md with the patch diff and a YARA rule.",
+              "Verified: patched build no longer resolves RSA_public_decrypt.",
+            ]}
+            refusal="I can't help with creating proof-of-concept exploits or offensive tooling, even for publicly disclosed vulnerabilities."
+          />
+        }
+      />
 
       <Faq items={FAQ} />
 
@@ -197,6 +186,10 @@ export function Home() {
         title="No cloud. No refusals."
         text="Talon-1 weights, evaluations and the Talos harness ship together on December 25, 2026."
       />
+
+      <p className="sr-only">
+        <a href={CONTACT_HREF}>Contact Wiresharks</a>
+      </p>
     </>
   );
 }

@@ -1204,3 +1204,687 @@ main > .block:last-of-type {
     flex-direction: column;
   }
 }
+
+/* ============================================================
+   Apple-style product tiles (taste-skill: one-motif direction)
+   Keeps brand colours and Geist / Geist Mono. Overrides earlier
+   section styles where the layout changed to centered tiles.
+   ============================================================ */
+:root {
+  --body: 16px;
+  --small: 13px;
+  --lead: 19px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  will-change: opacity, transform;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.learn {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  font-size: clamp(17px, 1.5vw, 21px);
+  font-weight: 500;
+  line-height: 1;
+}
+.learn span {
+  display: inline-block;
+  transition: transform 0.2s var(--ease);
+}
+.learn:hover span {
+  transform: translateX(4px);
+}
+.learn-light {
+  color: #ff6b63;
+}
+
+/* Hero: centered headline over the particle motif, apple.com style */
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: clamp(104px, 17vh, 220px);
+  text-align: center;
+  overflow: hidden;
+  margin-top: calc(-1 * var(--header-height));
+}
+.hero-stage {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.hero-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 60% at 50% 22%, #ffffffe6 0%, #ffffff40 46%, #ffffff00 68%);
+}
+.hero-copy {
+  max-width: 940px;
+  padding: 0 var(--pad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.hero-copy h1 {
+  font-size: clamp(44px, 6.6vw, 112px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  max-width: 15ch;
+}
+.hero-copy p {
+  font-size: clamp(19px, 2.1vw, 28px);
+  line-height: 1.35;
+  color: var(--muted);
+  max-width: 34ch;
+}
+.hero-links {
+  display: flex;
+  gap: 30px;
+  margin-top: 4px;
+}
+.hero-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(20px, 4vh, 44px);
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--pad);
+}
+
+/* Product tiles */
+.ptile {
+  padding: clamp(80px, 11vw, 150px) var(--pad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(40px, 5vw, 72px);
+  text-align: center;
+  overflow: hidden;
+}
+.ptile.size-tall {
+  min-height: 94svh;
+  justify-content: center;
+}
+.ptile.visual-first {
+  flex-direction: column-reverse;
+}
+.ptile.tone-light {
+  background: #fff;
+  color: var(--ink);
+}
+.ptile.tone-tint {
+  background: var(--surface);
+  color: var(--ink);
+}
+.ptile.tone-dark {
+  background: #111314;
+  color: #fff;
+}
+.ptile.tone-ink {
+  background: var(--ink);
+  color: #fff;
+}
+.ptile-head {
+  max-width: 940px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.ptile-head h2 {
+  font-size: clamp(40px, 5.4vw, 88px);
+  font-weight: 600;
+  letter-spacing: -0.038em;
+  line-height: 1.02;
+}
+.ptile-text,
+.ptile-head > p {
+  font-size: clamp(19px, 2vw, 27px);
+  line-height: 1.4;
+  max-width: 44ch;
+  color: inherit;
+}
+.ptile-text p + p {
+  margin-top: 0.7em;
+}
+.tone-light .ptile-text,
+.tone-tint .ptile-text,
+.tone-light .ptile-head > p,
+.tone-tint .ptile-head > p {
+  color: var(--muted);
+}
+.tone-ink .ptile-text,
+.tone-dark .ptile-text,
+.tone-ink .ptile-head > p,
+.tone-dark .ptile-head > p {
+  color: rgba(255, 255, 255, 0.76);
+}
+.ptile-links {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.ptile-visual {
+  width: 100%;
+  max-width: 1040px;
+}
+.ptile-visual .panel {
+  text-align: left;
+  margin: 0 auto;
+}
+
+/* Bento grid */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-top: clamp(24px, 4vw, 48px);
+  padding-bottom: clamp(24px, 4vw, 48px);
+}
+.bento-cell {
+  border-radius: 22px;
+  padding: clamp(28px, 3vw, 48px);
+  min-height: 300px;
+  display: flex;
+  align-items: flex-end;
+}
+.cell-wide,
+.cell-release {
+  grid-column: 1 / -1;
+}
+.cell-wide {
+  background: #eef0f1;
+}
+.cell-tint {
+  background: var(--surface);
+}
+.cell-dark {
+  background: var(--ink);
+  color: #fff;
+}
+.cell-release {
+  background: var(--ink);
+  color: #fff;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 22px;
+}
+.bento-text h3 {
+  font-size: clamp(24px, 2.4vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.bento-text p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 42ch;
+}
+.cell-dark .bento-text p,
+.cell-release .bento-text p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Countdown, in the brand text face */
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.countdown ol {
+  display: flex;
+  gap: clamp(18px, 2.4vw, 40px);
+}
+.countdown li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.countdown b {
+  font-family: "Geist", system-ui, sans-serif;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(32px, 3.2vw, 46px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.countdown span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.countdown-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+.countdown-live {
+  font-size: clamp(24px, 3vw, 40px);
+  font-weight: 500;
+}
+.tone-ink .countdown span,
+.tone-ink .countdown-note,
+.cell-release .countdown span,
+.cell-release .countdown-note,
+.closing .countdown span,
+.closing .countdown-note {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* Closing as a centered dark tile */
+.closing {
+  background: var(--ink);
+  color: #fff;
+  padding: clamp(88px, 11vw, 150px) var(--pad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 22px;
+  border: 0;
+}
+.closing h2 {
+  font-size: clamp(36px, 5vw, 76px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.03;
+}
+.closing p {
+  font-size: clamp(18px, 2vw, 24px);
+  color: rgba(255, 255, 255, 0.76);
+  max-width: 46ch;
+}
+.closing-foot {
+  margin-top: 10px;
+}
+
+/* FAQ without a kicker label */
+.faq {
+  padding-top: clamp(80px, 10vw, 140px);
+  padding-bottom: clamp(80px, 10vw, 140px);
+}
+.faq h2 {
+  font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-align: center;
+  margin-bottom: clamp(32px, 4vw, 56px);
+}
+
+/* Stack grid: no monospace kicker */
+.stack-kind {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 767px) {
+  .bento {
+    grid-template-columns: 1fr;
+  }
+  .cell-dark,
+  .cell-tint {
+    grid-column: 1 / -1;
+  }
+  .bento-cell {
+    min-height: 220px;
+  }
+  .hero-foot {
+    position: static;
+    margin-top: clamp(32px, 8vh, 72px);
+    padding-bottom: 40px;
+  }
+  .hero {
+    min-height: auto;
+    padding-bottom: 0;
+  }
+}
+
+/* taste-skill fixes: contrast, countdown face, filled FAQ, richer ink */
+.learn {
+  color: #b01c16;
+}
+.countdown span,
+.countdown-note,
+.countdown-live {
+  font-family: "Geist", system-ui, sans-serif;
+}
+.tone-light .ptile-text,
+.tone-tint .ptile-text,
+.tone-light .ptile-head > p,
+.tone-tint .ptile-head > p,
+.hero-copy p {
+  color: #4a4e51;
+}
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.faq details {
+  border: 0;
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 4px 22px;
+}
+.faq summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 0;
+  font-size: clamp(17px, 1.6vw, 20px);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary span {
+  color: var(--accent);
+  font-size: 26px;
+  line-height: 1;
+  transition: transform 0.2s var(--ease);
+}
+.faq details[open] summary span {
+  transform: rotate(45deg);
+}
+.faq details p {
+  padding: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4a4e51;
+  max-width: 62ch;
+}
+
+/* taste-skill: tile-aware link colour, Geist panel chrome, FAQ tidy */
+.tone-ink .learn,
+.tone-dark .learn {
+  color: #ff6b63;
+}
+.mono {
+  font-family: "Geist", system-ui, sans-serif;
+}
+.panel-bar span,
+.graph-root,
+.graph-workers,
+.registry li,
+.steps li,
+.stack-kind {
+  font-family: "Geist", system-ui, sans-serif;
+}
+.console pre {
+  font-family: var(--mono);
+}
+.faq-list details,
+.faq-list {
+  border: 0 !important;
+}
+.panel-bar span {
+  font-size: 13px;
+}
+
+.tag { font-size: 13px; }
+
+/* taste-skill: panels read as product UI in the brand face; only the
+   terminal transcript stays monospace (real code in <pre>). */
+.panel,
+.panel * {
+  font-family: "Geist", system-ui, sans-serif;
+}
+.console pre,
+.console pre * {
+  font-family: var(--mono);
+}
+.panel [class*="meta"],
+.registry li span,
+.graph-workers li span,
+.compare .tag {
+  font-size: 13px;
+}
+
+.compare-refused .refused {
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 13px;
+}
+.faq summary span {
+  font-family: "Geist", system-ui, sans-serif;
+}
+
+/* Hero legibility: keep the copy clear, let the orb sit lower */
+.hero-stage::after {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #fffffff2 24%,
+    #ffffff8c 40%,
+    #ffffff26 52%,
+    #ffffff00 62%
+  );
+}
+
+/* Bottom scrim so the countdown stays legible over the lower orb */
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(0deg, #ffffff 0%, #ffffffcc 36%, #ffffff00 100%);
+}
+
+/* ---- Talos / Talon subpages: apply the tile house style ---- */
+/* Fix: learn-light must win over the base .learn colour on dark fields */
+.learn.learn-light {
+  color: #ff6b63;
+}
+
+/* Lists become filled cards, no hairlines */
+.steps,
+.pipeline,
+.stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.steps li,
+.pipeline li,
+.stack li {
+  border: 0 !important;
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.steps li b,
+.pipeline li h3,
+.stack li h3 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.steps li span:last-child,
+.pipeline li p,
+.stack li p {
+  font-size: 15px;
+  color: #4a4e51;
+  line-height: 1.5;
+}
+.lineage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.lineage li {
+  border: 0 !important;
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #4a4e51;
+}
+.spec {
+  border: 0 !important;
+}
+.spec > div {
+  border: 0 !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.spec dt {
+  font-family: "Geist", system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 13px;
+  color: var(--muted);
+}
+.stackgrid li {
+  border: 0 !important;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+/* Centered subpage section headings to match the tiles */
+.block,
+.statement,
+.two-col {
+  text-align: center;
+  padding-top: clamp(72px, 9vw, 130px);
+  padding-bottom: clamp(72px, 9vw, 130px);
+  border: 0 !important;
+}
+.block > h2,
+.statement h2,
+.two-col h2 {
+  font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 0 auto 32px;
+  max-width: 18ch;
+}
+.block-lede,
+.two-col .muted {
+  max-width: 50ch;
+  margin: 0 auto 36px;
+  color: #4a4e51;
+  font-size: 17px;
+}
+.two-col {
+  display: block;
+}
+.two-col .spec-list {
+  max-width: 620px;
+  margin: 0 auto;
+  text-align: left;
+}
+.page-head {
+  text-align: center;
+  border: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-top: clamp(120px, 16vh, 220px);
+  padding-bottom: clamp(48px, 6vw, 80px);
+}
+.page-head h1 {
+  font-size: clamp(44px, 6vw, 96px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.page-lede {
+  max-width: 48ch;
+  margin: 0 auto;
+  font-size: clamp(18px, 2vw, 24px);
+  color: #4a4e51;
+}
+
+@media (max-width: 420px) {
+  .ptile-head h2 {
+    font-size: 30px;
+  }
+  .closing h2 {
+    font-size: 32px;
+  }
+  .page-head h1 {
+    font-size: 40px;
+  }
+}
+
+/* Remove remaining hairlines on subpage lists */
+.pipeline,
+.steps,
+.stack,
+.spec,
+.spec > div {
+  border: 0 !important;
+}
+.spec {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.spec > div {
+  padding: 14px 0;
+  background: var(--surface);
+  border-radius: 10px;
+  padding-left: 16px;
+  padding-right: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.spec dd {
+  text-align: right;
+}

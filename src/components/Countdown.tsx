@@ -4,8 +4,8 @@ import { RELEASE } from "../site";
 const UNITS = [
   ["Days", 86400],
   ["Hours", 3600],
-  ["Min", 60],
-  ["Sec", 1],
+  ["Minutes", 60],
+  ["Seconds", 1],
 ] as const;
 
 function useNow() {
@@ -21,15 +21,13 @@ export function Countdown() {
   const left = Math.max(0, Math.floor((RELEASE.getTime() - useNow()) / 1000));
   if (left === 0) {
     return (
-      <div className="countdown">
-        <p className="eyebrow">Talon-1</p>
-        <p className="countdown-live">Out now.</p>
+      <div className="countdown" data-ui>
+        <p className="countdown-live">Talon-1 is out now.</p>
       </div>
     );
   }
   return (
-    <div className="countdown">
-      <p className="eyebrow">Talon-1 / Dec 25</p>
+    <div className="countdown" data-ui>
       <ol role="timer" aria-label="Time until Talon-1">
         {UNITS.map(([label, size], i) => {
           const value = i === 0 ? Math.floor(left / size) : Math.floor((left % UNITS[i - 1][1]) / size);
@@ -41,6 +39,7 @@ export function Countdown() {
           );
         })}
       </ol>
+      <p className="countdown-note">Until Talon-1 · December 25, 2026</p>
     </div>
   );
 }

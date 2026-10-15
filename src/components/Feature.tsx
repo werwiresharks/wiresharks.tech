@@ -1,40 +1,48 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "@phosphor-icons/react";
+import { Reveal } from "./Reveal";
 
-/** A numbered section: copy on the left, a product panel on the right. */
+/**
+ * A centered product section in the apple.com manner: a title, a short lead,
+ * the working panel below, on a toned field. `index`/`eyebrow` are accepted
+ * for older callers but not shown — the title and position carry the section.
+ */
 export function Feature({
-  index,
-  eyebrow,
   title,
   children,
   cta,
   panel,
   flip = false,
+  tone = "light",
 }: {
-  index: string;
-  eyebrow: string;
+  index?: string;
+  eyebrow?: string;
   title: string;
   children: ReactNode;
   cta?: { to: string; label: string };
   panel: ReactNode;
   flip?: boolean;
+  tone?: "light" | "tint" | "dark" | "ink";
 }) {
   return (
-    <section className={`feature section-wrap${flip ? " is-flipped" : ""}`} aria-labelledby={`f-${index}`}>
-      <div className="feature-copy">
-        <p className="eyebrow">
-          {index} · {eyebrow}
-        </p>
-        <h2 id={`f-${index}`}>{title}</h2>
-        <div className="feature-text">{children}</div>
+    <section className={`ptile tone-${tone}${flip ? " visual-first" : ""}`} aria-label={title}>
+      <div className="ptile-head">
+        <Reveal as="h2">{title}</Reveal>
+        <Reveal className="ptile-text" delay={70}>
+          {children}
+        </Reveal>
         {cta && (
-          <Link className="button button-ghost" to={cta.to}>
-            {cta.label} <ArrowRight size={14} />
-          </Link>
+          <Reveal className="ptile-links" delay={140}>
+            <Link className="learn" to={cta.to}>
+              {cta.label}
+              <span aria-hidden="true"> ›</span>
+            </Link>
+          </Reveal>
         )}
       </div>
-      <div className="feature-panel">{panel}</div>
+      <Reveal className="ptile-visual" delay={180}>
+        {panel}
+      </Reveal>
     </section>
   );
 }

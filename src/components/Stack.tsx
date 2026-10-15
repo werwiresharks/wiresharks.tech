@@ -4,7 +4,7 @@ export function Stack({ items }: { items: [string, string][] }) {
     <ul className="stackgrid">
       {items.map(([kind, name]) => (
         <li key={name}>
-          <span className="mono">{kind}</span>
+          <span className="stack-kind">{kind}</span>
           <b>{name}</b>
         </li>
       ))}
