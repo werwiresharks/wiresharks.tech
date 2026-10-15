@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { ArrowUpRight, List, X } from "@phosphor-icons/react";
 import { CONTACT_HREF, NAV } from "../site";
+import { LogoMark } from "./LogoMark";
 import { Wordmark } from "./Wordmark";
 
 export function Header() {
@@ -64,6 +65,7 @@ export function Header() {
     <header ref={header} className={`masthead${scrolled ? " scrolled" : ""}${open ? " menu-open" : ""}`}>
       <div className="masthead-bar">
         <Link className="brand-link" to="/" aria-label="Wiresharks home">
+          <LogoMark />
           <Wordmark />
         </Link>
         <button
