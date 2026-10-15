@@ -26,6 +26,13 @@ export function Reveal({
       setShown(true);
       return;
     }
+    // Content already on screen at load (the hero) plays its entrance right
+    // away instead of waiting on the observer, so it can never sit invisible.
+    const rect = node.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      const id = window.setTimeout(() => setShown(true), 20);
+      return () => window.clearTimeout(id);
+    }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

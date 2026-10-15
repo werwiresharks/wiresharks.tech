@@ -241,19 +241,24 @@ export class TalosRenderer implements TalosView {
     canvas.addEventListener("webglcontextlost", onLost);
     this.cleanups.push(() => canvas.removeEventListener("webglcontextlost", onLost));
     if (this.options.interactive) {
+      // Listen on the window, not the stage: the stage is pointer-events: none
+      // so the decorative canvas can never intercept clicks on content above it.
       const move = (event: PointerEvent) => {
         const rect = host.getBoundingClientRect();
-        this.pointer = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-        this.start();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
+        this.pointer = inside ? { x, y } : null;
+        if (inside) this.start();
       };
       const leave = () => {
         this.pointer = null;
       };
-      host.addEventListener("pointermove", move, { passive: true });
-      host.addEventListener("pointerleave", leave);
+      window.addEventListener("pointermove", move, { passive: true });
+      document.documentElement.addEventListener("pointerleave", leave);
       this.cleanups.push(() => {
-        host.removeEventListener("pointermove", move);
-        host.removeEventListener("pointerleave", leave);
+        window.removeEventListener("pointermove", move);
+        document.documentElement.removeEventListener("pointerleave", leave);
       });
     }
   }

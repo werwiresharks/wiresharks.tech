@@ -1965,3 +1965,53 @@ main > .block:last-of-type {
     transform: none;
   }
 }
+
+/* ---- Hero: genuinely transparent glass, and layering that keeps the
+        decorative globe from ever intercepting clicks ---- */
+.hero-glass {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+  border-radius: 24px;
+}
+/* Lighter top scrim: protects the headline, lets the globe show behind the
+   description instead of washing it out with a white glow. */
+.hero-stage::after {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #fffffff0 16%,
+    #ffffff8c 26%,
+    #ffffff00 38%
+  );
+}
+.hero-stage,
+.hero-stage *,
+.hero-stage::after,
+.hero::after {
+  pointer-events: none;
+}
+.hero-copy {
+  position: relative;
+  z-index: 2;
+}
+.hero-links,
+.hero-cta {
+  pointer-events: auto;
+}
+.hero-cta {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.hero-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.hero-foot {
+  z-index: 1;
+}
