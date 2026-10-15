@@ -20,6 +20,9 @@ export function Home() {
         <div className="hero-copy section-wrap">
           <p className="eyebrow eyebrow-rule">Wiresharks</p>
           <h1 id="hero-title">The world's most dangerous AI.</h1>
+          <p className="hero-sub">
+            An autonomous agent harness and an abliterated cybersecurity model, built to work as one.
+          </p>
           <Countdown />
           <div className="hero-actions">
             <Link className="button" to="/talon">
@@ -35,13 +38,19 @@ export function Home() {
         <Link className="tile" to="/talos">
           <span className="eyebrow">01 / Harness</span>
           <h2>Talos</h2>
-          <p>The world's most capable harness.</p>
+          <p>
+            The world's most capable harness. Hermes at the core, with skills, memory, subagent
+            swarms and every major coding engine in one system.
+          </p>
           <ArrowRight size={20} />
         </Link>
         <Link className="tile" to="/talon">
           <span className="eyebrow">02 / Model</span>
           <h2>Talon-1</h2>
-          <p>The world's most dangerous model.</p>
+          <p>
+            The world's most dangerous model. Fine-tuned for security work, abliterated, and
+            released with open weights on December 25.
+          </p>
           <ArrowRight size={20} />
         </Link>
       </section>
