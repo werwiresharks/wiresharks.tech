@@ -68,7 +68,7 @@ const ROOT_ACTION_ANGLE = (38 * Math.PI) / 180;
 const TRACE_ANGLE = (-138 * Math.PI) / 180;
 const MAX_TRACES = 3;
 const RING_MARGIN = 0.24;
-const ACTION_SHARE = 0.035;
+const ACTION_SHARE = 0.05;
 
 function rootRadius(childCount: number) {
   return childCount === 0 ? 1 : childCount > 4 ? 0.6 : 0.66;
@@ -255,7 +255,7 @@ export function computeLayout(model: TalosModel): Layout {
       tone = "action-proposed";
     } else if (action.state === "awaiting") {
       distanceFromCenter = ringRadius - 0.06;
-      radius = 0.17;
+      radius = 0.22;
       flatten = { nx, ny, amount: 0.8 };
       tone = "action-awaiting";
       holdAngle = angle;

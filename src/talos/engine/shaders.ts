@@ -19,7 +19,7 @@ void main() {
   vec3 p = position;
   // Internal motion: small, seeded drift whose speed follows activity.
   float speed = 0.6 + activity * 2.2;
-  float amp = (0.006 + activity * 0.022) * uScale;
+  float amp = 0.006 + activity * 0.022;
   p += amp * vec3(
     sin(uTime * speed * (0.8 + seed) + seed * 40.0),
     cos(uTime * speed * (0.7 + seed * 0.6) + seed * 23.0),
@@ -28,17 +28,17 @@ void main() {
   // Pointer: particles near the cursor ease gently aside.
   vec3 away = p - uPointer;
   float d = length(away.xy);
-  float push = uPointerStrength * exp(-d * d / (0.09 * uScale * uScale));
-  p.xy += normalize(away.xy + 1e-5) * push * 0.08 * uScale;
+  float push = uPointerStrength * exp(-d * d / 0.09);
+  p.xy += normalize(away.xy + 1e-5) * push * 0.08;
 
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
   // Depth cue: the far hemisphere recedes into the page.
   float depth = clamp((mv.z - uCenterZ) / max(uScale, 0.001), -1.2, 1.2);
   float near = smoothstep(-1.1, 1.0, depth);
-  vAlpha = aParams.x * mix(0.28, 1.0, near);
-  vColor = mix(aColor * 0.55 + 0.45 * vec3(0.86, 0.87, 0.88), aColor, near);
-  float size = uBaseSize * aParams.y * mix(0.75, 1.15, near);
+  vAlpha = aParams.x * mix(0.16, 1.0, near);
+  vColor = mix(aColor * 0.4 + 0.6 * vec3(0.8, 0.83, 0.86), aColor, near);
+  float size = uBaseSize * aParams.y * mix(0.6, 1.25, near);
   gl_PointSize = size * uPixelRatio * (8.0 / -mv.z);
 }
 `;
@@ -140,7 +140,7 @@ void main() {
   float flow = vStyle.y;
   float alpha = vStyle.z;
   vec3 color = kind < 0.5 ? uInk : kind < 1.5 ? uBronze : uCool;
-  float base = kind < 0.5 ? 0.16 : kind < 1.5 ? 0.42 : 0.3;
+  float base = kind < 0.5 ? 0.3 : kind < 1.5 ? 0.5 : 0.38;
   // Transferred context travels along the thread as a soft pulse.
   float travel = fract(uTime * 0.55);
   float pulse = exp(-pow((vT - travel) * 7.0, 2.0)) * flow;

@@ -1,31 +1,47 @@
 # Wiresharks
 
-A cinematic, accessible company website built with React, TypeScript, Vite, Motion, and an isolated Three.js drone visualization.
+The wiresharks.tech website: Talos, Talon-1, and the Talos Particle Engine.
+React, TypeScript, Vite, and Three.js.
 
 ## Run locally
 
 ```sh
-npm install
-npm run dev -- --port 5173
+npm ci
+npm run dev
 ```
 
-Initial dependency installation used:
-
-```sh
-npm install react react-dom react-router-dom motion three @fontsource/geist @fontsource/geist-mono @phosphor-icons/react
-npm install -D vite typescript @vitejs/plugin-react @types/react @types/react-dom @types/three
-```
+Open http://localhost:5173.
 
 ## Verify
 
 ```sh
 npm run typecheck
+npm test
 npm run build
 npm run preview
 ```
 
-The product registry in `src/content/products.ts` owns summaries, capability descriptions, sources, image references, and links. Asset provenance is recorded in `docs/assets.md` and `docs/munki-assets.md`.
+## Structure
 
-Product pages use browser-history URLs. Production hosting must serve `index.html` for unknown paths so refresh and direct links work. `public/_redirects` includes the common static-host fallback. Configure the equivalent rewrite on hosts that do not support that file. Canonical domain references in robots and sitemap use `https://wiresharks.tech`.
+- `src/sections/` page sections (hero, Talos, autonomy, Talon-1, philosophy, company).
+- `src/talos/engine/` the Talos Particle Engine:
+  - `events.ts` typed event vocabulary.
+  - `model.ts` validated state reducer (ordering, hierarchy, authorization transitions).
+  - `layout.ts` pure model-to-space mapping and one-shot effects.
+  - `particles.ts` CPU particle simulation, allocation, and staggered transfers.
+  - `renderer.ts`, `shaders.ts`, `quality.ts` WebGL view, adaptive quality, cleanup.
+  - `engine.ts` facade that works with or without the renderer.
+- `src/talos/adapters/source.ts` the seam a real Talos runtime would use to supply events.
+- `src/talos/demo/director.ts` simulated events for the website demonstration.
 
-No backend is required. Contact sections on the homepage and every product page include matching email links for Tarushv Kosgi (`tkosgi@purdue.edu`) and Siddharth Gunti (`sgunti@purdue.edu`). The main contact button addresses both. No deployment, account configuration, or external publication is included.
+The engine visualizes authorization decisions; it never makes them.
+
+## Contact
+
+The only public address is hello@wiresharks.tech.
+
+## Hosting
+
+Vercel builds `main` for production. `vercel.json` redirects the former
+`/products/*` and `/research/*` routes to `/` and serves `index.html` for
+client routes.

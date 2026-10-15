@@ -9,10 +9,11 @@ import type { ToneStyle } from "./palette.ts";
  * stream between clusters rather than teleporting.
  */
 
+// A crisp outer surface over a volumetric interior; inner layers counter-rotate.
 const SHELLS = [
-  { fraction: 0.66, radius: 1, speed: 0.11 },
-  { fraction: 0.23, radius: 0.64, speed: -0.08 },
-  { fraction: 0.11, radius: 0.33, speed: 0.15 },
+  { fraction: 0.7, inner: 0.975, outer: 1.0, speed: 0.11 },
+  { fraction: 0.22, inner: 0.36, outer: 0.84, speed: -0.08 },
+  { fraction: 0.08, inner: 0.08, outer: 0.3, speed: 0.15 },
 ];
 const MAX_SLOTS = 96;
 const STIFFNESS = 16;
@@ -70,6 +71,7 @@ export class ParticleField {
   private velocity: Float32Array;
   private dir: Float32Array;
   private shell: Uint8Array;
+  private radial: Float32Array;
   private seed: Float32Array;
   private accentMask: Uint8Array;
   private colorState: Float32Array;
@@ -90,6 +92,7 @@ export class ParticleField {
     this.params = new Float32Array(capacity * 4);
     this.dir = new Float32Array(capacity * 3);
     this.shell = new Uint8Array(capacity);
+    this.radial = new Float32Array(capacity);
     this.seed = new Float32Array(capacity);
     this.accentMask = new Uint8Array(capacity);
     this.slot = new Int16Array(capacity).fill(-1);
@@ -118,11 +121,12 @@ export class ParticleField {
       const y = 1 - (2 * (k + 0.5)) / count;
       const r = Math.sqrt(1 - y * y);
       const theta = golden * k + s * 1.3;
-      // A slight radial jitter keeps shells from reading as wireframes.
-      const jitter = 1 + (random() - 0.5) * 0.05;
-      this.dir[i * 3] = Math.cos(theta) * r * jitter;
-      this.dir[i * 3 + 1] = y * jitter;
-      this.dir[i * 3 + 2] = Math.sin(theta) * r * jitter;
+      this.dir[i * 3] = Math.cos(theta) * r;
+      this.dir[i * 3 + 1] = y;
+      this.dir[i * 3 + 2] = Math.sin(theta) * r;
+      // Volume-uniform radius within the layer, so interiors have no hard edge.
+      const { inner, outer } = SHELLS[s];
+      this.radial[i] = Math.cbrt(inner ** 3 + random() * (outer ** 3 - inner ** 3));
       this.shell[i] = s;
       this.seed[i] = random();
       this.accentMask[i] = random() < ACCENT_RATIO ? 1 : 0;
@@ -252,7 +256,7 @@ export class ParticleField {
     for (let i = 0; i < n; i++) if (this.slot[i] < 0) free.push(i);
 
     const order = this.clusters
-      .map((c, s) => s)
+      .map((_, s) => s)
       .filter((s) => this.clusters[s] && desired[s] > counts[s])
       .sort((a, b) => (a === largest ? 1 : b === largest ? -1 : a - b));
 
@@ -397,7 +401,7 @@ export class ParticleField {
       const i3 = i * 3;
       if (!c) continue;
       const sh = this.shell[i];
-      const shellR = SHELLS[sh].radius * c.radius * c.breath;
+      const shellR = this.radial[i] * c.radius * c.breath;
       // Shell spin around the vertical axis, then the shared pointer tilt.
       let x = dir[i3] * c.cos[sh] + dir[i3 + 2] * c.sin[sh];
       let y = dir[i3 + 1];
