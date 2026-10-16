@@ -112,19 +112,6 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
       assert.ok(mother.y + mother.radius <= layout.height, `bottom clearance at ${scroll}`);
     }
   }
-  // The hero flow takes over from, and hands back to, the single orb without a jump.
-  let handoffs = 0;
-  let before = sample(0);
-  for (let scroll = 1; scroll < 3000; scroll++) {
-    const after = sample(scroll);
-    if (after.flow.weight !== before.flow.weight) {
-      handoffs++;
-      assert.ok(Math.hypot(after.mother.x - before.mother.x, after.mother.y - before.mother.y) < 3 && Math.abs(after.mother.radius - before.mother.radius) < 3, `flow hand-off at ${scroll}`);
-      assert.ok(after.flow.progress < 0.01 || after.flow.progress > 0.99, `hand-off at the ends of the flow, not mid-stream (${after.flow.progress})`);
-    }
-    before = after;
-  }
-  assert.ok(handoffs >= 1, "the hero dissolves into a flow");
   const motion = new HomeMotion();
   motion.step(sample(hold - 100), 0);
   for (let frame = 0; frame < 180; frame++) motion.step(sample(hold + 10), 1 / 60);
@@ -159,7 +146,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   }
 });
 
-test("the release orb grows smoothly into the space beside its copy and stays within the section", (t) => {
+test("the stream runs the length of the page and gathers into the release orb beside its copy", (t) => {
   let source: ReturnType<typeof createHomeSource> | undefined;
   t.after(() => source?.dispose());
   const viewport = { innerWidth: 1440, innerHeight: 900, scrollY: 0, addEventListener() {}, removeEventListener() {} };
@@ -183,12 +170,14 @@ test("the release orb grows smoothly into the space beside its copy and stays wi
     children,
     getBoundingClientRect: () => ({ left: rect[0], right: rect[0] + rect[2], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),
     closest: () => null,
+    querySelector: () => undefined,
     querySelectorAll: () => [],
   });
   const section = [0, 6911, 1440, 697];
   const copy = [80, 7169, 719, 281];
   const nodes = new Map<string, unknown>([
     [".hero", node([0, 0, 1440, 900])],
+    [".products .wrap", node([80, 900, 1280, 600])],
     [".faq", node([0, 6233, 1440, 678])],
     [".closing", node(section)],
     [".closing-inner > div", node(copy)],
@@ -200,24 +189,32 @@ test("the release orb grows smoothly into the space beside its copy and stays wi
   source = created;
   const sample = (scroll: number) => { viewport.scrollY = scroll; return structuredClone(created.sample()); };
   const settle = section[1] + section[3] / 2 - 450;
+  // The release orb fills the space beside its copy.
   const full = sample(settle);
+  assert.equal(full.flow.weight, 0);
   assert.ok(full.mother.radius > section[3] * 0.45, `release orb radius ${full.mother.radius}`);
   assert.ok(full.mother.x - full.mother.radius >= copy[0] + copy[2], "orb clears the copy column");
   assert.ok(full.mother.x + full.mother.radius <= 1440 + full.mother.radius * 0.3 + 0.01, "at most 30% leaves the right edge");
   assert.equal(full.warm, 1);
-  assert.equal(full.docked, true);
-  let previous = sample(6000);
-  for (const [from, to, step] of [[6000, 7117, 2], [7117, 6000, -2]]) {
-    for (let scroll = from; step > 0 ? scroll <= to : scroll >= to; scroll += step) {
-      const current = sample(scroll);
-      const { mother } = current;
-      assert.ok(Math.hypot(mother.x - previous.mother.x, mother.y - previous.mother.y) < 12 && Math.abs(mother.radius - previous.mother.radius) < 6, `continuous growth at ${scroll}`);
-      if (mother.radius > 30) {
-        assert.ok(mother.y + scroll - mother.radius >= section[1] - 0.01, `no spill above the section at ${scroll}`);
-        assert.ok(mother.y + scroll + mother.radius <= section[1] + section[3] + 0.01, `no spill below the section at ${scroll}`);
-      }
-      previous = current;
-    }
-  }
   assert.ok(sample(7117).opacity > 0.99, "the release orb does not fade at the end of the page");
+  // From the first scroll until the release section centres, the page is one stream.
+  const top = sample(0);
+  assert.equal(top.flow.weight, 0, "the hero orb is whole at the top");
+  let previous = top;
+  for (let scroll = 2; scroll < settle; scroll += 2) {
+    const current = sample(scroll);
+    assert.equal(current.flow.weight, 1, `stream at ${scroll}`);
+    assert.ok(current.flow.dissolve >= previous.flow.dissolve && current.flow.gather >= previous.flow.gather);
+    assert.ok(current.flow.river.x - current.flow.river.width >= 1360, "the river stays in the gutter, clear of the content");
+    assert.equal(current.opacity, 1);
+    const { mother } = current;
+    assert.ok(Math.hypot(mother.x - previous.mother.x, mother.y - previous.mother.y) < 6 && Math.abs(mother.radius - previous.mother.radius) < 6, `continuous at ${scroll}`);
+    previous = current;
+  }
+  assert.ok(sample(1500).flow.dissolve === 1 && sample(1500).flow.gather === 0, "mid-page it is purely a stream");
+  // The hand-back to the release orb is seamless.
+  const last = sample(settle - 0.5);
+  assert.ok(Math.hypot(last.mother.x - full.mother.x, last.mother.y - full.mother.y) < 1 && Math.abs(last.mother.radius - full.mother.radius) < 1);
+  // Scroll back up: identical states, in reverse.
+  assert.deepEqual(sample(3000), sample(3000));
 });

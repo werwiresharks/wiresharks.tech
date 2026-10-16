@@ -17,8 +17,17 @@ const SHELLS = [
   { fraction: 0.08, inner: 0.08, outer: 0.3, speed: 0.15 },
 ];
 const MAX_SLOTS = 96;
-/** Share of the flow's scroll range each particle spends in flight. */
+/** Share of a dissolve or gather each particle spends in flight. */
 const FLOW_WINDOW = 0.42;
+/** The river's height as a multiple of the viewport; it overhangs top and bottom. */
+const RIVER_SPAN = 1.24;
+const fract = (n: number) => n - Math.floor(n);
+/**
+ * A particle's share of the way through a dissolve or gather at overall progress `t`. Particles on
+ * the river's (right-hand) side go first, mixed with a seeded scatter, so orbs erode from that side.
+ */
+const departure = (t: number, dirX: number, seed: number) =>
+  smoothstep((t - ((1 - dirX) / 2 * 0.6 + seed * 0.4) * (1 - FLOW_WINDOW)) / FLOW_WINDOW);
 const smoothstep = (n: number) => { const t = Math.max(0, Math.min(1, n)); return t * t * (3 - 2 * t); };
 /** Small orbs (the docked coordinator, rail marker and worker icons) get visible life. */
 const smallness = (radius: number) => Math.max(0, Math.min(1, (70 - radius) / 40));
@@ -378,20 +387,15 @@ export class ParticleField {
     }
     const warmth = Math.max(frame.warm, warmthOf(frame.mother.radius), 0);
 
-    // Flow: the source and destination orbs, and each particle's path between them.
+    // The stream: the hero orb dissolves into a river down the right gutter, which gathers into the
+    // release orb at the end. Everything below is a pure function of the eased scroll state.
     const flow = frame.flow;
     const flowing = flow.weight > 0.0005;
     let smallFrom = 0;
     let smallTo = 0;
     let warmFrom = 0;
     let warmTo = 0;
-    let dhx = 0;
-    let dhy = 0;
-    let nx = 0;
-    let ny = 0;
-    let spread = 0;
-    let midX = 0;
-    let midY = 0;
+    let riverDensity = 0;
     if (flowing) {
       smallFrom = smallness(flow.from.radius);
       smallTo = smallness(flow.to.radius);
@@ -399,19 +403,8 @@ export class ParticleField {
       warmTo = Math.max(flow.warmTo, warmthOf(flow.to.radius), 0);
       this.setTilt(bodies + 1, tiltX + smallFrom * 0.45 * Math.sin(time * 0.29), tiltY + smallFrom * 0.36 * Math.sin(time * 0.21 + 1));
       this.setTilt(bodies + 2, smallTo * 0.45 * Math.sin(time * 0.29), smallTo * 0.36 * Math.sin(time * 0.21 + 1));
-      // World space: x right, y up.
-      const ddx = (flow.to.x - flow.from.x) * unit;
-      const ddy = (flow.from.y - flow.to.y) * unit;
-      const distance = Math.hypot(ddx, ddy) || unit;
-      dhx = ddx / distance;
-      dhy = ddy / distance;
-      // Lateral scatter runs across the direction of travel.
-      nx = -dhy;
-      ny = dhx;
-      // Paths share one channel, so the stream pinches between the orbs.
-      spread = Math.min(distance * 0.14, Math.max(flow.from.radius, flow.to.radius) * unit * 0.35) * (width < 768 ? 0.6 : 1);
-      midX = (flow.via.x - width / 2) * unit;
-      midY = (height / 2 - flow.via.y) * unit;
+      // A sparse river: about one visible particle per 20 square pixels of its band.
+      riverDensity = Math.min(1, (height * RIVER_SPAN * flow.river.width * 2) / 20 / this.active);
     }
 
     const body = this.body;
@@ -424,44 +417,33 @@ export class ParticleField {
       const mother = frame.mother;
       const seed = this.seed[i];
       let slot = 0;
-      if (!flowing || mix > 0 || flow.weight < 1) {
+      if (!flowing || flow.weight < 1) {
         const target = satellite?.frame ?? mother;
         const x = mother.x + (target.x - mother.x) * mix;
         const y = mother.y + (target.y - mother.y) * mix;
         const radius = mother.radius + (target.radius - mother.radius) * mix;
         this.place(0, i, x, y, radius, satellite ? cohort : bodies, small, mix, cohort, warmth, time, unit, width, height);
       }
-      if (flowing && mix === 0) {
-        this.place(8, i, flow.from.x, flow.from.y, flow.from.radius, bodies + 1, smallFrom, 0, cohort, warmFrom, time, unit, width, height);
-        this.place(16, i, flow.to.x, flow.to.y, flow.to.radius, bodies + 2, smallTo, 0, cohort, warmTo, time, unit, width, height);
-        // Particles facing the destination leave first, so the orb erodes from that side into a stream.
-        const facing = (1 - (this.dir[i3] * dhx + this.dir[i3 + 1] * dhy)) / 2;
-        const delay = (facing * 0.6 + seed * 0.4) * (1 - FLOW_WINDOW);
-        let p = smoothstep((flow.progress - delay) / FLOW_WINDOW);
-        // In flight, particles shimmer along their path; both ends stay exact.
-        p = Math.max(0, Math.min(1, p + 0.02 * Math.sin(time * 0.9 + seed * 40) * Math.sin(Math.PI * p)));
-        const lateral = ((seed * 97.13) % 1) - 0.5;
-        const depth = ((seed * 61.7 + 0.3) % 1) - 0.5;
-        const q = 1 - p;
-        const a = q * q;
-        const c = 2 * q * p;
-        const e = p * p;
-        const offset = lateral * spread;
-        const cx = midX + nx * offset + dhx * depth * spread;
-        const cy = midY + ny * offset + dhy * depth * spread;
-        const cz = depth * spread * 0.6;
-        body[24] = a * body[8] + c * cx + e * body[16];
-        body[25] = a * body[9] + c * cy + e * body[17];
-        body[26] = a * body[10] + c * cz + e * body[18];
-        // Particles thin to the destination's density only on the final approach, so the stream holds
-        // its body and visibly converges; in flight they glow bronze to read over light and dark sections.
-        const settle = smoothstep((p - 0.55) / 0.45);
-        for (let k = 3; k < 5; k++) body[24 + k] = body[8 + k] + (body[16 + k] - body[8 + k]) * settle;
-        const glow = Math.sin(Math.PI * p);
-        for (let k = 5; k < 8; k++) {
-          const tone = body[8 + k] + (body[16 + k] - body[8 + k]) * p;
-          const bronze = (this.accentMask[i] ? TONES.running.accent : TONES.completed.accent)[k - 5];
-          body[24 + k] = tone + (bronze - tone) * glow;
+      if (flowing) {
+        this.river(16, i, flow, riverDensity, time, unit, width, height);
+        const leaving = flow.dissolve < 1 ? departure(flow.dissolve, this.dir[i3], seed) : 1;
+        const arriving = flow.gather > 0 ? departure(flow.gather, this.dir[i3], seed) : 0;
+        if (leaving < 1) {
+          // Dissolve: from the hero orb out to the river, sweeping right before falling into the flow.
+          this.place(8, i, flow.from.x, flow.from.y, flow.from.radius, bodies + 1, smallFrom, 0, cohort, warmFrom, time, unit, width, height);
+          this.travel(8, 16, leaving, 0.85, 0.15, false, i);
+        } else if (arriving > 0) {
+          // Gather: out of the river into the release orb, falling first and then sweeping in.
+          this.place(8, i, flow.to.x, flow.to.y, flow.to.radius, bodies + 2, smallTo, 0, cohort, warmTo, time, unit, width, height);
+          this.travel(16, 8, arriving, 0.15, 0.85, true, i);
+        } else {
+          for (let k = 0; k < 8; k++) body[24 + k] = body[16 + k];
+        }
+        if (mix > 0 && satellite) {
+          // Docked marks (workers, principles, coordinator, console) peel off the passing stream.
+          this.place(8, i, satellite.frame.x, satellite.frame.y, satellite.frame.radius, cohort, 1, mix, cohort, 1, time, unit, width, height);
+          const k = smoothstep(mix);
+          for (let j = 0; j < 8; j++) body[24 + j] += (body[8 + j] - body[24 + j]) * k;
         }
         if (flow.weight < 1) {
           for (let k = 0; k < 8; k++) body[24 + k] = body[k] + (body[24 + k] - body[k]) * flow.weight;
@@ -478,6 +460,53 @@ export class ParticleField {
       this.params[i4 + 1] = body[slot + 4];
       this.params[i4 + 2] = 0;
       this.params[i4 + 3] = seed;
+    }
+  }
+
+  /** The particle's place in the river, which flows down the viewport as the page scrolls. */
+  private river(out: number, i: number, flow: HomeFrame["flow"], density: number, time: number, unit: number, width: number, height: number) {
+    const body = this.body;
+    const seed = this.seed[i];
+    const band = flow.river.width;
+    // Evenly spaced along the river; scrolling a viewport carries particles 0.7 of a viewport down it,
+    // and a slow drift keeps it moving at rest. The river overhangs both edges, so wrapping is unseen.
+    const u = fract(i * 0.6180339 + (flow.phase / (height * RIVER_SPAN)) * 0.7 + time * 0.012);
+    const y = height * (u * RIVER_SPAN - (RIVER_SPAN - 1) / 2);
+    const meander = band * 0.55 * Math.sin((y / height) * 5.2 + (flow.phase / height) * 1.6 + 0.6);
+    const lateral = (fract(seed * 97.13) - 0.5) * 2 * band + Math.sin(time * 0.7 + seed * 30) * band * 0.12;
+    body[out] = (flow.river.x + meander + lateral - width / 2) * unit;
+    body[out + 1] = (height / 2 - y) * unit;
+    body[out + 2] = (fract(seed * 61.7 + 0.3) - 0.5) * band * 2 * unit;
+    body[out + 3] = Math.max(0, Math.min(1, (density - seed) / 0.02));
+    body[out + 4] = 0.9;
+    const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
+    body[out + 5] = bronze[0];
+    body[out + 6] = bronze[1];
+    body[out + 7] = bronze[2];
+  }
+
+  /**
+   * Moves a particle `p` of the way from `a` to `b` (body offsets) into the result slot, on a curve
+   * that covers `bendX` of the horizontal and `bendY` of the vertical distance by its midpoint.
+   * Arrivals fade in early; departures thin out late, so the stream keeps its body.
+   */
+  private travel(a: number, b: number, p: number, bendX: number, bendY: number, arriving: boolean, i: number) {
+    const body = this.body;
+    const q = 1 - p;
+    const cx = body[a] + (body[b] - body[a]) * bendX;
+    const cy = body[a + 1] + (body[b + 1] - body[a + 1]) * bendY;
+    const cz = (body[a + 2] + body[b + 2]) / 2;
+    body[24] = q * q * body[a] + 2 * q * p * cx + p * p * body[b];
+    body[25] = q * q * body[a + 1] + 2 * q * p * cy + p * p * body[b + 1];
+    body[26] = q * q * body[a + 2] + 2 * q * p * cz + p * p * body[b + 2];
+    const fade = arriving ? smoothstep(p / 0.45) : smoothstep((p - 0.55) / 0.45);
+    for (let k = 3; k < 5; k++) body[24 + k] = body[a + k] + (body[b + k] - body[a + k]) * fade;
+    // In flight, particles glow bronze to read over light and dark sections.
+    const glow = Math.sin(Math.PI * p);
+    const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
+    for (let k = 5; k < 8; k++) {
+      const tone = body[a + k] + (body[b + k] - body[a + k]) * p;
+      body[24 + k] = tone + (bronze[k - 5] - tone) * glow;
     }
   }
 

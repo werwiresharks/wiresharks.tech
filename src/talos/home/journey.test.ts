@@ -277,59 +277,90 @@ test("small orbs wander and breathe while the hero sphere keeps its rigid spin",
   assert.ok(dock.fade > 0, JSON.stringify(dock));
 });
 
-test("the flow dissolves one orb into a stream and reconstructs the other exactly at both ends", () => {
-  const from = { x: 1060, y: 450, radius: 330 };
-  // The products orb arrives from below the fold.
-  const to = { x: 1340, y: 1300, radius: 44 };
-  const flowFrame = (progress: number) => {
-    const pose = createHomeFrame();
-    pose.mother = { ...from };
-    Object.assign(pose.flow, { progress, weight: 1, from: { ...from }, to: { ...to }, via: { x: 1330, y: 850 } });
-    return pose;
-  };
-  const plain = (mother: typeof from) => {
-    const pose = createHomeFrame();
-    pose.mother = { ...mother };
-    return pose;
-  };
+const streamFrame = (dissolve: number, gather: number, phase = 0) => {
+  const pose = createHomeFrame();
+  pose.mother = { x: 1060, y: 450, radius: 330 };
+  Object.assign(pose.flow, {
+    dissolve, gather, phase, weight: 1,
+    from: { x: 1060, y: 450, radius: 330 },
+    to: { x: 1200, y: 400, radius: 340 },
+    river: { x: 1400, width: 28 },
+    warmTo: 1,
+  });
+  return pose;
+};
+
+test("the stream reconstructs the hero orb and the release orb exactly at its two ends", () => {
   const field = new ParticleField(3000);
   const snapshot = (pose: ReturnType<typeof createHomeFrame>) => {
     field.stepHome(pose, 1440, 900, 4, 7.5);
     return { position: field.position.slice(), params: field.params.slice(), color: field.color.slice() };
   };
+  const single = (mother: { x: number; y: number; radius: number }, warm: number) => {
+    const pose = createHomeFrame();
+    pose.mother = { ...mother };
+    pose.warm = warm;
+    return pose;
+  };
   const close = (a: Float32Array, b: Float32Array) => a.every((value, i) => Math.abs(value - b[i]) < 1e-5);
-  for (const [progress, mother] of [[0, from], [1, to]] as const) {
-    const flowing = snapshot(flowFrame(progress));
-    const single = snapshot(plain(mother));
-    assert.ok(close(flowing.position, single.position), `positions match the ${progress ? "destination" : "source"} orb`);
-    assert.ok(close(flowing.params, single.params), `alpha and size match the ${progress ? "destination" : "source"} orb`);
-    assert.ok(close(flowing.color, single.color), `colour matches the ${progress ? "destination" : "source"} orb`);
+  for (const [dissolve, gather, mother, warm] of [[0, 0, { x: 1060, y: 450, radius: 330 }, 0], [1, 1, { x: 1200, y: 400, radius: 340 }, 1]] as const) {
+    const stream = snapshot(streamFrame(dissolve, gather));
+    const orb = snapshot(single(mother, warm));
+    const end = gather ? "release" : "hero";
+    assert.ok(close(stream.position, orb.position), `positions match the ${end} orb`);
+    assert.ok(close(stream.params, orb.params), `alpha and size match the ${end} orb`);
+    assert.ok(close(stream.color, orb.color), `colour matches the ${end} orb`);
   }
-  // Midway, a share of the particles is in transit, outside both orbs.
-  const unit = 4 / 900;
-  const middle = snapshot(flowFrame(0.5));
-  let transit = 0;
-  for (let i = 0; i < field.active; i++) {
-    const x = middle.position[i * 3] / unit + 720;
-    const y = 450 - middle.position[i * 3 + 1] / unit;
-    if (Math.hypot(x - from.x, y - from.y) > from.radius * 1.02 && Math.hypot(x - to.x, y - to.y) > to.radius * 1.02) transit++;
-  }
-  assert.ok(transit > field.active * 0.15, `${transit} particles in transit`);
-  // Scroll-driven: returning to a progress reproduces it exactly.
-  snapshot(flowFrame(0.8));
-  assert.deepEqual(snapshot(flowFrame(0.5)).position, middle.position);
 });
 
-test("flow progress eases across wheel jumps and hands back only once it lands", () => {
+test("between the orbs every particle is in the river, which flows with the scroll", () => {
+  const field = new ParticleField(12000);
+  const unit = 4 / 900;
+  const sample = (phase: number) => {
+    field.stepHome(streamFrame(1, 0, phase), 1440, 900, 4, 3);
+    return { position: field.position.slice(), params: field.params.slice() };
+  };
+  const middle = sample(2000);
+  let visible = 0;
+  for (let i = 0; i < field.active; i++) {
+    const x = middle.position[i * 3] / unit + 720;
+    assert.ok(Math.abs(x - 1400) <= 28 * 1.7 + 0.01, `particle ${i} at x ${x} stays in the river`);
+    if (middle.params[i * 4] > 0.1) visible++;
+  }
+  assert.ok(visible > 50 && visible < field.active * 0.8, `${visible} visible: a sparse but present stream`);
+  // Scrolling down carries the river down the viewport; scrolling back returns it exactly.
+  const later = sample(2060);
+  let lower = 0;
+  for (let i = 0; i < field.active; i++) if (later.position[i * 3 + 1] < middle.position[i * 3 + 1]) lower++;
+  assert.ok(lower > field.active * 0.9, "particles move down the river as the page scrolls down");
+  assert.deepEqual(sample(2000).position, middle.position);
+});
+
+test("docked marks peel off the passing stream", () => {
+  const field = new ParticleField(3000);
+  const unit = 4 / 900;
+  const pose = streamFrame(1, 0, 1500);
+  pose.satellites[0].frame = { x: 140, y: 600, radius: 9 };
+  pose.satellites[0].mix = 1;
+  field.stepHome(pose, 1440, 900, 4, 3);
+  for (let i = 0; i < field.active; i += 50) {
+    const x = field.position[i * 3] / unit + 720;
+    const y = 450 - field.position[i * 3 + 1] / unit;
+    assert.ok(Math.hypot(x - 140, y - 600) <= 9 * 1.08, "worker particles sit in their mark");
+  }
+});
+
+test("stream progress eases across wheel jumps and hands back only once it lands", () => {
   const motion = new HomeMotion();
   const target = createHomeFrame();
-  Object.assign(target.flow, { progress: 0, weight: 0 });
   motion.step(target, 0);
-  Object.assign(target.flow, { progress: 1, weight: 0 });
+  Object.assign(target.flow, { dissolve: 1, gather: 1, phase: 6000, weight: 0 });
   const first = motion.step(target, 1 / 60);
-  assert.ok(first.flow.progress > 0 && first.flow.progress < 0.5, "a jump past the flow plays it rather than snapping");
+  assert.ok(first.flow.gather > 0 && first.flow.gather < 0.5, "a jump past the stream plays it rather than snapping");
+  assert.ok(first.flow.phase > 0 && first.flow.phase < 6000, "the river glides to the new scroll");
   assert.equal(first.flow.weight > 0, true);
   for (let i = 0; i < 240; i++) motion.step(target, 1 / 60);
-  assert.equal(motion.step(target, 1 / 60).flow.progress, 1);
-  assert.equal(motion.step(target, 1 / 60).flow.weight, 0);
+  const settled = motion.step(target, 1 / 60);
+  assert.equal(settled.flow.gather, 1);
+  assert.equal(settled.flow.weight, 0);
 });

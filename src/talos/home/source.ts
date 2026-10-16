@@ -1,5 +1,5 @@
 import { createHomeFrame, heroFrame, sampleHomeFrame } from "./journey.ts";
-import type { HomeGeometry, JourneyDock, JourneyStop } from "./journey.ts";
+import type { HomeGeometry, JourneyDock, JourneyFlow, JourneyStop } from "./journey.ts";
 import type { Framing } from "../engine/renderer.ts";
 
 export function createHomeSource(root: HTMLElement, onChange: () => void) {
@@ -33,7 +33,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   /**
    * The release section's orb fills the empty space beside its copy. With the countdown in the right
    * column, it takes the whole column height and may run off the right edge; when the copy stacks, it
-   * takes the space beside the buttons and countdown. Returns null when there is no room (phones).
+   * takes the space beside the buttons and countdown. Phones, with no room beside the copy, get a
+   * smaller orb in the section's top padding. Returns null only when even that does not fit.
    */
   const closingFrame = (): Framing | null => {
     const section = root.querySelector(".closing");
@@ -52,8 +53,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const bottom = area.bottom - (beside ? 0 : 8);
     // At most 30% of the radius may leave the right edge.
     const radius = Math.min((bottom - top) * 0.46, (width - left) / 1.7, 480);
-    if (radius < 90) return null;
-    return { x: (left + radius + width - radius * 0.7) / 2, y: (top + bottom) / 2, radius };
+    if (radius >= 90) return { x: (left + radius + width - radius * 0.7) / 2, y: (top + bottom) / 2, radius };
+    const above = Math.min((column.top - area.top) * 0.42, width * 0.28);
+    return above >= 30 ? { x: width / 2, y: (area.top + column.top) / 2, radius: above } : null;
   };
   const measure = () => {
     const height = window.innerHeight;
@@ -95,8 +97,11 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       while (stops.length > 1 && stops[stops.length - 1].at >= first.at) stops.pop();
       stops.push(...next);
     };
-    const releaseFrame = mobile ? null : closingFrame();
-    let destination: { at: number; frame: Framing } | null = null;
+    const releaseFrame = closingFrame();
+    let releaseAt = 0;
+    let talonDock: JourneyDock | null = null;
+    let talosDock: JourneyDock | null = null;
+    const marks: { key: string; frame: Framing }[] = [];
     for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
       if (key === "closing" && releaseFrame) continue;
       const node = root.querySelector(`[data-home-stop="${key}"]`);
@@ -122,7 +127,6 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         approach.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 160 : hold) } });
       }
       at = Math.max(at, approach[approach.length - 1].at + height * 0.12);
-      if (key === "products") destination = { at, frame };
       const panel = key === "talos" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
       const panelRelease = panel
         ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
@@ -144,8 +148,11 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       previousRail = edge;
       previousDeparture = after;
       if (key === "talon") {
-        docks.push({ enter: at - height * 0.18, leave: release, holdFrom: at, satellites: [] });
+        talonDock = { enter: at - height * 0.18, leave: release, holdFrom: at, satellites: [] };
+        docks.push(talonDock);
+        marks.push({ key: "console", frame });
       }
+      if (key === "talos") marks.push({ key: "coordinator", frame });
       if (key !== "talos" && key !== "principles") continue;
       const selector = key === "talos" ? "[data-home-worker]" : "[data-home-principle]";
       const satellites = Array.from(root.querySelectorAll(selector), (slot, index) => ({
@@ -156,7 +163,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       if (!last) continue;
       const enter = at - height * 0.18;
       const leave = panel ? panelRelease : Math.max(at + height * 0.14, last.frame.y - height * 0.42);
-      docks.push({ enter, leave: panel ? release : leave, satelliteLeave: leave, holdFrom: panel ? at : undefined, satellites });
+      const dock = { enter, leave: panel ? release : leave, satelliteLeave: leave, holdFrom: panel ? at : undefined, satellites };
+      if (key === "talos") talosDock = dock;
+      docks.push(dock);
     }
     const faq = root.querySelector(".faq");
     if (faq) {
@@ -178,30 +187,41 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       // Enter the section's top corner while still small, then grow; its top edge never leaves the dark section.
       const enter = { ...rail, y: box.top + rail.radius + 24 };
       stops.push({ at: start + (settle - start) * 0.35, frame: enter, warm: 1 }, { at: settle, frame: releaseFrame, warm: 1 });
+      releaseAt = settle;
       // The section holds the orb from here on; exempt it from the viewport rail clamp.
       docks.push({ enter: start, leave: Infinity, holdFrom: start, satellites: [] });
     }
     stops.sort((a, b) => a.at - b.at);
     // The release orb stays inside its section, which scrolls away by itself; it needs no fade at the page end.
     const end = releaseFrame && closing ? Infinity : document.documentElement.scrollHeight - height + height * 0.15;
-    // The hero orb dissolves into a stream and reforms as the products orb. Beside the desktop copy it
-    // holds in place from the top. Where the copy stacks under or over it, it rides the page, and the
-    // stream runs down the right margin, clear of the text.
-    const flowStart = mobile ? heroExit : 0;
-    const side = window.innerWidth >= 1024;
-    const flow = destination && destination.at - flowStart > height * 0.25
-      ? {
-          start: flowStart,
-          end: destination.at,
+    // The page-long stream: the hero orb dissolves into a river down the right gutter, which runs
+    // through every section and gathers into the release orb at the end. Beside the desktop copy the
+    // hero orb holds in place while it dissolves; where the copy stacks, it rides the page.
+    let flow: JourneyFlow | undefined;
+    if (releaseFrame && releaseAt) {
+      const pinned = window.innerWidth >= 1024;
+      const dissolveEnd = pinned ? rect.height * 0.75 : Math.max(height * 0.4, heroPose.y + heroPose.radius - height * 0.2);
+      const gatherStart = Math.max(dissolveEnd + height * 0.5, releaseAt - height * 0.9);
+      // The gutter right of the page's content column; the river runs down its middle.
+      const wrap = root.querySelector(".products .wrap") ?? root.querySelector(".wrap");
+      const contentRight = wrap ? wrap.getBoundingClientRect().right - parseFloat(getComputedStyle(wrap).paddingRight || "0") : window.innerWidth - rail.radius * 3;
+      const gutter = Math.max(rail.radius * 2, window.innerWidth - contentRight);
+      if (gatherStart < releaseAt - height * 0.2) {
+        flow = {
           from: heroPose,
-          to: destination.frame,
-          pinned: side,
-          via: side ? undefined : {
-            x: window.innerWidth - Math.max(20, window.innerWidth * 0.05),
-            y: (heroPose.y + destination.frame.y) / 2,
-          },
+          to: releaseFrame,
+          pinned,
+          dissolve: [0, dissolveEnd],
+          gather: [gatherStart, releaseAt],
+          river: { x: window.innerWidth - gutter / 2, width: Math.max(rail.radius, gutter * 0.35) },
+        };
+        // The marks the orb used to dock into are fed from the stream instead.
+        for (const mark of marks) {
+          const dock = mark.key === "console" ? talonDock : talosDock;
+          if (dock) dock.satellites.push({ key: mark.key, frame: mark.frame });
         }
-      : undefined;
+      }
+    }
     geometry = { stops, docks, end, height, mobile, width: window.innerWidth, heroExit, flow };
     dirty = false;
   };
@@ -223,7 +243,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   document.fonts.addEventListener("loadingdone", invalidate);
   void document.fonts.ready.then(() => { if (!disposed) invalidate(); });
   return {
-    get active() { return window.scrollY < quietStart || window.scrollY > quietEnd; },
+    // The stream keeps moving everywhere; without it the rail orb rests over the FAQ.
+    get active() { return geometry.flow !== undefined || window.scrollY < quietStart || window.scrollY > quietEnd; },
     sample() {
       if (dirty) measure();
       return sampleHomeFrame(geometry, window.scrollY, pose);

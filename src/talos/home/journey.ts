@@ -12,32 +12,35 @@ export type HomeFrame = {
 };
 
 /**
- * One orb dissolving into a stream and reforming as another. `progress` runs 0 (all particles in
- * `from`) to 1 (all in `to`); `weight` blends the flow in over the ordinary single-orb pose.
+ * The page-long stream: the hero orb dissolves into a river of particles that flows down the right
+ * gutter through every section, then gathers into the release orb at the end. `dissolve` and `gather`
+ * run 0–1 over their scroll ranges; `phase` is the scroll position the river flows with; `weight`
+ * blends the stream in over the ordinary single-orb pose.
  */
 export type HomeFlow = {
-  progress: number;
+  dissolve: number;
+  gather: number;
+  phase: number;
   weight: number;
   from: Framing;
   to: Framing;
-  /** The channel every path bends through, in viewport pixels. */
-  via: { x: number; y: number };
+  /** Centre line and half-width of the river, in viewport pixels. */
+  river: { x: number; width: number };
   warmFrom: number;
   warmTo: number;
 };
 
 /**
- * Document frames for the flow's two orbs. A `pinned` source holds its viewport position once
- * scrolling passes `start`; otherwise it rides the page. `via` (document) routes the stream around
- * copy; by default it bows away from the left-hand column.
+ * Document frames for the stream's two orbs. A `pinned` source holds its viewport position while it
+ * dissolves; otherwise it rides the page. Scroll ranges are [start, end] pairs.
  */
 export type JourneyFlow = {
-  start: number;
-  end: number;
   from: Framing;
   to: Framing;
   pinned: boolean;
-  via?: { x: number; y: number };
+  dissolve: [number, number];
+  gather: [number, number];
+  river: { x: number; width: number };
   warmFrom?: number;
   warmTo?: number;
 };
@@ -64,6 +67,8 @@ export type HomeGeometry = {
 export const HOME_KEYS = [
   "worker-0", "worker-1", "worker-2", "worker-3", "worker-4", "worker-5",
   "principle-0", "principle-1", "principle-2", "principle-3",
+  // While the stream runs, the coordinator and console marks are fed from it like the workers.
+  "coordinator", "console",
 ];
 
 export function createHomeFrame(): HomeFrame {
@@ -74,7 +79,10 @@ export function createHomeFrame(): HomeFrame {
     satellites: HOME_KEYS.map((key) => ({ key, frame: { x: 0, y: 0, radius: 0 }, mix: 0 })),
     opacity: 1,
     warm: 0,
-    flow: { progress: 0, weight: 0, from: { x: 0, y: 0, radius: 0 }, to: { x: 0, y: 0, radius: 0 }, via: { x: 0, y: 0 }, warmFrom: 0, warmTo: 0 },
+    flow: {
+      dissolve: 0, gather: 0, phase: 0, weight: 0,
+      from: { x: 0, y: 0, radius: 0 }, to: { x: 0, y: 0, radius: 0 }, river: { x: 0, width: 0 }, warmFrom: 0, warmTo: 0,
+    },
   };
 }
 
@@ -104,18 +112,23 @@ export class HomeMotion {
     const blend = immediate ? 1 : 1 - Math.exp(-10 * dt);
     this.frame.opacity += (target.opacity - this.frame.opacity) * blend;
     this.frame.warm += (target.warm - this.frame.warm) * blend;
-    // The flow's ends are exact document frames; its progress eases like the mother so wheel jumps glide.
+    // The stream's ends are exact frames; its progress and phase ease like the mother, so wheel jumps glide.
     const flow = this.frame.flow;
     const next = target.flow;
     Object.assign(flow.from, next.from);
     Object.assign(flow.to, next.to);
-    Object.assign(flow.via, next.via);
+    Object.assign(flow.river, next.river);
     flow.warmFrom = next.warmFrom;
     flow.warmTo = next.warmTo;
-    flow.progress = immediate || Math.abs(next.progress - flow.progress) < 0.0005 ? next.progress : flow.progress + (next.progress - flow.progress) * blend;
-    // Stay in flight until the eased progress lands, then hand back to the single orb.
-    const flying = next.weight > 0 || (flow.progress > 0.0005 && flow.progress < 0.9995) ? 1 : 0;
-    flow.weight = immediate || Math.abs(flying - flow.weight) < 0.0005 ? flying : flow.weight + (flying - flow.weight) * blend;
+    const ease = (current: number, goal: number, epsilon: number) =>
+      immediate || Math.abs(goal - current) < epsilon ? goal : current + (goal - current) * blend;
+    flow.dissolve = ease(flow.dissolve, next.dissolve, 0.0005);
+    flow.gather = ease(flow.gather, next.gather, 0.0005);
+    flow.phase = ease(flow.phase, next.phase, 0.05);
+    // Stay in the stream until the eased progress lands at either end, then hand back to the single orb.
+    const landed = (flow.dissolve < 0.0005 && next.dissolve === 0) || (flow.gather > 0.9995 && next.gather === 1);
+    const flowing = next.weight > 0 || !landed ? 1 : 0;
+    flow.weight = ease(flow.weight, flowing, 0.0005);
     for (let i = 0; i < this.frame.satellites.length; i++) {
       const current = this.frame.satellites[i];
       const next = target.satellites[i];
@@ -209,39 +222,36 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
     }
   }
   const flow = geometry.flow;
+  const f = out.flow;
   if (flow) {
-    const f = out.flow;
     f.from.x = flow.from.x;
-    f.from.y = flow.from.y - (flow.pinned ? flow.start : scroll);
+    f.from.y = flow.from.y - (flow.pinned ? Math.min(scroll, flow.dissolve[0]) : scroll);
     f.from.radius = flow.from.radius;
     f.to.x = flow.to.x;
     f.to.y = flow.to.y - scroll;
     f.to.radius = flow.to.radius;
-    if (flow.via) {
-      f.via.x = flow.via.x;
-      f.via.y = flow.via.y - scroll;
-    } else {
-      const dx = f.to.x - f.from.x;
-      const dy = f.to.y - f.from.y;
-      // Perpendicular, pointing right (screen y runs down).
-      const flip = dy >= 0 ? 1 : -1;
-      f.via.x = (f.from.x + f.to.x) / 2 + Math.abs(dy) * 0.16;
-      f.via.y = (f.from.y + f.to.y) / 2 - dx * 0.16 * flip;
-    }
+    f.river.x = flow.river.x;
+    f.river.width = flow.river.width;
     f.warmFrom = flow.warmFrom ?? 0;
-    f.warmTo = flow.warmTo ?? 0;
-    f.progress = clamp((scroll - flow.start) / Math.max(1, flow.end - flow.start));
-    f.weight = scroll > flow.start && scroll < flow.end ? 1 : 0;
+    f.warmTo = flow.warmTo ?? 1;
+    f.phase = scroll;
+    f.dissolve = clamp((scroll - flow.dissolve[0]) / Math.max(1, flow.dissolve[1] - flow.dissolve[0]));
+    f.gather = clamp((scroll - flow.gather[0]) / Math.max(1, flow.gather[1] - flow.gather[0]));
+    f.weight = scroll > flow.dissolve[0] && scroll < flow.gather[1] ? 1 : 0;
     if (f.weight) {
-      // The single-orb pose the flow stands in for: continuous with the stops at both ends.
-      const k = smooth(f.progress);
-      out.mother.x = f.from.x + (f.to.x - f.from.x) * k;
-      out.mother.y = f.from.y + (f.to.y - f.from.y) * k;
-      out.mother.radius = f.from.radius + (f.to.radius - f.from.radius) * k;
-      out.warm = f.warmFrom + (f.warmTo - f.warmFrom) * k;
+      // The single-orb pose the stream stands in for: the hero orb, the river, then the release orb.
+      // Continuous with the stops at both ends.
+      const river = { x: f.river.x, y: height / 2, radius: f.river.width };
+      const [a, b, k] = f.gather > 0 ? [river, f.to, smooth(f.gather)] : [f.from, river, smooth(f.dissolve)];
+      out.mother.x = a.x + (b.x - a.x) * k;
+      out.mother.y = a.y + (b.y - a.y) * k;
+      out.mother.radius = a.radius + (b.radius - a.radius) * k;
+      out.warm = f.gather > 0 ? 1 : f.warmFrom + (1 - f.warmFrom) * k;
+      out.opacity = 1;
+      out.docked = false;
     }
   } else {
-    out.flow.weight = 0;
+    f.weight = 0;
   }
   return out;
 }
