@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --test src/talos/engine/engine.test.ts src/talos/home/journey.test.ts"
+    "test": "node --test src/talos/engine/engine.test.ts src/talos/home/journey.test.ts src/talos/home/source.test.ts"
   },
   "dependencies": {
     "@fontsource/geist": "^5.3.0",

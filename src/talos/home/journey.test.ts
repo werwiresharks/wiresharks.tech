@@ -150,22 +150,83 @@ test("a settled harness sphere stays attached to its panel until the reader move
   }
 });
 
-test("docking cancels travel inertia and tracks panel scrolling without lag", () => {
+test("docking eases accumulated travel error before exact attachment and continuous departure", () => {
   const motion = new HomeMotion();
   const target = createHomeFrame();
-  target.mother = { x: 1000, y: 400, radius: 80 };
+  target.mother = { x: 500, y: 400, radius: 34 };
   motion.step(target, 0);
-  target.mother = { x: 300, y: 200, radius: 34 };
-  motion.step(target, 1 / 60);
+  target.mother.x = 300;
+  let previous = 500;
+  for (let i = 0; i < 9; i++) previous = motion.step(target, 1 / 60).mother.x;
   target.docked = true;
-  for (const y of [200, 160, 181, 85, 200]) {
-    target.mother.y = y;
-    const frame = motion.step(target, 1 / 60);
-    assert.deepEqual(frame.mother, target.mother);
-    assert.equal(frame.docked, true);
+  const entry = motion.step(target, 1 / 60).mother.x;
+  assert.ok(previous - entry < 15);
+  assert.ok(entry > 300);
+  for (let i = 0; i < 150; i++) motion.step(target, 1 / 60);
+  assert.deepEqual(motion.step(target, 1 / 60).mother, target.mother);
+  for (const scroll of [20, 80, 40, 100, 0]) {
+    target.scroll = scroll;
+    target.mother.y = 400 - scroll;
+    assert.deepEqual(motion.step(target, 1 / 60).mother, target.mother);
   }
   target.docked = false;
   target.mother.x = 1000;
   const departing = motion.step(target, 1 / 60);
   assert.ok(departing.mother.x > 300 && departing.mother.x < 320);
+  for (let i = 0; i < 9; i++) motion.step(target, 1 / 60);
+  const beforeReverse = departing.mother.x;
+  target.mother.x = 300;
+  target.docked = true;
+  const reverse = motion.step(target, 1 / 60);
+  assert.ok(Math.abs(reverse.mother.x - beforeReverse) < 45);
+  assert.ok(reverse.mother.x > 300);
+  for (let i = 0; i < 180; i++) motion.step(target, 1 / 60);
+  assert.deepEqual(motion.step(target, 1 / 60).mother, target.mother);
+});
+
+test("transit is a reversible thin stream with exact spheres at landing and stable buffers", () => {
+  const field = new ParticleField(3000);
+  const g = geometry();
+  const buffers = [field.position, field.color, field.params];
+  const landing = sampleHomeFrame(g, 1400, createHomeFrame());
+  assert.equal(landing.transit.mix, 0);
+  field.stepHome(landing, 1280, 800, 4, 0);
+  const sphere = field.position.slice();
+  const sphereUnit = 4 / 800;
+  let sphereExtent = 0;
+  for (let i = 10; i < field.active; i += 50) {
+    const radius = Math.hypot(sphere[i * 3] - (landing.mother.x - 640) * sphereUnit,
+      sphere[i * 3 + 1] - (400 - landing.mother.y) * sphereUnit, sphere[i * 3 + 2]);
+    assert.ok(radius <= landing.mother.radius * sphereUnit + 0.000001);
+    sphereExtent = Math.max(sphereExtent, radius);
+  }
+  assert.ok(sphereExtent > landing.mother.radius * sphereUnit * 0.95);
+  const transit = sampleHomeFrame(g, 1100, createHomeFrame());
+  assert.equal(transit.transit.mix, 1);
+  field.stepHome(transit, 1280, 800, 4, 0);
+  const positions = field.position.slice();
+  assert.ok(positions.every(Number.isFinite));
+  const nx = transit.transit.x;
+  const ny = -transit.transit.y;
+  let along = 0;
+  let across = 0;
+  const unit = 4 / 800;
+  for (let i = 10; i < field.active; i += 50) {
+    const x = positions[i * 3] - (transit.mother.x - 640) * unit;
+    const y = positions[i * 3 + 1] - (400 - transit.mother.y) * unit;
+    along += (x * nx + y * ny) ** 2;
+    across += (-x * ny + y * nx) ** 2;
+  }
+  assert.ok(along > across * 8);
+  sampleHomeFrame(g, 1900, transit);
+  field.stepHome(transit, 1280, 800, 4, 0);
+  sampleHomeFrame(g, 1100, transit);
+  field.stepHome(transit, 1280, 800, 4, 0);
+  assert.deepEqual(field.position, positions);
+  field.stepHome(landing, 1280, 800, 4, 0);
+  assert.deepEqual(field.position, sphere);
+  assert.equal(field.position, buffers[0]);
+  assert.equal(field.color, buffers[1]);
+  assert.equal(field.params, buffers[2]);
+  assert.equal(field.active, 3000);
 });

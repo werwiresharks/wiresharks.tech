@@ -43,35 +43,44 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const docks: JourneyDock[] = [];
     const hold = height * (mobile ? 0.34 : 0.42);
     const appendStops = (...next: JourneyStop[]) => {
-      for (const stop of next) {
-        if (stop.at - stops[stops.length - 1].at >= height * 0.08) stops.push(stop);
-      }
+      const first = next[0];
+      while (stops.length > 1 && stops[stops.length - 1].at >= first.at) stops.pop();
+      stops.push(...next);
     };
     for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
       const node = root.querySelector(`[data-home-stop="${key}"]`);
       if (!node) continue;
       const frame = readFrame(node);
-      const at = Math.max(1, frame.y - hold);
+      let at = Math.max(1, frame.y - hold);
       const edge = !mobile && key === "talos" ? (narrow ? 20 : 46) : rail.x;
+      const approach: JourneyStop[] = [];
       if (!mobile && edge !== previousRail) {
         const section = root.querySelector(key === "talos" ? "#talos" : "#platform");
-        const gap = section ? section.getBoundingClientRect().top + window.scrollY + (key === "talos" ? 24 : -40) : frame.y - 180;
+        const gap = section ? readFrame(section).y - section.getBoundingClientRect().height / 2 + (key === "talos" ? 24 : -40) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
-        appendStops(
-          { at: crossing - height * 0.18, frame: { ...rail, x: previousRail, y: gap } },
-          { at: crossing + height * 0.18, frame: { ...rail, x: edge, y: gap } },
+        const previousDock = docks.at(-1);
+        const start = Math.max(crossing - height * 0.18, (previousDock?.leave ?? 0) + height * 0.1);
+        const finish = Math.max(crossing + height * 0.18, start + height * 0.12);
+        approach.push(
+          { at: start, frame: { ...rail, x: previousRail, y: gap } },
+          { at: finish, frame: { ...rail, x: edge, y: gap } },
         );
       } else {
-        const before = at - height * (mobile ? 0.42 : 0.32);
-        appendStops({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
+        const before = Math.max(at - height * (mobile ? 0.42 : 0.32), (docks.at(-1)?.leave ?? -Infinity) + height * 0.1);
+        approach.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
       }
+      at = Math.max(at, approach[approach.length - 1].at + height * 0.12);
       const panel = key === "talos" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
       const release = panel
         ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
         : at + height * 0.08;
       const after = release + height * 0.24;
+      const arrival = at - height * (mobile ? 0.24 : 0.18);
+      if (arrival - approach[approach.length - 1].at >= height * 0.08) {
+        approach.push({ at: arrival, frame: { ...rail, x: edge, y: frame.y } });
+      }
       appendStops(
-        { at: at - height * (mobile ? 0.24 : 0.18), frame: { ...rail, x: edge, y: frame.y } },
+        ...approach,
         { at, frame },
         { at: release, frame },
         { at: release + height * 0.1, frame: { ...rail, x: edge, y: frame.y } },

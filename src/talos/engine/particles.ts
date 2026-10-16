@@ -356,6 +356,9 @@ export class ParticleField {
     const cy = Math.cos(tiltY);
     const sy = Math.sin(tiltY);
     const warmth = Math.max(0, Math.min(1, (160 - frame.mother.radius) / 100));
+    const directionLength = Math.hypot(frame.transit.x, frame.transit.y) || 1;
+    const nx = frame.transit.x / directionLength;
+    const ny = -frame.transit.y / directionLength;
     for (let shell = 0; shell < SHELLS.length; shell++) {
       this.homeCos[shell] = Math.cos(time * SHELLS[shell].speed);
       this.homeSin[shell] = Math.sin(time * SHELLS[shell].speed);
@@ -383,9 +386,19 @@ export class ParticleField {
       const dz = -this.dir[i3] * sin + this.dir[i3 + 2] * cos;
       const tx = dx * cy + dz * sy;
       const tz = -dx * sy + dz * cy;
-      this.position[i3] = (x - width / 2) * unit + tx * r;
-      this.position[i3 + 1] = (height / 2 - y) * unit + (this.dir[i3 + 1] * cx - tz * sx) * r;
-      this.position[i3 + 2] = (this.dir[i3 + 1] * sx + tz * cx) * r;
+      const localY = this.dir[i3 + 1] * cx - tz * sx;
+      const localZ = this.dir[i3 + 1] * sx + tz * cx;
+      const morph = frame.transit.mix * (1 - mix);
+
+      const along = tx * nx + localY * ny;
+      const across = -tx * ny + localY * nx;
+      const streamLength = Math.max(28 * unit, Math.min(76 * unit, radius * 2.2));
+      const streamAlong = along * streamLength;
+      const organic = Math.sin(along * 4.2 + this.seed[i] * 3) * 0.09;
+      const streamAcross = (across * (0.16 + 0.09 * Math.cos(along * 3)) + organic) * Math.min(radius, 24 * unit);
+      this.position[i3] = (x - width / 2) * unit + tx * r * (1 - morph) + (nx * streamAlong - ny * streamAcross) * morph;
+      this.position[i3 + 1] = (height / 2 - y) * unit + localY * r * (1 - morph) + (ny * streamAlong + nx * streamAcross) * morph;
+      this.position[i3 + 2] = localZ * r * (1 - morph * 0.84);
       const color = this.accentMask[i] ? base.accent : base.base;
       const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
       for (let j = 0; j < 3; j++) this.color[i3 + j] = color[j] + (bronze[j] - color[j]) * warmth;

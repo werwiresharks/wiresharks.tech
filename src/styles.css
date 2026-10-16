@@ -1867,10 +1867,11 @@ button {
   right: 0;
   top: 0;
 }
-.home-console { padding-top: 96px; }
+.home-console { position: relative; }
+.home-console .console pre { padding-top: 112px; }
 .home-local-landing {
   position: absolute;
-  top: 0;
+  top: 52px;
   right: 24px;
   width: 72px;
   height: 72px;
@@ -1883,6 +1884,11 @@ button {
   border-bottom: 1px solid var(--line);
 }
 .home-graph-dock i { display: block; width: 68px; height: 68px; }
+.home-page:not([data-journey="ready"]) :is(.home-graph-dock i, .home-local-landing) {
+  border: 1px solid var(--bronze-deep);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--bronze-deep) 35%, transparent), transparent 70%);
+}
 .home-graph .graph-workers li { grid-template-columns: 24px minmax(0, 1fr) auto auto; }
 .home-graph .graph-workers i {
   position: relative;
@@ -1954,7 +1960,7 @@ button {
   .home-page .section-head h2 { margin-top: 32px; }
   .home-landing, .home-section-landing { width: 40px; height: 40px; top: -10px; }
   .home-section-landing { top: calc(var(--section-y) - 10px); }
-  .home-console { padding-top: 66px; }
+  .home-console .console pre { padding-top: 82px; }
   .home-local-landing { width: 44px; height: 44px; right: 12px; }
   .home-graph-dock { height: 76px; }
   .home-graph-dock i { width: 44px; height: 44px; }

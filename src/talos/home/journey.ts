@@ -3,6 +3,8 @@ import type { Framing } from "../engine/renderer.ts";
 export type HomeFrame = {
   mother: Framing;
   docked: boolean;
+  scroll: number;
+  transit: { mix: number; x: number; y: number };
   satellites: { key: string; frame: Framing; mix: number }[];
   opacity: number;
 };
@@ -33,19 +35,23 @@ export function createHomeFrame(): HomeFrame {
   return {
     mother: { x: 0, y: 0, radius: 0 },
     docked: false,
+    scroll: 0,
+    transit: { mix: 0, x: 1, y: 0 },
     satellites: HOME_KEYS.map((key) => ({ key, frame: { x: 0, y: 0, radius: 0 }, mix: 0 })),
     opacity: 1,
   };
 }
 
-/** The scroll pose stays deterministic; this follower preserves velocity between wheel steps. */
+/** Travel eases in document space so a settled panel follows scrolling without lag. */
 export class HomeMotion {
   private frame = createHomeFrame();
   private velocity = { x: 0, y: 0, radius: 0 };
   private initialized = false;
 
   step(target: HomeFrame, dt: number, snap = false): HomeFrame {
-    const immediate = snap || !this.initialized || target.docked;
+    const immediate = snap || !this.initialized;
+    this.frame.mother.y += this.frame.scroll - target.scroll;
+    this.frame.scroll = target.scroll;
     this.initialized = true;
     this.frame.docked = target.docked;
     const decay = Math.exp(-12 * dt);
@@ -54,16 +60,24 @@ export class HomeMotion {
       const change = this.velocity[axis] + 12 * offset;
       this.frame.mother[axis] = immediate ? target.mother[axis] : target.mother[axis] + (offset + change * dt) * decay;
       this.velocity[axis] = immediate ? 0 : (this.velocity[axis] - 12 * change * dt) * decay;
+      if (Math.abs(this.frame.mother[axis] - target.mother[axis]) < 0.01 && Math.abs(this.velocity[axis]) < 0.1) {
+        this.frame.mother[axis] = target.mother[axis];
+        this.velocity[axis] = 0;
+      }
     }
     const blend = immediate ? 1 : 1 - Math.exp(-10 * dt);
     this.frame.opacity += (target.opacity - this.frame.opacity) * blend;
+    this.frame.transit.mix += (target.transit.mix - this.frame.transit.mix) * blend;
+    this.frame.transit.x += (target.transit.x - this.frame.transit.x) * blend;
+    this.frame.transit.y += (target.transit.y - this.frame.transit.y) * blend;
+    if (Math.abs(this.frame.transit.mix - target.transit.mix) < 0.001) this.frame.transit.mix = target.transit.mix;
     for (let i = 0; i < this.frame.satellites.length; i++) {
       const current = this.frame.satellites[i];
       const next = target.satellites[i];
       current.frame.x = next.frame.x;
       current.frame.y = next.frame.y;
       current.frame.radius = next.frame.radius;
-      current.mix += (next.mix - current.mix) * blend;
+      current.mix = next.mix;
     }
     return this.frame;
   }
@@ -87,6 +101,7 @@ export function heroFrame(width: number, height: number): Framing {
 /** Samples cached document coordinates into an existing viewport pose. */
 export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: HomeFrame): HomeFrame {
   const { stops, height } = geometry;
+  out.scroll = scroll;
   if (!stops.length) { out.opacity = 0; return out; }
   let left = stops[0];
   let right = left;
@@ -96,14 +111,22 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
     left = right;
   }
   const t = smooth((scroll - left.at) / Math.max(1, right.at - left.at));
-  const moving = left.frame.x !== right.frame.x;
-  const arc = Math.sin(t * Math.PI) * (geometry.mobile || !moving ? 0 : 24);
-  out.mother.x = left.frame.x + (right.frame.x - left.frame.x) * t + arc;
+  const dx = right.frame.x - left.frame.x;
+  const dy = right.frame.y - left.frame.y;
+  const distance = Math.hypot(dx, dy);
+  out.transit.mix = distance > 1 ? 4 * t * (1 - t) : 0;
+  out.transit.x = distance > 1 ? dx / distance : 1;
+  out.transit.y = distance > 1 ? dy / distance : 0;
+  out.mother.x = left.frame.x + dx * t;
   out.mother.y = left.frame.y + (right.frame.y - left.frame.y) * t - scroll;
   out.mother.radius = left.frame.radius + (right.frame.radius - left.frame.radius) * t;
   const docked = geometry.docks.some((dock) => dock.holdFrom !== undefined && scroll >= dock.holdFrom && scroll <= dock.leave);
   out.docked = docked;
-  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1) && !docked) {
+  const attachment = Math.max(0, ...geometry.docks.map((dock) => dock.holdFrom === undefined ? 0
+    : smooth((scroll - dock.enter) / Math.max(1, dock.holdFrom - dock.enter))
+      * (1 - smooth((scroll - dock.leave) / (height * 0.24)))));
+  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1) && attachment < 1) {
+    const documentPose = { ...out.mother };
     const header = geometry.mobile ? 64 : 76;
     const edge = geometry.mobile ? 11 : geometry.width < 1024 ? 12 : 22;
     const margin = geometry.mobile ? 4 : geometry.width < 1024 ? 8 : 24;
@@ -117,6 +140,9 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
     out.mother.x += (parkX - out.mother.x) * park;
     out.mother.y = Math.max(header + out.mother.radius + 20, Math.min(height - out.mother.radius - 28, out.mother.y));
     out.mother.x = Math.max(out.mother.radius + 4, Math.min(geometry.width - out.mother.radius - 4, out.mother.x));
+    for (const axis of ["x", "y", "radius"] as const) {
+      out.mother[axis] += (documentPose[axis] - out.mother[axis]) * attachment;
+    }
   }
   const opacity = (left.opacity ?? 1) + ((right.opacity ?? 1) - (left.opacity ?? 1)) * t;
   out.opacity = opacity * (1 - smooth((scroll - (geometry.end - height * 0.6)) / (height * 0.45)));
@@ -128,7 +154,8 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
       if (index === dock.satellites.length) continue;
       const target = dock.satellites[index].frame;
       const stagger = index * (geometry.mobile ? 9 : 14);
-      const arrive = smooth((scroll - dock.enter - stagger) / (height * 0.16));
+      const arrivalEnd = dock.holdFrom ?? dock.enter + height * 0.16 + (dock.satellites.length - 1) * (geometry.mobile ? 9 : 14);
+      const arrive = smooth((scroll - dock.enter - stagger) / Math.max(1, arrivalEnd - dock.enter - stagger));
       const depart = 1 - smooth((scroll - dock.leave) / (height * 0.18));
       satellite.mix = arrive * depart;
       satellite.frame.x = target.x;
