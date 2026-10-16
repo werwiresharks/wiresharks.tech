@@ -82,12 +82,10 @@ const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const smooth = (n: number) => { const t = clamp(n); return t * t * (3 - 2 * t); };
 
 export function heroFrame(width: number, height: number): Framing {
-  if (width >= 1024) {
-    return { x: width * 0.5, y: height * 0.53, radius: Math.min(width * 0.19, height * 0.8 / 2 / 1.24) };
-  }
   if (width >= 768) {
-    const radius = Math.min(width * 0.26, height * 0.2);
-    return { x: width * 0.5, y: 112 + radius, radius };
+    // Fill the visible hero between the fixed header and the bottom edge.
+    const radius = Math.min(width * 0.45, (height - 140 - 24) / 2);
+    return { x: width * 0.5, y: 140 + radius, radius };
   }
   const radius = Math.min(width * 0.23, 110);
   return { x: width / 2, y: height - radius - 36, radius };
