@@ -1898,19 +1898,6 @@ button {
   background: radial-gradient(circle at 35% 30%, var(--bronze-deep), transparent 70%);
   box-shadow: none;
 }
-.home-graph .graph-workers i::after {
-  content: "";
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  left: calc(50% - 2px);
-  top: calc(50% - 2px);
-  border-radius: 50%;
-  background: var(--line-strong);
-}
-.home-graph .state-done i::after { background: var(--ok); }
-.home-graph .state-running i::after { background: var(--run); }
-.home-graph .state-review i::after { background: var(--review); }
 .home-page[data-journey="ready"] .home-graph .graph-workers i {
   background: transparent;
   border-color: transparent;
