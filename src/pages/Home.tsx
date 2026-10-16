@@ -78,9 +78,15 @@ export function Home() {
               Meet Talos
             </Cta>
           </Reveal>
-          <Reveal delay={240} className="hero-launch">
-            <Countdown />
-          </Reveal>
+          {/* Phones stack the orb here, in flow, with the countdown beneath it. */}
+          <div className="hero-orb-group">
+            <div className="hero-orb-slot" aria-hidden="true">
+              <StaticOrb />
+            </div>
+            <Reveal delay={240} className="hero-launch">
+              <Countdown />
+            </Reveal>
+          </div>
         </div>
       </section>
 

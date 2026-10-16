@@ -1874,6 +1874,9 @@ button {
   text-underline-offset: 0.1em;
   text-decoration-skip-ink: none;
 }
+/* Phones only: the orb's in-flow slot and the countdown beneath it. Inert elsewhere. */
+.hero-orb-group { display: contents; }
+.hero-orb-slot { display: none; }
 .home-page .section-head {
   position: relative;
   max-width: none;
@@ -1956,18 +1959,33 @@ button {
   .home-page .hero {
     min-height: 100svh;
     padding-top: calc(var(--header-height) + 24px);
-    padding-bottom: calc(min(46vw, 220px) + 56px);
+    padding-bottom: clamp(40px, 12vw, 64px);
   }
   .home-page .hero-glass, .home-page .hero-ctas { margin-top: 24px; }
-  .home-page .hero-launch { margin-top: 28px; }
-  .home-page .hero-backdrop .tpe-static {
-    top: auto;
-    bottom: 36px;
-    left: 50%;
-    right: auto;
-    width: min(46vw, 220px);
-    transform: translateX(-50%);
+  /* Centre on the viewport: the negative margin cancels the wrap's wider right gutter. */
+  .home-page .hero-orb-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: calc(var(--pad) - 34px);
   }
+  /* Matches heroFrame's phone radius; the particle orb is drawn over this box. */
+  .home-page .hero-orb-slot {
+    display: block;
+    position: relative;
+    width: min(46vw, 220px);
+    aspect-ratio: 1;
+    margin-top: clamp(36px, 11vw, 56px);
+  }
+  .home-page .hero-orb-slot .tpe-static {
+    inset: 0;
+    width: 100%;
+    transform: none;
+  }
+  .home-page[data-journey="ready"] .hero-orb-slot .tpe-static { visibility: hidden; }
+  .home-page .hero-backdrop .tpe-static { display: none; }
+  .home-page .hero-launch { margin-top: clamp(28px, 8vw, 40px); }
+  .home-page .hero-launch .countdown { justify-content: center; text-align: center; }
   .home-page .hero-backdrop::after { background: none; }
   .home-page .section-head { padding-right: 0; }
   .home-page .section-head h2 { margin-top: 32px; }

@@ -59,9 +59,14 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     parentElement: root,
     getBoundingClientRect: () => ({ left: rect[0], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),
     closest: (selector: string) => selector === panel ? nodes.get(panel) : null,
+    querySelector: (selector: string) => nodes.get(selector),
     querySelectorAll: () => [],
   });
   nodes.set(".hero", node([0, 0, layout.width, layout.hero]));
+  // Phones stack the orb slot under the buttons, above the countdown.
+  const orb = Math.min(layout.width * 0.46, 220);
+  const slot = [(layout.width - orb) / 2, layout.hero - orb - 160, orb, orb];
+  if (layout.width < 768) nodes.set(".hero-orb-slot", node(slot));
   const landingSize = layout.width < 768 ? 40 : layout.width < 1024 ? 64 : 88;
   nodes.set('[data-home-stop="products"]', node([
     layout.width < 768 ? layout.width - 74 : layout.platform[0],
@@ -77,7 +82,8 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   const workers = Array.from({ length: 6 }, (_, i) => node([layout.worker[0], layout.worker[1] + i * layout.row, 22, 22]));
   source = createHomeSource(root, () => {});
   if (layout.width < 768) {
-    assert.equal(source.sample().mother.y + source.sample().mother.radius, layout.hero - 36);
+    const { mother } = source.sample();
+    assert.deepEqual(mother, { x: layout.width / 2, y: slot[1] + orb / 2, radius: orb / 2 });
   }
   const center = layout.talos[1] + layout.talos[3] / 2;
   const hold = center - layout.height * (layout.width < 768 ? 0.44 : 0.5);
@@ -90,7 +96,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     assert.ok(Math.hypot(before.mother.x - after.mother.x, before.mother.y - after.mother.y) < 0.02);
   }
   assert.ok(sample(hold).satellites.slice(0, 6).every((s) => s.mix === 1));
-  const heroExit = layout.width < 768 ? Math.max(1, heroFrame(layout.width, layout.hero).y - layout.height * 0.65) + layout.height * 0.4 : layout.height * 0.7;
+  const heroExit = layout.width < 768 ? Math.max(1, slot[1] - 64 - 50) + layout.height * 0.4 : layout.height * 0.7;
   if (layout.width >= 1024) {
     assert.ok(sample(150).mother.radius > heroFrame(layout.width, layout.hero).radius * 0.75);
     assert.ok(sample(360).mother.radius > 65, "hero shrink remains spread over the scroll rather than reaching the rail by 360px");
