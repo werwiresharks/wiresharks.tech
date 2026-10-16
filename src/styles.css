@@ -1873,12 +1873,26 @@ button {
 .home-graph-dock i { display: block; width: 68px; height: 68px; }
 .home-graph .graph-workers li { grid-template-columns: 24px minmax(0, 1fr) auto auto; }
 .home-graph .graph-workers i {
+  position: relative;
   width: 22px;
   height: 22px;
   border: 1px solid color-mix(in srgb, var(--bronze-deep) 35%, transparent);
   background: radial-gradient(circle at 35% 30%, var(--bronze-deep), transparent 70%);
   box-shadow: none;
 }
+.home-graph .graph-workers i::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  left: calc(50% - 2px);
+  top: calc(50% - 2px);
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.home-graph .state-done i::after { background: var(--ok); }
+.home-graph .state-running i::after { background: var(--run); }
+.home-graph .state-review i::after { background: var(--review); }
 .home-page[data-journey="ready"] .home-graph .graph-workers i {
   background: transparent;
   border-color: transparent;

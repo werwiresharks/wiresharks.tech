@@ -11,15 +11,17 @@ export function HomeJourney() {
     if (!node || !root) return;
     let cancelled = false;
     let renderer: TalosRenderer | null = null;
+    let source: ReturnType<typeof createHomeSource> | null = null;
     let failed = false;
     let load = 0;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const source = createHomeSource(root, () => renderer?.requestPresentation());
     const fallback = () => {
       failed = true;
       root.dataset.journey = "fallback";
       renderer?.dispose();
       renderer = null;
+      source?.dispose();
+      source = null;
       node.replaceChildren();
     };
     const sync = () => {
@@ -28,12 +30,15 @@ export function HomeJourney() {
         root.dataset.journey = "static";
         renderer?.dispose();
         renderer = null;
+        source?.dispose();
+        source = null;
         return;
       }
       if (failed || renderer) return;
       void import("../engine/renderer.ts").then(({ TalosRenderer, supportsWebGL }) => {
         if (cancelled || generation !== load) return;
         if (!supportsWebGL()) { fallback(); return; }
+        source = createHomeSource(root, () => renderer?.requestPresentation());
         renderer = new TalosRenderer({
           host: node,
           frame: heroFrame,
@@ -51,7 +56,7 @@ export function HomeJourney() {
       cancelled = true;
       load++;
       motion.removeEventListener("change", sync);
-      source.dispose();
+      source?.dispose();
       renderer?.dispose();
       delete root.dataset.journey;
     };

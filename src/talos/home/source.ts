@@ -42,6 +42,11 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     let previousRail = rail.x;
     const docks: JourneyDock[] = [];
     const hold = height * (mobile ? 0.34 : 0.42);
+    const appendStops = (...next: JourneyStop[]) => {
+      for (const stop of next) {
+        if (stop.at - stops[stops.length - 1].at >= height * 0.08) stops.push(stop);
+      }
+    };
     for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
       const node = root.querySelector(`[data-home-stop="${key}"]`);
       if (!node) continue;
@@ -52,16 +57,16 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         const section = root.querySelector(key === "talos" ? "#talos" : "#platform");
         const gap = section ? section.getBoundingClientRect().top + window.scrollY + (key === "talos" ? 24 : -40) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
-        stops.push(
+        appendStops(
           { at: crossing - height * 0.18, frame: { ...rail, x: previousRail, y: gap } },
           { at: crossing + height * 0.18, frame: { ...rail, x: edge, y: gap } },
         );
       } else {
         const before = at - height * (mobile ? 0.42 : 0.32);
-        stops.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
+        appendStops({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
       }
       const after = at + height * 0.32;
-      stops.push(
+      appendStops(
         { at: at - height * (mobile ? 0.24 : 0.18), frame: { ...rail, x: edge, y: frame.y } },
         { at, frame },
         { at: at + height * 0.08, frame },
