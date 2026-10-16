@@ -434,6 +434,21 @@ button {
   font-size: 1.0625rem;
   transition: transform var(--fast) var(--ease);
 }
+/* A product mark before the label: tighter padding keeps the button close to its plain width. */
+.cta-has-icon {
+  gap: 10px;
+  padding: 0 16px;
+}
+.cta-icon {
+  display: inline-flex;
+  margin-right: -2px;
+  opacity: 0.85;
+}
+.cta-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
 .cta:hover {
   transform: translateY(-1px);
 }

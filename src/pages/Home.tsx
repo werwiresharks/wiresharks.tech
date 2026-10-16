@@ -1,5 +1,6 @@
 import { Countdown } from "../components/Countdown";
 import { Cta } from "../components/Cta";
+import { TalonIcon, TalosIcon } from "../components/ProductIcons";
 import { Reveal } from "../components/Reveal";
 import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
@@ -70,8 +71,10 @@ export function Home() {
             </p>
           </Reveal>
           <Reveal delay={180} className="hero-ctas">
-            <Cta to="/talon">Explore Talon-1</Cta>
-            <Cta to="/talos" variant="secondary">
+            <Cta to="/talon" icon={<TalonIcon />}>
+              Explore Talon-1
+            </Cta>
+            <Cta to="/talos" variant="secondary" icon={<TalosIcon />}>
               Meet Talos
             </Cta>
           </Reveal>

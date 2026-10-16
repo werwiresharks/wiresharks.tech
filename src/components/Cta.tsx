@@ -9,13 +9,21 @@ export function Cta({
   to,
   children,
   variant = "primary",
+  icon,
 }: {
   to: string;
   children: ReactNode;
   variant?: "primary" | "secondary" | "inverse";
+  /** A small product mark shown before the label. */
+  icon?: ReactNode;
 }) {
   return (
-    <Link className={`cta cta-${variant}`} to={to}>
+    <Link className={`cta cta-${variant}${icon ? " cta-has-icon" : ""}`} to={to}>
+      {icon && (
+        <span className="cta-icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
       {children}
       <span className="cta-arrow" aria-hidden="true">
         →
