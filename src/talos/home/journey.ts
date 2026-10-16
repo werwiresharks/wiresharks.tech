@@ -92,8 +92,9 @@ const smooth = (n: number) => { const t = clamp(n); return t * t * (3 - 2 * t); 
 export function heroFrame(width: number, height: number, copyRight = width * 0.5, copyTop = Infinity): Framing {
   if (width >= 1024) {
     // Anchor to the right edge, clear of the copy, centred in the visible hero below the header.
-    const margin = Math.max(24, width * 0.03);
-    const radius = Math.min(width * 0.45, (height - 140 - 24) / 2, (width - margin - copyRight - margin) / 2);
+    const margin = Math.max(24, width * 0.06);
+    const gap = Math.max(24, width * 0.02);
+    const radius = Math.min(width * 0.45, (height - 140 - 24) / 2, (width - margin - copyRight - gap) / 2);
     return { x: width - margin - radius, y: (140 + height - 24) / 2, radius };
   }
   if (width >= 768) {
