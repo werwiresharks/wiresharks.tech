@@ -149,3 +149,23 @@ test("a settled harness sphere stays attached to its panel until the reader move
     assert.ok(pose.satellites.slice(0, 6).every((satellite) => satellite.mix === 1));
   }
 });
+
+test("docking cancels travel inertia and tracks panel scrolling without lag", () => {
+  const motion = new HomeMotion();
+  const target = createHomeFrame();
+  target.mother = { x: 1000, y: 400, radius: 80 };
+  motion.step(target, 0);
+  target.mother = { x: 300, y: 200, radius: 34 };
+  motion.step(target, 1 / 60);
+  target.docked = true;
+  for (const y of [200, 160, 181, 85, 200]) {
+    target.mother.y = y;
+    const frame = motion.step(target, 1 / 60);
+    assert.deepEqual(frame.mother, target.mother);
+    assert.equal(frame.docked, true);
+  }
+  target.docked = false;
+  target.mother.x = 1000;
+  const departing = motion.step(target, 1 / 60);
+  assert.ok(departing.mother.x > 300 && departing.mother.x < 320);
+});

@@ -65,7 +65,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         const before = at - height * (mobile ? 0.42 : 0.32);
         appendStops({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
       }
-      const panel = key === "talos" ? node.closest(".home-graph") : null;
+      const panel = key === "talos" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
       const release = panel
         ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
         : at + height * 0.08;
@@ -78,6 +78,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         { at: after, frame: { ...rail, x: edge, y: after + (mobile ? 120 : hold) } },
       );
       previousRail = edge;
+      if (key === "talon") {
+        docks.push({ enter: at - height * 0.18, leave: release, holdFrom: at, satellites: [] });
+      }
       if (key !== "talos" && key !== "principles") continue;
       const selector = key === "talos" ? "[data-home-worker]" : "[data-home-principle]";
       const satellites = Array.from(root.querySelectorAll(selector), (slot, index) => ({

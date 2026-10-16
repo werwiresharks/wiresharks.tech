@@ -436,8 +436,8 @@ export class TalosRenderer implements TalosView {
       const pose = this.homeMotion.step(this.options.home.sample(), dt, still);
       this.system.position.set(0, 0, 0);
       this.system.scale.setScalar(1);
-      const response = still ? 1 : 1 - Math.exp(-dt * 3);
-      const interactive = this.pointer !== null && !still && pose.mother.radius > 45;
+      const response = still || pose.docked ? 1 : 1 - Math.exp(-dt * 3);
+      const interactive = this.pointer !== null && !still && !pose.docked && pose.mother.radius > 45;
       const unit = this.worldHeight() / this.height;
       const pointer = this.pointer;
       const px = pointer ? (pointer.x - this.width / 2) * unit : 99;

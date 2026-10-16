@@ -2,6 +2,7 @@ import type { Framing } from "../engine/renderer.ts";
 
 export type HomeFrame = {
   mother: Framing;
+  docked: boolean;
   satellites: { key: string; frame: Framing; mix: number }[];
   opacity: number;
 };
@@ -31,6 +32,7 @@ export const HOME_KEYS = [
 export function createHomeFrame(): HomeFrame {
   return {
     mother: { x: 0, y: 0, radius: 0 },
+    docked: false,
     satellites: HOME_KEYS.map((key) => ({ key, frame: { x: 0, y: 0, radius: 0 }, mix: 0 })),
     opacity: 1,
   };
@@ -43,8 +45,9 @@ export class HomeMotion {
   private initialized = false;
 
   step(target: HomeFrame, dt: number, snap = false): HomeFrame {
-    const immediate = snap || !this.initialized;
+    const immediate = snap || !this.initialized || target.docked;
     this.initialized = true;
+    this.frame.docked = target.docked;
     const decay = Math.exp(-12 * dt);
     for (const axis of ["x", "y", "radius"] as const) {
       const offset = this.frame.mother[axis] - target.mother[axis];
@@ -99,6 +102,7 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
   out.mother.y = left.frame.y + (right.frame.y - left.frame.y) * t - scroll;
   out.mother.radius = left.frame.radius + (right.frame.radius - left.frame.radius) * t;
   const docked = geometry.docks.some((dock) => dock.holdFrom !== undefined && scroll >= dock.holdFrom && scroll <= dock.leave);
+  out.docked = docked;
   if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1) && !docked) {
     const header = geometry.mobile ? 64 : 76;
     const edge = geometry.mobile ? 11 : geometry.width < 1024 ? 12 : 22;
