@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createHomeFrame, heroFrame, sampleHomeFrame } from "./journey.ts";
+import { createHomeFrame, heroFrame, HomeMotion, sampleHomeFrame } from "./journey.ts";
 import type { HomeGeometry } from "./journey.ts";
 import { ParticleField } from "../engine/particles.ts";
 
@@ -85,7 +85,9 @@ test("particle cohorts retain buffers, budget and identity through a complete mo
 test("hero framing keeps the original desktop and smaller mobile compositions", () => {
   assert.equal(heroFrame(1440, 1000).x, 1440 * 0.73);
   assert.ok(heroFrame(390, 844).radius < heroFrame(1440, 1000).radius);
-  assert.ok(heroFrame(390, 844).y < 200);
+  const mobile = heroFrame(390, 844);
+  assert.equal(mobile.x, 195);
+  assert.equal(mobile.y + mobile.radius, 808);
 });
 
 
@@ -111,4 +113,23 @@ test("docked worker spheres continue to animate without moving their document ce
   field.stepHome(pose, 1280, 800, 4, 1);
   assert.notDeepEqual(field.position.slice(0, 18), before.slice(0, 18));
   assert.deepEqual(pose.satellites, centers);
+});
+
+test("wheel jumps ease into place without overshoot and leave docked markers aligned", () => {
+  const motion = new HomeMotion();
+  const target = createHomeFrame();
+  target.mother = { x: 200, y: 400, radius: 90 };
+  motion.step(target, 0);
+  target.mother = { x: 1000, y: 200, radius: 22 };
+  target.satellites[0].frame = { x: 120, y: 300, radius: 9 };
+  target.satellites[0].mix = 1;
+  let previous = 200;
+  for (let i = 0; i < 120; i++) {
+    const pose = motion.step(target, 1 / 60);
+    assert.ok(pose.mother.x >= previous && pose.mother.x <= 1000);
+    if (i === 0) assert.ok(pose.mother.x < 220);
+    assert.deepEqual(pose.satellites[0].frame, target.satellites[0].frame);
+    previous = pose.mother.x;
+  }
+  assert.ok(Math.abs(previous - 1000) < 0.01);
 });

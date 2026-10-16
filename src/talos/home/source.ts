@@ -31,7 +31,14 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const stops: JourneyStop[] = [{ at: 0, frame: heroPose }];
     const narrow = window.innerWidth < 1024;
     const rail = { x: window.innerWidth - (mobile ? 15 : narrow ? 20 : 46), y: 120, radius: mobile ? 11 : narrow ? 12 : 22 };
-    if (mobile) stops.push({ at: 130, frame: { ...rail, y: 250 } });
+    const heroExit = mobile ? Math.max(1, heroPose.y - height * 0.65) : -1;
+    if (mobile) {
+      const depart = heroExit + height * 0.2;
+      stops.push(
+        { at: heroExit, frame: heroPose },
+        { at: depart, frame: { ...rail, y: depart + 120 } },
+      );
+    }
     let previousRail = rail.x;
     const docks: JourneyDock[] = [];
     const hold = height * (mobile ? 0.34 : 0.42);
@@ -46,8 +53,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         const gap = section ? section.getBoundingClientRect().top + window.scrollY + (key === "talos" ? 24 : -40) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
         stops.push(
-          { at: crossing - height * 0.07, frame: { ...rail, x: previousRail, y: gap } },
-          { at: crossing + height * 0.07, frame: { ...rail, x: edge, y: gap } },
+          { at: crossing - height * 0.18, frame: { ...rail, x: previousRail, y: gap } },
+          { at: crossing + height * 0.18, frame: { ...rail, x: edge, y: gap } },
         );
       } else {
         const before = at - height * (mobile ? 0.42 : 0.32);
@@ -86,7 +93,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     }
     stops.sort((a, b) => a.at - b.at);
     const end = document.documentElement.scrollHeight - height + height * 0.15;
-    geometry = { stops, docks, end, height, mobile, width: window.innerWidth };
+    geometry = { stops, docks, end, height, mobile, width: window.innerWidth, heroExit };
     dirty = false;
   };
   const notify = () => {

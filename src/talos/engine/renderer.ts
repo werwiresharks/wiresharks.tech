@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { HomeFrame } from "../home/journey.ts";
+import { HomeMotion } from "../home/journey.ts";
 import type { TalosView } from "./engine.ts";
 import type { Effect, Layout, ThreadTarget } from "./layout.ts";
 import type { TalosModel } from "./model.ts";
@@ -84,6 +85,7 @@ export class TalosRenderer implements TalosView {
   private tiltX = 0;
   private tiltY = 0;
   private time = 0;
+  private homeMotion = new HomeMotion();
   private last = 0;
   private frameHandle = 0;
   private visible = true;
@@ -431,7 +433,7 @@ export class TalosRenderer implements TalosView {
   private advance(dt: number, still: boolean) {
     this.time += dt;
     if (this.options.home) {
-      const pose = this.options.home.sample();
+      const pose = this.homeMotion.step(this.options.home.sample(), dt, still);
       this.system.position.set(0, 0, 0);
       this.system.scale.setScalar(1);
       const response = still ? 1 : 1 - Math.exp(-dt * 3);

@@ -1908,14 +1908,22 @@ button {
 }
 @media (max-width: 767px) {
   .home-page .wrap { padding-right: 34px; }
-  .home-page .hero { padding-top: calc(var(--header-height) + clamp(180px, 46vw, 220px) + 40px); }
-  .home-page .hero-backdrop .tpe-static {
-    top: calc(80px + min(23vw, 110px));
-    left: auto;
-    right: 24px;
-    width: min(46vw, 220px);
-    transform: translateY(-50%);
+  .home-page .hero {
+    min-height: 100svh;
+    padding-top: calc(var(--header-height) + 24px);
+    padding-bottom: calc(min(46vw, 220px) + 56px);
   }
+  .home-page .hero-glass, .home-page .hero-ctas { margin-top: 24px; }
+  .home-page .hero-launch { margin-top: 28px; }
+  .home-page .hero-backdrop .tpe-static {
+    top: auto;
+    bottom: 36px;
+    left: 50%;
+    right: auto;
+    width: min(46vw, 220px);
+    transform: translateX(-50%);
+  }
+  .home-page .hero-backdrop::after { background: none; }
   .home-page .section-head { padding-right: 0; }
   .home-page .section-head h2 { margin-top: 32px; }
   .home-landing, .home-section-landing { width: 40px; height: 40px; top: -10px; }

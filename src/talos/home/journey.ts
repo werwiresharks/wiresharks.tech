@@ -19,6 +19,7 @@ export type HomeGeometry = {
   height: number;
   mobile: boolean;
   width?: number;
+  heroExit?: number;
 };
 
 export const HOME_KEYS = [
@@ -34,6 +35,36 @@ export function createHomeFrame(): HomeFrame {
   };
 }
 
+/** The scroll pose stays deterministic; this follower preserves velocity between wheel steps. */
+export class HomeMotion {
+  private frame = createHomeFrame();
+  private velocity = { x: 0, y: 0, radius: 0 };
+  private initialized = false;
+
+  step(target: HomeFrame, dt: number, snap = false): HomeFrame {
+    const immediate = snap || !this.initialized;
+    this.initialized = true;
+    const decay = Math.exp(-12 * dt);
+    for (const axis of ["x", "y", "radius"] as const) {
+      const offset = this.frame.mother[axis] - target.mother[axis];
+      const change = this.velocity[axis] + 12 * offset;
+      this.frame.mother[axis] = immediate ? target.mother[axis] : target.mother[axis] + (offset + change * dt) * decay;
+      this.velocity[axis] = immediate ? 0 : (this.velocity[axis] - 12 * change * dt) * decay;
+    }
+    const blend = immediate ? 1 : 1 - Math.exp(-10 * dt);
+    this.frame.opacity += (target.opacity - this.frame.opacity) * blend;
+    for (let i = 0; i < this.frame.satellites.length; i++) {
+      const current = this.frame.satellites[i];
+      const next = target.satellites[i];
+      current.frame.x = next.frame.x;
+      current.frame.y = next.frame.y;
+      current.frame.radius = next.frame.radius;
+      current.mix += (next.mix - current.mix) * blend;
+    }
+    return this.frame;
+  }
+}
+
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const smooth = (n: number) => { const t = clamp(n); return t * t * (3 - 2 * t); };
 
@@ -46,7 +77,7 @@ export function heroFrame(width: number, height: number): Framing {
     return { x: width * 0.66, y: 112 + radius, radius };
   }
   const radius = Math.min(width * 0.23, 110);
-  return { x: width - radius - 24, y: 84 + radius, radius };
+  return { x: width / 2, y: height - radius - 36, radius };
 }
 
 /** Samples cached document coordinates into an existing viewport pose. */
@@ -66,7 +97,7 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
   out.mother.x = left.frame.x + (right.frame.x - left.frame.x) * t + arc;
   out.mother.y = left.frame.y + (right.frame.y - left.frame.y) * t - scroll;
   out.mother.radius = left.frame.radius + (right.frame.radius - left.frame.radius) * t;
-  if (geometry.width !== undefined) {
+  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1)) {
     const header = geometry.mobile ? 64 : 76;
     const edge = geometry.mobile ? 11 : geometry.width < 1024 ? 12 : 22;
     const margin = geometry.mobile ? 4 : geometry.width < 1024 ? 8 : 24;
