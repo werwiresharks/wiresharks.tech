@@ -84,6 +84,8 @@ export class ParticleField {
   private time = 0;
   private homeCos = new Float32Array(3);
   private homeSin = new Float32Array(3);
+  // Per-body tilt (cos/sin x, cos/sin y): one entry per satellite plus the mother.
+  private homeTilt = new Float32Array(4 * 51);
 
   constructor(capacity: number) {
     this.capacity = capacity;
@@ -351,19 +353,33 @@ export class ParticleField {
   stepHome(frame: HomeFrame, width: number, height: number, worldHeight: number, time: number, tiltX = 0, tiltY = 0) {
     const unit = worldHeight / height;
     const base = TONES.idle;
-    const cx = Math.cos(tiltX);
-    const sx = Math.sin(tiltX);
-    const cy = Math.cos(tiltY);
-    const sy = Math.sin(tiltY);
     const warmth = Math.max(0, Math.min(1, (160 - frame.mother.radius) / 100));
+    // Small orbs (the docked coordinator, rail marker and worker icons) need visible life:
+    // a rigid spin of an even sphere reads as static at a few dozen pixels.
+    const small = Math.max(0, Math.min(1, (70 - frame.mother.radius) / 40));
     for (let shell = 0; shell < SHELLS.length; shell++) {
       this.homeCos[shell] = Math.cos(time * SHELLS[shell].speed);
       this.homeSin[shell] = Math.sin(time * SHELLS[shell].speed);
     }
+    const bodies = frame.satellites.length;
+    // A slow precession shows the poles, so the spin reads as 3D. Satellites ease from the mother's into their own.
+    const motherX = small * 0.45 * Math.sin(time * 0.29);
+    const motherY = small * 0.36 * Math.sin(time * 0.21 + 1);
+    for (let b = 0; b <= bodies; b++) {
+      const mix = b < bodies ? frame.satellites[b].mix : 0;
+      const ax = tiltX + motherX + (0.3 * Math.sin(time * 0.29 + (b + 1) * 1.7) - motherX) * mix;
+      const ay = tiltY + motherY + (0.24 * Math.sin(time * 0.21 + (b + 1) * 2.3 + 1) - motherY) * mix;
+      const o = b * 4;
+      this.homeTilt[o] = Math.cos(ax);
+      this.homeTilt[o + 1] = Math.sin(ax);
+      this.homeTilt[o + 2] = Math.cos(ay);
+      this.homeTilt[o + 3] = Math.sin(ay);
+    }
     for (let i = 0; i < this.active; i++) {
       const i3 = i * 3;
       const i4 = i * 4;
-      const satellite = frame.satellites[i % 50];
+      const cohort = i % 50;
+      const satellite = frame.satellites[cohort];
       const mix = satellite?.mix ?? 0;
       const mother = frame.mother;
       const target = satellite?.frame ?? mother;
@@ -377,14 +393,35 @@ export class ParticleField {
       const shellSin = this.homeSin[this.shell[i]];
       const cos = shellCos * cosOffset - shellSin * sinOffset;
       const sin = shellSin * cosOffset + shellCos * sinOffset;
-      const breath = 1 + mix * 0.065 * Math.sin(time * 1.9 + (i % 50) * 0.85);
+      // The mother only breathes inward so it never outgrows its frame.
+      const breath = 1 + mix * 0.06 * Math.sin(time * 1.1 + cohort * 0.85) - small * (1 - mix) * 0.035 * (0.5 - 0.5 * Math.cos(time * 0.8));
       const r = this.radial[i] * radius * breath;
+      const o = (satellite ? cohort : bodies) * 4;
+      const bcx = this.homeTilt[o];
+      const bsx = this.homeTilt[o + 1];
+      const bcy = this.homeTilt[o + 2];
+      const bsy = this.homeTilt[o + 3];
       const dx = this.dir[i3] * cos + this.dir[i3 + 2] * sin;
       const dz = -this.dir[i3] * sin + this.dir[i3 + 2] * cos;
-      const tx = dx * cy + dz * sy;
-      const tz = -dx * sy + dz * cy;
-      const localY = this.dir[i3 + 1] * cx - tz * sx;
-      const localZ = this.dir[i3 + 1] * sx + tz * cx;
+      let tx = dx * bcy + dz * bsy;
+      const tz = -dx * bsy + dz * bcy;
+      let localY = this.dir[i3 + 1] * bcx - tz * bsx;
+      let localZ = this.dir[i3 + 1] * bsx + tz * bcx;
+      const lively = Math.max(small, mix);
+      const seed = this.seed[i];
+      let twinkle = 0;
+      if (lively > 0) {
+        // Each particle wanders over its own shell on unrelated periods, so nothing loops visibly.
+        const wander = lively * (0.06 + 0.09 * mix);
+        tx += wander * Math.sin(time * (0.5 + seed * 0.7) + seed * 40);
+        localY += wander * Math.cos(time * (0.45 + seed * 0.6) + seed * 23);
+        localZ += wander * Math.sin(time * (0.55 + seed * 0.5) + seed * 61);
+        const n = 1 / Math.hypot(tx, localY, localZ);
+        tx *= n;
+        localY *= n;
+        localZ *= n;
+        twinkle = lively * (0.5 + 0.5 * Math.sin(time * (0.6 + seed * 0.8) + seed * 17));
+      }
       this.position[i3] = (x - width / 2) * unit + tx * r;
       this.position[i3 + 1] = (height / 2 - y) * unit + localY * r;
       this.position[i3 + 2] = localZ * r;
@@ -396,9 +433,9 @@ export class ParticleField {
       const density = Math.min(1, pixelRadius * pixelRadius * 0.9 / cohortCount);
       const edge = Math.min(0.08, Math.max(0.002, density * 0.2));
       const alpha = Math.max(0, Math.min(1, (density - this.seed[i]) / edge));
-      this.params[i4] = base.alpha * frame.opacity * alpha;
+      this.params[i4] = base.alpha * frame.opacity * alpha * (1 - 0.3 * twinkle);
       const size = Math.max(0.5, Math.min(1, mother.radius / 160));
-      this.params[i4 + 1] = size + (0.7 - size) * mix;
+      this.params[i4 + 1] = (size + (0.7 - size) * mix) * (1 + 0.25 * (twinkle - 0.5 * lively));
       this.params[i4 + 2] = 0;
       this.params[i4 + 3] = this.seed[i];
     }

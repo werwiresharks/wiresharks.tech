@@ -243,3 +243,30 @@ for (const capacity of [7150, 1430]) test(`minimum homepage quality retains reco
   assert.equal(field.active, Math.min(capacity, 2400));
   assert.equal(field.capacity, capacity);
 });
+
+test("small orbs wander and breathe while the hero sphere keeps its rigid spin", () => {
+  const movement = (radius: number, mix: number) => {
+    const field = new ParticleField(3000);
+    const pose = createHomeFrame();
+    pose.mother = { x: 640, y: 400, radius };
+    pose.satellites[0].frame = { x: 200, y: 300, radius: 9 };
+    pose.satellites[0].mix = mix;
+    field.stepHome(pose, 1280, 800, 4, 10);
+    const before = field.position.slice();
+    const alpha = field.params.slice();
+    field.stepHome(pose, 1280, 800, 4, 10.5);
+    let shift = 0;
+    let fade = 0;
+    // A rigid spin keeps every radius and alpha unchanged.
+    for (let i = 0; i < field.active; i++) {
+      const at = (p: Float32Array) => Math.hypot(p[i * 3] - (pose.mother.x - 640) * 4 / 800, p[i * 3 + 1], p[i * 3 + 2]);
+      if (i % 50 >= 10) shift += Math.abs(at(field.position) - at(before));
+      fade += Math.abs(field.params[i * 4] - alpha[i * 4]);
+    }
+    return { shift, fade };
+  };
+  const hero = movement(300, 0);
+  const dock = movement(34, 1);
+  assert.ok(hero.fade === 0 && hero.shift < dock.shift / 1000, JSON.stringify({ hero, dock }));
+  assert.ok(dock.fade > 0, JSON.stringify(dock));
+});
