@@ -4,7 +4,6 @@ export type HomeFrame = {
   mother: Framing;
   docked: boolean;
   scroll: number;
-  transit: { mix: number; x: number; y: number };
   satellites: { key: string; frame: Framing; mix: number }[];
   opacity: number;
 };
@@ -36,7 +35,6 @@ export function createHomeFrame(): HomeFrame {
     mother: { x: 0, y: 0, radius: 0 },
     docked: false,
     scroll: 0,
-    transit: { mix: 0, x: 1, y: 0 },
     satellites: HOME_KEYS.map((key) => ({ key, frame: { x: 0, y: 0, radius: 0 }, mix: 0 })),
     opacity: 1,
   };
@@ -67,10 +65,6 @@ export class HomeMotion {
     }
     const blend = immediate ? 1 : 1 - Math.exp(-10 * dt);
     this.frame.opacity += (target.opacity - this.frame.opacity) * blend;
-    this.frame.transit.mix += (target.transit.mix - this.frame.transit.mix) * blend;
-    this.frame.transit.x += (target.transit.x - this.frame.transit.x) * blend;
-    this.frame.transit.y += (target.transit.y - this.frame.transit.y) * blend;
-    if (Math.abs(this.frame.transit.mix - target.transit.mix) < 0.001) this.frame.transit.mix = target.transit.mix;
     for (let i = 0; i < this.frame.satellites.length; i++) {
       const current = this.frame.satellites[i];
       const next = target.satellites[i];
@@ -113,12 +107,8 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
   const t = smooth((scroll - left.at) / Math.max(1, right.at - left.at));
   const dx = right.frame.x - left.frame.x;
   const dy = right.frame.y - left.frame.y;
-  const distance = Math.hypot(dx, dy);
-  out.transit.mix = distance > 1 ? 4 * t * (1 - t) : 0;
-  out.transit.x = distance > 1 ? dx / distance : 1;
-  out.transit.y = distance > 1 ? dy / distance : 0;
   out.mother.x = left.frame.x + dx * t;
-  out.mother.y = left.frame.y + (right.frame.y - left.frame.y) * t - scroll;
+  out.mother.y = left.frame.y + dy * t - scroll;
   out.mother.radius = left.frame.radius + (right.frame.radius - left.frame.radius) * t;
   const docked = geometry.docks.some((dock) => dock.holdFrom !== undefined && scroll >= dock.holdFrom && scroll <= dock.leave);
   out.docked = docked;

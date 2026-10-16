@@ -184,49 +184,26 @@ test("docking eases accumulated travel error before exact attachment and continu
   assert.deepEqual(motion.step(target, 1 / 60).mother, target.mother);
 });
 
-test("transit is a reversible thin stream with exact spheres at landing and stable buffers", () => {
+test("the mother stays spherical throughout travel and reverse scrolling", () => {
   const field = new ParticleField(3000);
   const g = geometry();
-  const buffers = [field.position, field.color, field.params];
-  const landing = sampleHomeFrame(g, 1400, createHomeFrame());
-  assert.equal(landing.transit.mix, 0);
-  field.stepHome(landing, 1280, 800, 4, 0);
-  const sphere = field.position.slice();
-  const sphereUnit = 4 / 800;
-  let sphereExtent = 0;
-  for (let i = 10; i < field.active; i += 50) {
-    const radius = Math.hypot(sphere[i * 3] - (landing.mother.x - 640) * sphereUnit,
-      sphere[i * 3 + 1] - (400 - landing.mother.y) * sphereUnit, sphere[i * 3 + 2]);
-    assert.ok(radius <= landing.mother.radius * sphereUnit + 0.000001);
-    sphereExtent = Math.max(sphereExtent, radius);
-  }
-  assert.ok(sphereExtent > landing.mother.radius * sphereUnit * 0.95);
-  const transit = sampleHomeFrame(g, 1100, createHomeFrame());
-  assert.equal(transit.transit.mix, 1);
-  field.stepHome(transit, 1280, 800, 4, 0);
-  const positions = field.position.slice();
-  assert.ok(positions.every(Number.isFinite));
-  const nx = transit.transit.x;
-  const ny = -transit.transit.y;
-  let along = 0;
-  let across = 0;
   const unit = 4 / 800;
-  for (let i = 10; i < field.active; i += 50) {
-    const x = positions[i * 3] - (transit.mother.x - 640) * unit;
-    const y = positions[i * 3 + 1] - (400 - transit.mother.y) * unit;
-    along += (x * nx + y * ny) ** 2;
-    across += (-x * ny + y * nx) ** 2;
+  const buffer = field.position;
+  for (const scroll of [0, 400, 800, 1100, 1400, 1800, 1400, 1100, 400, 0]) {
+    const pose = sampleHomeFrame(g, scroll, createHomeFrame());
+    field.stepHome(pose, 1280, 800, 4, 0);
+    let extent = 0;
+    for (let i = 10; i < field.active; i += 50) {
+      const radius = Math.hypot(
+        field.position[i * 3] - (pose.mother.x - 640) * unit,
+        field.position[i * 3 + 1] - (400 - pose.mother.y) * unit,
+        field.position[i * 3 + 2],
+      );
+      assert.ok(radius <= pose.mother.radius * unit + 0.000001);
+      extent = Math.max(extent, radius);
+    }
+    assert.ok(extent > pose.mother.radius * unit * 0.95);
+    assert.equal(field.position, buffer);
+    assert.ok(field.position.every(Number.isFinite));
   }
-  assert.ok(along > across * 8);
-  sampleHomeFrame(g, 1900, transit);
-  field.stepHome(transit, 1280, 800, 4, 0);
-  sampleHomeFrame(g, 1100, transit);
-  field.stepHome(transit, 1280, 800, 4, 0);
-  assert.deepEqual(field.position, positions);
-  field.stepHome(landing, 1280, 800, 4, 0);
-  assert.deepEqual(field.position, sphere);
-  assert.equal(field.position, buffers[0]);
-  assert.equal(field.color, buffers[1]);
-  assert.equal(field.params, buffers[2]);
-  assert.equal(field.active, 3000);
 });
