@@ -255,13 +255,18 @@ button {
   --bar-inset: 12px;
   --bar-height: 56px;
   --bar-motion: 420ms cubic-bezier(0.4, 0, 0.2, 1);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
   height: var(--header-height);
   display: flex;
   justify-content: center;
   pointer-events: none; /* only the bar itself is interactive */
+}
+.masthead + main {
+  padding-top: var(--header-height);
 }
 .masthead-bar {
   position: relative;
