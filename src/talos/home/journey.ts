@@ -8,6 +8,38 @@ export type HomeFrame = {
   opacity: number;
   /** 0–1: how far particles take the bronze tone used over dark sections. */
   warm: number;
+  flow: HomeFlow;
+};
+
+/**
+ * One orb dissolving into a stream and reforming as another. `progress` runs 0 (all particles in
+ * `from`) to 1 (all in `to`); `weight` blends the flow in over the ordinary single-orb pose.
+ */
+export type HomeFlow = {
+  progress: number;
+  weight: number;
+  from: Framing;
+  to: Framing;
+  /** The channel every path bends through, in viewport pixels. */
+  via: { x: number; y: number };
+  warmFrom: number;
+  warmTo: number;
+};
+
+/**
+ * Document frames for the flow's two orbs. A `pinned` source holds its viewport position once
+ * scrolling passes `start`; otherwise it rides the page. `via` (document) routes the stream around
+ * copy; by default it bows away from the left-hand column.
+ */
+export type JourneyFlow = {
+  start: number;
+  end: number;
+  from: Framing;
+  to: Framing;
+  pinned: boolean;
+  via?: { x: number; y: number };
+  warmFrom?: number;
+  warmTo?: number;
 };
 
 export type JourneyStop = { at: number; frame: Framing; opacity?: number; warm?: number };
@@ -26,6 +58,7 @@ export type HomeGeometry = {
   mobile: boolean;
   width?: number;
   heroExit?: number;
+  flow?: JourneyFlow;
 };
 
 export const HOME_KEYS = [
@@ -41,6 +74,7 @@ export function createHomeFrame(): HomeFrame {
     satellites: HOME_KEYS.map((key) => ({ key, frame: { x: 0, y: 0, radius: 0 }, mix: 0 })),
     opacity: 1,
     warm: 0,
+    flow: { progress: 0, weight: 0, from: { x: 0, y: 0, radius: 0 }, to: { x: 0, y: 0, radius: 0 }, via: { x: 0, y: 0 }, warmFrom: 0, warmTo: 0 },
   };
 }
 
@@ -70,6 +104,18 @@ export class HomeMotion {
     const blend = immediate ? 1 : 1 - Math.exp(-10 * dt);
     this.frame.opacity += (target.opacity - this.frame.opacity) * blend;
     this.frame.warm += (target.warm - this.frame.warm) * blend;
+    // The flow's ends are exact document frames; its progress eases like the mother so wheel jumps glide.
+    const flow = this.frame.flow;
+    const next = target.flow;
+    Object.assign(flow.from, next.from);
+    Object.assign(flow.to, next.to);
+    Object.assign(flow.via, next.via);
+    flow.warmFrom = next.warmFrom;
+    flow.warmTo = next.warmTo;
+    flow.progress = immediate || Math.abs(next.progress - flow.progress) < 0.0005 ? next.progress : flow.progress + (next.progress - flow.progress) * blend;
+    // Stay in flight until the eased progress lands, then hand back to the single orb.
+    const flying = next.weight > 0 || (flow.progress > 0.0005 && flow.progress < 0.9995) ? 1 : 0;
+    flow.weight = immediate || Math.abs(flying - flow.weight) < 0.0005 ? flying : flow.weight + (flying - flow.weight) * blend;
     for (let i = 0; i < this.frame.satellites.length; i++) {
       const current = this.frame.satellites[i];
       const next = target.satellites[i];
@@ -161,6 +207,41 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
       satellite.frame.radius = target.radius;
       break;
     }
+  }
+  const flow = geometry.flow;
+  if (flow) {
+    const f = out.flow;
+    f.from.x = flow.from.x;
+    f.from.y = flow.from.y - (flow.pinned ? flow.start : scroll);
+    f.from.radius = flow.from.radius;
+    f.to.x = flow.to.x;
+    f.to.y = flow.to.y - scroll;
+    f.to.radius = flow.to.radius;
+    if (flow.via) {
+      f.via.x = flow.via.x;
+      f.via.y = flow.via.y - scroll;
+    } else {
+      const dx = f.to.x - f.from.x;
+      const dy = f.to.y - f.from.y;
+      // Perpendicular, pointing right (screen y runs down).
+      const flip = dy >= 0 ? 1 : -1;
+      f.via.x = (f.from.x + f.to.x) / 2 + Math.abs(dy) * 0.16;
+      f.via.y = (f.from.y + f.to.y) / 2 - dx * 0.16 * flip;
+    }
+    f.warmFrom = flow.warmFrom ?? 0;
+    f.warmTo = flow.warmTo ?? 0;
+    f.progress = clamp((scroll - flow.start) / Math.max(1, flow.end - flow.start));
+    f.weight = scroll > flow.start && scroll < flow.end ? 1 : 0;
+    if (f.weight) {
+      // The single-orb pose the flow stands in for: continuous with the stops at both ends.
+      const k = smooth(f.progress);
+      out.mother.x = f.from.x + (f.to.x - f.from.x) * k;
+      out.mother.y = f.from.y + (f.to.y - f.from.y) * k;
+      out.mother.radius = f.from.radius + (f.to.radius - f.from.radius) * k;
+      out.warm = f.warmFrom + (f.warmTo - f.warmFrom) * k;
+    }
+  } else {
+    out.flow.weight = 0;
   }
   return out;
 }

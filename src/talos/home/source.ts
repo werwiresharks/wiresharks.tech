@@ -96,6 +96,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       stops.push(...next);
     };
     const releaseFrame = mobile ? null : closingFrame();
+    let destination: { at: number; frame: Framing } | null = null;
     for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
       if (key === "closing" && releaseFrame) continue;
       const node = root.querySelector(`[data-home-stop="${key}"]`);
@@ -121,6 +122,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         approach.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 160 : hold) } });
       }
       at = Math.max(at, approach[approach.length - 1].at + height * 0.12);
+      if (key === "products") destination = { at, frame };
       const panel = key === "talos" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
       const panelRelease = panel
         ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
@@ -182,7 +184,25 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     stops.sort((a, b) => a.at - b.at);
     // The release orb stays inside its section, which scrolls away by itself; it needs no fade at the page end.
     const end = releaseFrame && closing ? Infinity : document.documentElement.scrollHeight - height + height * 0.15;
-    geometry = { stops, docks, end, height, mobile, width: window.innerWidth, heroExit };
+    // The hero orb dissolves into a stream and reforms as the products orb. Beside the desktop copy it
+    // holds in place from the top. Where the copy stacks under or over it, it rides the page, and the
+    // stream runs down the right margin, clear of the text.
+    const flowStart = mobile ? heroExit : 0;
+    const side = window.innerWidth >= 1024;
+    const flow = destination && destination.at - flowStart > height * 0.25
+      ? {
+          start: flowStart,
+          end: destination.at,
+          from: heroPose,
+          to: destination.frame,
+          pinned: side,
+          via: side ? undefined : {
+            x: window.innerWidth - Math.max(20, window.innerWidth * 0.05),
+            y: (heroPose.y + destination.frame.y) / 2,
+          },
+        }
+      : undefined;
+    geometry = { stops, docks, end, height, mobile, width: window.innerWidth, heroExit, flow };
     dirty = false;
   };
   const notify = () => {

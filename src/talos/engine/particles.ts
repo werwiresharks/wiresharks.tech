@@ -17,6 +17,13 @@ const SHELLS = [
   { fraction: 0.08, inner: 0.08, outer: 0.3, speed: 0.15 },
 ];
 const MAX_SLOTS = 96;
+/** Share of the flow's scroll range each particle spends in flight. */
+const FLOW_WINDOW = 0.42;
+const smoothstep = (n: number) => { const t = Math.max(0, Math.min(1, n)); return t * t * (3 - 2 * t); };
+/** Small orbs (the docked coordinator, rail marker and worker icons) get visible life. */
+const smallness = (radius: number) => Math.max(0, Math.min(1, (70 - radius) / 40));
+/** Small orbs, which sit over dark sections, take the bronze tone. */
+const warmthOf = (radius: number) => Math.min(1, (160 - radius) / 100);
 const STIFFNESS = 16;
 
 type Cluster = {
@@ -84,8 +91,10 @@ export class ParticleField {
   private time = 0;
   private homeCos = new Float32Array(3);
   private homeSin = new Float32Array(3);
-  // Per-body tilt (cos/sin x, cos/sin y): one entry per satellite plus the mother.
-  private homeTilt = new Float32Array(4 * 51);
+  // Per-body tilt (cos/sin x, cos/sin y): one per satellite, the mother, and the flow's two ends.
+  private homeTilt = new Float32Array(4 * 53);
+  // Scratch for one particle: mother, flow source, flow destination and blended result, 8 values each.
+  private body = new Float32Array(32);
 
   constructor(capacity: number) {
     this.capacity = capacity;
@@ -352,16 +361,12 @@ export class ParticleField {
   /** Fixed cohorts morph from their original lattice without changing event ownership. */
   stepHome(frame: HomeFrame, width: number, height: number, worldHeight: number, time: number, tiltX = 0, tiltY = 0) {
     const unit = worldHeight / height;
-    const base = TONES.idle;
-    const warmth = Math.max(frame.warm, Math.min(1, (160 - frame.mother.radius) / 100), 0);
-    // Small orbs (the docked coordinator, rail marker and worker icons) need visible life:
-    // a rigid spin of an even sphere reads as static at a few dozen pixels.
-    const small = Math.max(0, Math.min(1, (70 - frame.mother.radius) / 40));
     for (let shell = 0; shell < SHELLS.length; shell++) {
       this.homeCos[shell] = Math.cos(time * SHELLS[shell].speed);
       this.homeSin[shell] = Math.sin(time * SHELLS[shell].speed);
     }
     const bodies = frame.satellites.length;
+    const small = smallness(frame.mother.radius);
     // A slow precession shows the poles, so the spin reads as 3D. Satellites ease from the mother's into their own.
     const motherX = small * 0.45 * Math.sin(time * 0.29);
     const motherY = small * 0.36 * Math.sin(time * 0.21 + 1);
@@ -369,12 +374,47 @@ export class ParticleField {
       const mix = b < bodies ? frame.satellites[b].mix : 0;
       const ax = tiltX + motherX + (0.3 * Math.sin(time * 0.29 + (b + 1) * 1.7) - motherX) * mix;
       const ay = tiltY + motherY + (0.24 * Math.sin(time * 0.21 + (b + 1) * 2.3 + 1) - motherY) * mix;
-      const o = b * 4;
-      this.homeTilt[o] = Math.cos(ax);
-      this.homeTilt[o + 1] = Math.sin(ax);
-      this.homeTilt[o + 2] = Math.cos(ay);
-      this.homeTilt[o + 3] = Math.sin(ay);
+      this.setTilt(b, ax, ay);
     }
+    const warmth = Math.max(frame.warm, warmthOf(frame.mother.radius), 0);
+
+    // Flow: the source and destination orbs, and each particle's path between them.
+    const flow = frame.flow;
+    const flowing = flow.weight > 0.0005;
+    let smallFrom = 0;
+    let smallTo = 0;
+    let warmFrom = 0;
+    let warmTo = 0;
+    let dhx = 0;
+    let dhy = 0;
+    let nx = 0;
+    let ny = 0;
+    let spread = 0;
+    let midX = 0;
+    let midY = 0;
+    if (flowing) {
+      smallFrom = smallness(flow.from.radius);
+      smallTo = smallness(flow.to.radius);
+      warmFrom = Math.max(flow.warmFrom, warmthOf(flow.from.radius), 0);
+      warmTo = Math.max(flow.warmTo, warmthOf(flow.to.radius), 0);
+      this.setTilt(bodies + 1, tiltX + smallFrom * 0.45 * Math.sin(time * 0.29), tiltY + smallFrom * 0.36 * Math.sin(time * 0.21 + 1));
+      this.setTilt(bodies + 2, smallTo * 0.45 * Math.sin(time * 0.29), smallTo * 0.36 * Math.sin(time * 0.21 + 1));
+      // World space: x right, y up.
+      const ddx = (flow.to.x - flow.from.x) * unit;
+      const ddy = (flow.from.y - flow.to.y) * unit;
+      const distance = Math.hypot(ddx, ddy) || unit;
+      dhx = ddx / distance;
+      dhy = ddy / distance;
+      // Lateral scatter runs across the direction of travel.
+      nx = -dhy;
+      ny = dhx;
+      // Paths share one channel, so the stream pinches between the orbs.
+      spread = Math.min(distance * 0.14, Math.max(flow.from.radius, flow.to.radius) * unit * 0.35) * (width < 768 ? 0.6 : 1);
+      midX = (flow.via.x - width / 2) * unit;
+      midY = (height / 2 - flow.via.y) * unit;
+    }
+
+    const body = this.body;
     for (let i = 0; i < this.active; i++) {
       const i3 = i * 3;
       const i4 = i * 4;
@@ -382,63 +422,131 @@ export class ParticleField {
       const satellite = frame.satellites[cohort];
       const mix = satellite?.mix ?? 0;
       const mother = frame.mother;
-      const target = satellite?.frame ?? mother;
-      const x = mother.x + (target.x - mother.x) * mix;
-      const y = mother.y + (target.y - mother.y) * mix;
-      const radius = (mother.radius + (target.radius - mother.radius) * mix) * unit;
-      const angle = time * 0.38 * mix;
-      const cosOffset = Math.cos(angle);
-      const sinOffset = Math.sin(angle);
-      const shellCos = this.homeCos[this.shell[i]];
-      const shellSin = this.homeSin[this.shell[i]];
-      const cos = shellCos * cosOffset - shellSin * sinOffset;
-      const sin = shellSin * cosOffset + shellCos * sinOffset;
-      // The mother only breathes inward so it never outgrows its frame.
-      const breath = 1 + mix * 0.06 * Math.sin(time * 1.1 + cohort * 0.85) - small * (1 - mix) * 0.035 * (0.5 - 0.5 * Math.cos(time * 0.8));
-      const r = this.radial[i] * radius * breath;
-      const o = (satellite ? cohort : bodies) * 4;
-      const bcx = this.homeTilt[o];
-      const bsx = this.homeTilt[o + 1];
-      const bcy = this.homeTilt[o + 2];
-      const bsy = this.homeTilt[o + 3];
-      const dx = this.dir[i3] * cos + this.dir[i3 + 2] * sin;
-      const dz = -this.dir[i3] * sin + this.dir[i3 + 2] * cos;
-      let tx = dx * bcy + dz * bsy;
-      const tz = -dx * bsy + dz * bcy;
-      let localY = this.dir[i3 + 1] * bcx - tz * bsx;
-      let localZ = this.dir[i3 + 1] * bsx + tz * bcx;
-      const lively = Math.max(small, mix);
       const seed = this.seed[i];
-      let twinkle = 0;
-      if (lively > 0) {
-        // Each particle wanders over its own shell on unrelated periods, so nothing loops visibly.
-        const wander = lively * (0.06 + 0.09 * mix);
-        tx += wander * Math.sin(time * (0.5 + seed * 0.7) + seed * 40);
-        localY += wander * Math.cos(time * (0.45 + seed * 0.6) + seed * 23);
-        localZ += wander * Math.sin(time * (0.55 + seed * 0.5) + seed * 61);
-        const n = 1 / Math.hypot(tx, localY, localZ);
-        tx *= n;
-        localY *= n;
-        localZ *= n;
-        twinkle = lively * (0.5 + 0.5 * Math.sin(time * (0.6 + seed * 0.8) + seed * 17));
+      let slot = 0;
+      if (!flowing || mix > 0 || flow.weight < 1) {
+        const target = satellite?.frame ?? mother;
+        const x = mother.x + (target.x - mother.x) * mix;
+        const y = mother.y + (target.y - mother.y) * mix;
+        const radius = mother.radius + (target.radius - mother.radius) * mix;
+        this.place(0, i, x, y, radius, satellite ? cohort : bodies, small, mix, cohort, warmth, time, unit, width, height);
       }
-      this.position[i3] = (x - width / 2) * unit + tx * r;
-      this.position[i3 + 1] = (height / 2 - y) * unit + localY * r;
-      this.position[i3 + 2] = localZ * r;
-      const color = this.accentMask[i] ? base.accent : base.base;
-      const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
-      for (let j = 0; j < 3; j++) this.color[i3 + j] = color[j] + (bronze[j] - color[j]) * warmth;
-      const pixelRadius = radius / unit;
-      const cohortCount = this.active * (1 - 0.98 * mix);
-      const density = Math.min(1, pixelRadius * pixelRadius * 0.9 / cohortCount);
-      const edge = Math.min(0.08, Math.max(0.002, density * 0.2));
-      const alpha = Math.max(0, Math.min(1, (density - this.seed[i]) / edge));
-      this.params[i4] = base.alpha * frame.opacity * alpha * (1 - 0.3 * twinkle);
-      const size = Math.max(0.5, Math.min(1, mother.radius / 160));
-      this.params[i4 + 1] = (size + (0.7 - size) * mix) * (1 + 0.25 * (twinkle - 0.5 * lively));
+      if (flowing && mix === 0) {
+        this.place(8, i, flow.from.x, flow.from.y, flow.from.radius, bodies + 1, smallFrom, 0, cohort, warmFrom, time, unit, width, height);
+        this.place(16, i, flow.to.x, flow.to.y, flow.to.radius, bodies + 2, smallTo, 0, cohort, warmTo, time, unit, width, height);
+        // Particles facing the destination leave first, so the orb erodes from that side into a stream.
+        const facing = (1 - (this.dir[i3] * dhx + this.dir[i3 + 1] * dhy)) / 2;
+        const delay = (facing * 0.6 + seed * 0.4) * (1 - FLOW_WINDOW);
+        let p = smoothstep((flow.progress - delay) / FLOW_WINDOW);
+        // In flight, particles shimmer along their path; both ends stay exact.
+        p = Math.max(0, Math.min(1, p + 0.02 * Math.sin(time * 0.9 + seed * 40) * Math.sin(Math.PI * p)));
+        const lateral = ((seed * 97.13) % 1) - 0.5;
+        const depth = ((seed * 61.7 + 0.3) % 1) - 0.5;
+        const q = 1 - p;
+        const a = q * q;
+        const c = 2 * q * p;
+        const e = p * p;
+        const offset = lateral * spread;
+        const cx = midX + nx * offset + dhx * depth * spread;
+        const cy = midY + ny * offset + dhy * depth * spread;
+        const cz = depth * spread * 0.6;
+        body[24] = a * body[8] + c * cx + e * body[16];
+        body[25] = a * body[9] + c * cy + e * body[17];
+        body[26] = a * body[10] + c * cz + e * body[18];
+        // Particles thin to the destination's density only on the final approach, so the stream holds
+        // its body and visibly converges; in flight they glow bronze to read over light and dark sections.
+        const settle = smoothstep((p - 0.55) / 0.45);
+        for (let k = 3; k < 5; k++) body[24 + k] = body[8 + k] + (body[16 + k] - body[8 + k]) * settle;
+        const glow = Math.sin(Math.PI * p);
+        for (let k = 5; k < 8; k++) {
+          const tone = body[8 + k] + (body[16 + k] - body[8 + k]) * p;
+          const bronze = (this.accentMask[i] ? TONES.running.accent : TONES.completed.accent)[k - 5];
+          body[24 + k] = tone + (bronze - tone) * glow;
+        }
+        if (flow.weight < 1) {
+          for (let k = 0; k < 8; k++) body[24 + k] = body[k] + (body[24 + k] - body[k]) * flow.weight;
+        }
+        slot = 24;
+      }
+      this.position[i3] = body[slot];
+      this.position[i3 + 1] = body[slot + 1];
+      this.position[i3 + 2] = body[slot + 2];
+      this.color[i3] = body[slot + 5];
+      this.color[i3 + 1] = body[slot + 6];
+      this.color[i3 + 2] = body[slot + 7];
+      this.params[i4] = TONES.idle.alpha * frame.opacity * body[slot + 3];
+      this.params[i4 + 1] = body[slot + 4];
       this.params[i4 + 2] = 0;
-      this.params[i4 + 3] = this.seed[i];
+      this.params[i4 + 3] = seed;
     }
+  }
+
+  private setTilt(index: number, ax: number, ay: number) {
+    const o = index * 4;
+    this.homeTilt[o] = Math.cos(ax);
+    this.homeTilt[o + 1] = Math.sin(ax);
+    this.homeTilt[o + 2] = Math.cos(ay);
+    this.homeTilt[o + 3] = Math.sin(ay);
+  }
+
+  /**
+   * One particle on a sphere centred at (x, y) CSS pixels: writes world position, alpha (before page
+   * opacity), size and colour into `body` from `out`.
+   */
+  private place(out: number, i: number, x: number, y: number, radiusPx: number, tilt: number, small: number, mix: number,
+    cohort: number, warmth: number, time: number, unit: number, width: number, height: number) {
+    const i3 = i * 3;
+    const body = this.body;
+    const radius = radiusPx * unit;
+    const angle = time * 0.38 * mix;
+    const cosOffset = Math.cos(angle);
+    const sinOffset = Math.sin(angle);
+    const shellCos = this.homeCos[this.shell[i]];
+    const shellSin = this.homeSin[this.shell[i]];
+    const cos = shellCos * cosOffset - shellSin * sinOffset;
+    const sin = shellSin * cosOffset + shellCos * sinOffset;
+    // The mother only breathes inward so it never outgrows its frame.
+    const breath = 1 + mix * 0.06 * Math.sin(time * 1.1 + cohort * 0.85) - small * (1 - mix) * 0.035 * (0.5 - 0.5 * Math.cos(time * 0.8));
+    const r = this.radial[i] * radius * breath;
+    const o = tilt * 4;
+    const bcx = this.homeTilt[o];
+    const bsx = this.homeTilt[o + 1];
+    const bcy = this.homeTilt[o + 2];
+    const bsy = this.homeTilt[o + 3];
+    const dx = this.dir[i3] * cos + this.dir[i3 + 2] * sin;
+    const dz = -this.dir[i3] * sin + this.dir[i3 + 2] * cos;
+    let tx = dx * bcy + dz * bsy;
+    const tz = -dx * bsy + dz * bcy;
+    let localY = this.dir[i3 + 1] * bcx - tz * bsx;
+    let localZ = this.dir[i3 + 1] * bsx + tz * bcx;
+    const lively = Math.max(small, mix);
+    const seed = this.seed[i];
+    let twinkle = 0;
+    if (lively > 0) {
+      // Each particle wanders over its own shell on unrelated periods, so nothing loops visibly.
+      const wander = lively * (0.06 + 0.09 * mix);
+      tx += wander * Math.sin(time * (0.5 + seed * 0.7) + seed * 40);
+      localY += wander * Math.cos(time * (0.45 + seed * 0.6) + seed * 23);
+      localZ += wander * Math.sin(time * (0.55 + seed * 0.5) + seed * 61);
+      const n = 1 / Math.hypot(tx, localY, localZ);
+      tx *= n;
+      localY *= n;
+      localZ *= n;
+      twinkle = lively * (0.5 + 0.5 * Math.sin(time * (0.6 + seed * 0.8) + seed * 17));
+    }
+    body[out] = (x - width / 2) * unit + tx * r;
+    body[out + 1] = (height / 2 - y) * unit + localY * r;
+    body[out + 2] = localZ * r;
+    const cohortCount = this.active * (1 - 0.98 * mix);
+    const density = Math.min(1, radiusPx * radiusPx * 0.9 / cohortCount);
+    const edge = Math.min(0.08, Math.max(0.002, density * 0.2));
+    const alpha = Math.max(0, Math.min(1, (density - seed) / edge));
+    body[out + 3] = alpha * (1 - 0.3 * twinkle);
+    const size = Math.max(0.5, Math.min(1, radiusPx / 160));
+    body[out + 4] = (size + (0.7 - size) * mix) * (1 + 0.25 * (twinkle - 0.5 * lively));
+    const color = this.accentMask[i] ? TONES.idle.accent : TONES.idle.base;
+    const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
+    for (let j = 0; j < 3; j++) body[out + 5 + j] = color[j] + (bronze[j] - color[j]) * warmth;
   }
 
   /**

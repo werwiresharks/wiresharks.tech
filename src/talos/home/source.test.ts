@@ -112,6 +112,19 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
       assert.ok(mother.y + mother.radius <= layout.height, `bottom clearance at ${scroll}`);
     }
   }
+  // The hero flow takes over from, and hands back to, the single orb without a jump.
+  let handoffs = 0;
+  let before = sample(0);
+  for (let scroll = 1; scroll < 3000; scroll++) {
+    const after = sample(scroll);
+    if (after.flow.weight !== before.flow.weight) {
+      handoffs++;
+      assert.ok(Math.hypot(after.mother.x - before.mother.x, after.mother.y - before.mother.y) < 3 && Math.abs(after.mother.radius - before.mother.radius) < 3, `flow hand-off at ${scroll}`);
+      assert.ok(after.flow.progress < 0.01 || after.flow.progress > 0.99, `hand-off at the ends of the flow, not mid-stream (${after.flow.progress})`);
+    }
+    before = after;
+  }
+  assert.ok(handoffs >= 1, "the hero dissolves into a flow");
   const motion = new HomeMotion();
   motion.step(sample(hold - 100), 0);
   for (let frame = 0; frame < 180; frame++) motion.step(sample(hold + 10), 1 / 60);
