@@ -31,17 +31,21 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const stops: JourneyStop[] = [{ at: 0, frame: heroPose }];
     const narrow = window.innerWidth < 1024;
     const rail = { x: window.innerWidth - (mobile ? 15 : narrow ? 20 : 46), y: 120, radius: mobile ? 11 : narrow ? 12 : 22 };
-    const heroExit = mobile ? Math.max(1, heroPose.y - height * 0.65) : -1;
+    const heroExit = mobile ? Math.max(1, heroPose.y - height * 0.65) : height * 0.7;
     if (mobile) {
-      const depart = heroExit + height * 0.2;
+      const depart = heroExit + height * 0.4;
       stops.push(
         { at: heroExit, frame: heroPose },
-        { at: depart, frame: { ...rail, y: depart + 120 } },
+        { at: depart, frame: { ...rail, y: depart + 160 } },
       );
     }
+    if (!mobile) {
+      stops.push({ at: heroExit, frame: { ...rail, y: heroExit + height * 0.5 } });
+    }
     let previousRail = rail.x;
+    let previousDeparture = 0;
     const docks: JourneyDock[] = [];
-    const hold = height * (mobile ? 0.34 : 0.42);
+    const hold = height * (mobile ? 0.44 : 0.5);
     const appendStops = (...next: JourneyStop[]) => {
       const first = next[0];
       while (stops.length > 1 && stops[stops.length - 1].at >= first.at) stops.pop();
@@ -58,22 +62,23 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         const section = root.querySelector(key === "talos" ? "#talos" : "#platform");
         const gap = section ? readFrame(section).y - section.getBoundingClientRect().height / 2 + (key === "talos" ? 24 : -40) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
-        const previousDock = docks.at(-1);
-        const start = Math.max(crossing - height * 0.18, (previousDock?.leave ?? 0) + height * 0.1);
+        const start = Math.max(crossing - height * 0.18, previousDeparture);
         const finish = Math.max(crossing + height * 0.18, start + height * 0.12);
         approach.push(
           { at: start, frame: { ...rail, x: previousRail, y: gap } },
           { at: finish, frame: { ...rail, x: edge, y: gap } },
         );
       } else {
-        const before = Math.max(at - height * (mobile ? 0.42 : 0.32), (docks.at(-1)?.leave ?? -Infinity) + height * 0.1);
-        approach.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
+        const before = Math.max(at - height * (mobile ? 0.42 : 0.32), previousDeparture, key === "products" && !mobile ? heroExit : 0);
+        approach.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 160 : hold) } });
       }
       at = Math.max(at, approach[approach.length - 1].at + height * 0.12);
       const panel = key === "talos" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
-      const release = panel
+      const panelRelease = panel
         ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
         : at + height * 0.08;
+      // Depart while the complete sphere still clears the sticky header and its easing tail.
+      const release = Math.min(panelRelease, frame.y - (mobile ? 64 : 76) - frame.radius - 40 - height * 0.12);
       const after = release + height * 0.24;
       const arrival = at - height * (mobile ? 0.24 : 0.18);
       if (arrival - approach[approach.length - 1].at >= height * 0.08) {
@@ -84,9 +89,10 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         { at, frame },
         { at: release, frame },
         { at: release + height * 0.1, frame: { ...rail, x: edge, y: frame.y } },
-        { at: after, frame: { ...rail, x: edge, y: after + (mobile ? 120 : hold) } },
+        { at: after, frame: { ...rail, x: edge, y: after + (mobile ? 160 : hold) } },
       );
       previousRail = edge;
+      previousDeparture = after;
       if (key === "talon") {
         docks.push({ enter: at - height * 0.18, leave: release, holdFrom: at, satellites: [] });
       }
@@ -99,8 +105,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const last = satellites.at(-1);
       if (!last) continue;
       const enter = at - height * 0.18;
-      const leave = panel ? release : Math.max(at + height * 0.14, last.frame.y - height * 0.42);
-      docks.push({ enter, leave, holdFrom: panel ? at : undefined, satellites });
+      const leave = panel ? panelRelease : Math.max(at + height * 0.14, last.frame.y - height * 0.42);
+      docks.push({ enter, leave: panel ? release : leave, satelliteLeave: leave, holdFrom: panel ? at : undefined, satellites });
     }
     const faq = root.querySelector(".faq");
     if (faq) {

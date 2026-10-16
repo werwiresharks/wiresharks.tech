@@ -138,12 +138,13 @@ test("a settled harness sphere stays attached to its panel until the reader move
   const g = geometry();
   g.width = 1280;
   g.stops = [
-    { at: 1400, frame: { x: 300, y: 1700, radius: 34 } },
-    { at: 2000, frame: { x: 300, y: 1700, radius: 34 } },
+    { at: 1200, frame: { x: 300, y: 1700, radius: 34 } },
+    { at: 1420, frame: { x: 300, y: 1700, radius: 34 } },
   ];
-  g.docks[0].holdFrom = 1400;
-  g.docks[0].leave = 2000;
-  for (const scroll of [1500, 1700, 1900]) {
+  g.docks[0].enter = 1050;
+  g.docks[0].holdFrom = 1200;
+  g.docks[0].leave = 1420;
+  for (const scroll of [1250, 1300, 1400]) {
     const pose = sampleHomeFrame(g, scroll, createHomeFrame());
     assert.deepEqual(pose.mother, { x: 300, y: 1700 - scroll, radius: 34 });
     assert.ok(pose.satellites.slice(0, 6).every((satellite) => satellite.mix === 1));
@@ -206,4 +207,39 @@ test("the mother stays spherical throughout travel and reverse scrolling", () =>
     assert.equal(field.position, buffer);
     assert.ok(field.position.every(Number.isFinite));
   }
+});
+
+for (const capacity of [7150, 1430]) test(`minimum homepage quality retains recognizable shells with capacity ${capacity}`, () => {
+  const field = new ParticleField(capacity);
+  field.setActive(Math.min(2400, capacity));
+  const pose = createHomeFrame();
+  pose.mother = { x: 195, y: 240, radius: 22 };
+  for (let i = 0; i < 6; i++) {
+    pose.satellites[i].frame = { x: 60, y: 180 + i * 50, radius: 7 };
+    pose.satellites[i].mix = 1;
+  }
+  field.stepHome(pose, 390, 667, 4, 0);
+  const visible = new Array(7).fill(0);
+  const extents = Array.from({ length: 6 }, () => ({ left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }));
+  for (let i = 0; i < field.active; i++) {
+    if (field.params[i * 4] < 0.1) continue;
+    const cohort = i % 50;
+    visible[cohort < 6 ? cohort : 6]++;
+    if (cohort >= 6) continue;
+    const x = field.position[i * 3] * 667 / 4 + 195;
+    const y = 667 / 2 - field.position[i * 3 + 1] * 667 / 4;
+    const extent = extents[cohort];
+    extent.left = Math.min(extent.left, x);
+    extent.right = Math.max(extent.right, x);
+    extent.top = Math.min(extent.top, y);
+    extent.bottom = Math.max(extent.bottom, y);
+  }
+  assert.ok(visible[6] >= 300, `mother has ${visible[6]} visible particles`);
+  for (let i = 0; i < 6; i++) {
+    assert.ok(visible[i] >= (capacity < 2400 ? 20 : 28), `worker ${i} has ${visible[i]} visible particles`);
+    assert.ok(extents[i].right - extents[i].left > 10, JSON.stringify(extents[i]));
+    assert.ok(extents[i].bottom - extents[i].top > 10, JSON.stringify(extents[i]));
+  }
+  assert.equal(field.active, Math.min(capacity, 2400));
+  assert.equal(field.capacity, capacity);
 });

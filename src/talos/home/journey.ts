@@ -13,6 +13,7 @@ export type JourneyDock = {
   enter: number;
   leave: number;
   holdFrom?: number;
+  satelliteLeave?: number;
   satellites: { key: string; frame: Framing }[];
 };
 export type HomeGeometry = {
@@ -112,27 +113,20 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
   out.mother.radius = left.frame.radius + (right.frame.radius - left.frame.radius) * t;
   const docked = geometry.docks.some((dock) => dock.holdFrom !== undefined && scroll >= dock.holdFrom && scroll <= dock.leave);
   out.docked = docked;
-  const attachment = Math.max(0, ...geometry.docks.map((dock) => dock.holdFrom === undefined ? 0
-    : smooth((scroll - dock.enter) / Math.max(1, dock.holdFrom - dock.enter))
-      * (1 - smooth((scroll - dock.leave) / (height * 0.24)))));
-  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1) && attachment < 1) {
-    const documentPose = { ...out.mother };
+  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1) && !docked) {
     const header = geometry.mobile ? 64 : 76;
     const edge = geometry.mobile ? 11 : geometry.width < 1024 ? 12 : 22;
     const margin = geometry.mobile ? 4 : geometry.width < 1024 ? 8 : 24;
     out.mother.radius = Math.max(1, Math.min(out.mother.radius, (geometry.width - 8) / 2, (height - header - 48) / 2));
-    const top = header + out.mother.radius + 20;
+    const top = header + out.mother.radius + 50;
     const bottom = height - out.mother.radius - 28;
     const overflow = Math.max(top - out.mother.y, out.mother.y - bottom, 0);
     const park = smooth(overflow / Math.max(60, out.mother.radius * 2));
     out.mother.radius += (edge - out.mother.radius) * park;
     const parkX = !geometry.mobile && out.mother.x < geometry.width / 2 ? edge + margin : geometry.width - edge - margin;
     out.mother.x += (parkX - out.mother.x) * park;
-    out.mother.y = Math.max(header + out.mother.radius + 20, Math.min(height - out.mother.radius - 28, out.mother.y));
+    out.mother.y = Math.max(header + out.mother.radius + 50, Math.min(height - out.mother.radius - 28, out.mother.y));
     out.mother.x = Math.max(out.mother.radius + 4, Math.min(geometry.width - out.mother.radius - 4, out.mother.x));
-    for (const axis of ["x", "y", "radius"] as const) {
-      out.mother[axis] += (documentPose[axis] - out.mother[axis]) * attachment;
-    }
   }
   const opacity = (left.opacity ?? 1) + ((right.opacity ?? 1) - (left.opacity ?? 1)) * t;
   out.opacity = opacity * (1 - smooth((scroll - (geometry.end - height * 0.6)) / (height * 0.45)));
@@ -146,7 +140,7 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
       const stagger = index * (geometry.mobile ? 9 : 14);
       const arrivalEnd = dock.holdFrom ?? dock.enter + height * 0.16 + (dock.satellites.length - 1) * (geometry.mobile ? 9 : 14);
       const arrive = smooth((scroll - dock.enter - stagger) / Math.max(1, arrivalEnd - dock.enter - stagger));
-      const depart = 1 - smooth((scroll - dock.leave) / (height * 0.18));
+      const depart = 1 - smooth((scroll - (dock.satelliteLeave ?? dock.leave)) / (height * 0.18));
       satellite.mix = arrive * depart;
       satellite.frame.x = target.x;
       satellite.frame.y = target.y - scroll;

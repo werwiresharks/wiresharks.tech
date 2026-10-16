@@ -427,7 +427,7 @@ export class TalosRenderer implements TalosView {
     if (this.pixelRatio > 1) {
       this.maxPixelRatio = Math.max(1, this.pixelRatio - 0.35);
       this.resize();
-    } else this.field.setActive(this.field.active * 0.72);
+    } else this.field.setActive(Math.max(this.options.home ? 2400 : 256, this.field.active * 0.72));
   }
 
   private advance(dt: number, still: boolean) {

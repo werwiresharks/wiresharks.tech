@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHomeSource } from "./source.ts";
-import { HomeMotion } from "./journey.ts";
+import { heroFrame, HomeMotion } from "./journey.ts";
 
-// Rectangles captured from the homepage at 1280×800, 1024×768, 768×1024, and 375×667.
+// Rectangles captured from the homepage at 1280×800, 1024×768, 768×1024, 375×667, and 390×844.
 const layouts = [
   { width: 1280, height: 800, hero: 800,
     talon: [1095.96, 1488.66, 72, 72], console: [619.23, 1436.66, 572.73, 394.28],
@@ -25,6 +25,11 @@ const layouts = [
     talos: [158.5, 3642.3, 44, 44], graph: [31, 3584.8, 299, 506],
     section: [20, 2755.9, 321, 1379.9], platform: [315, 4317.8, 40, 40],
     platformSection: [0, 4231.8, 375, 3186.48], worker: [48, 3803.8, 22, 22], row: 50.4 },
+  { width: 390, height: 844, hero: 855.59375,
+    talon: [289, 2188.046875, 44, 44], console: [31, 2136.046875, 314, 514.078125],
+    talos: [166, 3590.53125, 44, 44], graph: [31, 3533.03125, 314, 487.5],
+    section: [20, 2741.921875, 336, 1337.609375], platform: [330, 4261.53125, 40, 40],
+    platformSection: [0, 4175.53125, 390, 3186.484375], worker: [48, 3750.53125, 22, 22], row: 47 },
 ];
 
 for (const layout of layouts) test(`source geometry remains continuous and attached at ${layout.width}px`, (t) => {
@@ -56,6 +61,11 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     closest: (selector: string) => selector === panel ? nodes.get(panel) : null,
   });
   nodes.set(".hero", node([0, 0, layout.width, layout.hero]));
+  const landingSize = layout.width < 768 ? 40 : layout.width < 1024 ? 64 : 88;
+  nodes.set('[data-home-stop="products"]', node([
+    layout.width < 768 ? layout.width - 74 : layout.platform[0],
+    layout.hero + (layout.width < 768 ? 86 : 140.8), landingSize, landingSize,
+  ]));
   nodes.set('[data-home-stop="talon"]', node(layout.talon, ".home-console"));
   nodes.set(".home-console", node(layout.console));
   nodes.set('[data-home-stop="talos"]', node(layout.talos, ".home-graph"));
@@ -65,11 +75,13 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   nodes.set("#platform", node(layout.platformSection));
   const workers = Array.from({ length: 6 }, (_, i) => node([layout.worker[0], layout.worker[1] + i * layout.row, 22, 22]));
   source = createHomeSource(root, () => {});
-  if (layout.width === 375) {
+  if (layout.width < 768) {
     assert.equal(source.sample().mother.y + source.sample().mother.radius, layout.hero - 36);
   }
-  const hold = layout.talos[1] + layout.talos[3] / 2 - layout.height * (layout.width < 768 ? 0.34 : 0.42);
-  const leave = layout.graph[1] + layout.graph[3] - layout.height * 0.28;
+  const center = layout.talos[1] + layout.talos[3] / 2;
+  const hold = center - layout.height * (layout.width < 768 ? 0.44 : 0.5);
+  const satelliteLeave = layout.graph[1] + layout.graph[3] - layout.height * 0.28;
+  const leave = center - (layout.width < 768 ? 64 : 76) - layout.talos[2] / 2 - 40 - layout.height * 0.12;
   const sample = (scroll: number) => { viewport.scrollY = scroll; return structuredClone(source.sample()); };
   for (const boundary of [hold, leave]) {
     const before = sample(boundary - 0.001);
@@ -77,16 +89,38 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     assert.ok(Math.hypot(before.mother.x - after.mother.x, before.mother.y - after.mother.y) < 0.02);
   }
   assert.ok(sample(hold).satellites.slice(0, 6).every((s) => s.mix === 1));
+  const heroExit = layout.width < 768 ? Math.max(1, heroFrame(layout.width, layout.hero).y - layout.height * 0.65) + layout.height * 0.4 : layout.height * 0.7;
+  if (layout.width >= 1024) {
+    assert.ok(sample(150).mother.radius > heroFrame(layout.width, layout.hero).radius * 0.75);
+    assert.ok(sample(360).mother.radius > 65, "hero shrink remains spread over the scroll rather than reaching the rail by 360px");
+  }
+  const travel = new HomeMotion();
+  for (let scroll = 0; scroll < 10500; scroll += 2.5) {
+    const target = sample(scroll);
+    const rendered = travel.step(target, 1 / 60);
+    if (layout.width < 1024 && scroll <= heroExit) continue;
+    for (const mother of [target.mother, rendered.mother]) {
+      assert.ok(mother.x - mother.radius >= 0 && mother.x + mother.radius <= layout.width, `horizontal bounds at ${scroll}`);
+      assert.ok(mother.y - mother.radius >= (layout.width < 768 ? 64 : 76), `header clearance at ${scroll}: ${JSON.stringify(mother)}`);
+      assert.ok(mother.y + mother.radius <= layout.height, `bottom clearance at ${scroll}`);
+    }
+  }
   const motion = new HomeMotion();
   motion.step(sample(hold - 100), 0);
   for (let frame = 0; frame < 180; frame++) motion.step(sample(hold + 10), 1 / 60);
-  for (const scroll of [hold + 30, hold + 100, hold + 50, leave - 1]) {
+  for (const scroll of [hold + 10, (hold + leave) / 2, hold + 20, leave - 1]) {
     const target = sample(scroll);
     assert.equal(target.docked, true);
     const frame = motion.step(target, 1 / 60);
     assert.deepEqual(frame.mother, target.mother);
     assert.ok(frame.satellites.slice(0, 6).every((satellite) => satellite.mix === 1));
   }
+  for (let scroll = leave; scroll <= leave + layout.height * 0.1; scroll += 2) {
+    const mother = sample(scroll).mother;
+    assert.ok(Math.abs(mother.y + scroll - center) < 0.01, "departure stays above coordinator text until it reaches the rail");
+  }
+  assert.ok(sample(leave + 20).satellites.slice(0, 6).every((satellite) => satellite.mix === 1), "worker rows stay attached after the mother departs");
+  assert.ok(sample(satelliteLeave + layout.height * 0.18).satellites.every((satellite) => satellite.mix === 0));
   const forward = sample(leave + 70);
   sample(leave + 300);
   assert.deepEqual(sample(leave + 70), forward);
@@ -98,7 +132,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   }
   if (layout.width === 1280) {
     const gap = layout.section[1] + 24;
-    const crossingMiddle = (layout.console[1] + layout.console[3] - layout.height * 0.28 + layout.height * 0.1) + layout.height * 0.06;
+    const crossingMiddle = gap - layout.height * 0.5 - layout.height * 0.1;
     const crossing = sample(crossingMiddle).mother;
     assert.ok(crossing.x > 46 && crossing.x < layout.width - 46);
     assert.ok(Math.abs(crossing.y + crossingMiddle - gap) < 0.01, "rail crossing stays in the section gap");

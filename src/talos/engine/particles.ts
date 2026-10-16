@@ -233,7 +233,7 @@ export class ParticleField {
   }
 
   setActive(count: number) {
-    const next = Math.max(256, Math.min(this.capacity, Math.round(count)));
+    const next = Math.min(this.capacity, Math.max(256, Math.round(count)));
     if (next === this.active) return;
     if (next > this.active)
       for (let i = this.active; i < next; i++) this.slot[i] = this.prevSlot[i] = -1;
@@ -392,7 +392,7 @@ export class ParticleField {
       const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
       for (let j = 0; j < 3; j++) this.color[i3 + j] = color[j] + (bronze[j] - color[j]) * warmth;
       const pixelRadius = radius / unit;
-      const cohortCount = this.capacity * (1 - 0.98 * mix);
+      const cohortCount = this.active * (1 - 0.98 * mix);
       const density = Math.min(1, pixelRadius * pixelRadius * 0.9 / cohortCount);
       const edge = Math.min(0.08, Math.max(0.002, density * 0.2));
       const alpha = Math.max(0, Math.min(1, (density - this.seed[i]) / edge));
