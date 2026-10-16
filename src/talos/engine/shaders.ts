@@ -1,6 +1,7 @@
 /** GLSL for particles, the authority ring, and connecting threads. */
 
 export const particleVertex = /* glsl */ `
+uniform float uDrift;
 uniform float uTime;
 uniform float uPixelRatio;
 uniform float uBaseSize;
@@ -20,7 +21,7 @@ void main() {
   // Internal motion: small, seeded drift whose speed follows activity.
   float speed = 0.6 + activity * 2.2;
   float amp = 0.006 + activity * 0.022;
-  p += amp * vec3(
+  p += uDrift * amp * vec3(
     sin(uTime * speed * (0.8 + seed) + seed * 40.0),
     cos(uTime * speed * (0.7 + seed * 0.6) + seed * 23.0),
     sin(uTime * speed * (0.9 + seed * 0.4) + seed * 61.0)

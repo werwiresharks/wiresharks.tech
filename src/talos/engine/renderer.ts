@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { HomeFrame } from "../home/journey.ts";
 import type { TalosView } from "./engine.ts";
 import type { Effect, Layout, ThreadTarget } from "./layout.ts";
 import type { TalosModel } from "./model.ts";
@@ -25,6 +26,7 @@ export type Framing = { x: number; y: number; radius: number };
 
 export type RendererOptions = {
   host: HTMLElement;
+  home?: { sample: () => HomeFrame; readonly active?: boolean };
   frame: (width: number, height: number) => Framing;
   particleScale?: number;
   interactive?: boolean;
@@ -127,6 +129,7 @@ export class TalosRenderer implements TalosView {
       depthWrite: false,
       depthTest: false,
       uniforms: {
+        uDrift: { value: options.home ? 0 : 1 },
         uTime: { value: 0 },
         uPixelRatio: { value: 1 },
         uBaseSize: { value: 2.2 },
@@ -244,10 +247,10 @@ export class TalosRenderer implements TalosView {
       // Listen on the window, not the stage: the stage is pointer-events: none
       // so the decorative canvas can never intercept clicks on content above it.
       const move = (event: PointerEvent) => {
-        const rect = host.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        const inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
+        const rect = this.options.home ? null : host.getBoundingClientRect();
+        const x = event.clientX - (rect?.left ?? 0);
+        const y = event.clientY - (rect?.top ?? 0);
+        const inside = x >= 0 && y >= 0 && x <= (rect?.width ?? this.width) && y <= (rect?.height ?? this.height);
         this.pointer = inside ? { x, y } : null;
         if (inside) this.start();
       };
@@ -278,7 +281,9 @@ export class TalosRenderer implements TalosView {
     const { host } = this.options;
     this.width = Math.max(1, host.clientWidth);
     this.height = Math.max(1, host.clientHeight);
-    this.pixelRatio = Math.min(window.devicePixelRatio || 1, this.maxPixelRatio);
+    if (this.options.home && this.width < 768 && this.field.active > 6000) this.field.setActive(6000);
+    const maxDpr = this.options.home && this.width < 768 ? 1.5 : this.maxPixelRatio;
+    this.pixelRatio = Math.min(window.devicePixelRatio || 1, this.maxPixelRatio, maxDpr);
     this.renderer.setPixelRatio(this.pixelRatio);
     this.renderer.setSize(this.width, this.height, false);
     this.camera.aspect = this.width / this.height;
@@ -295,6 +300,10 @@ export class TalosRenderer implements TalosView {
 
   /** Recompute framing, e.g. when the surrounding layout changes. */
   refreshFraming() {
+    if (this.options.home) {
+      this.requestPresentation();
+      return;
+    }
     this.framing = this.options.frame(this.width, this.height);
     this.targetCenter.copy(this.toWorld(this.framing.x, this.framing.y));
     const pxPerUnit = this.height / this.worldHeight();
@@ -334,6 +343,7 @@ export class TalosRenderer implements TalosView {
 
   update(layout: Layout, model: TalosModel, effects: Effect[]) {
     void model;
+    if (this.options.home) return;
     this.field.setTargets(layout.clusters);
     this.targetRingRadius = layout.ring.radius;
     this.targetHold = layout.ring.holdAngle !== null ? 1 : 0;
@@ -376,6 +386,11 @@ export class TalosRenderer implements TalosView {
 
   private pendingFlow: string | null = null;
 
+  requestPresentation() {
+    this.needsRender = true;
+    this.start();
+  }
+
   private get animating() {
     return !this.paused && !this.reduced && this.visible && document.visibilityState === "visible";
   }
@@ -403,7 +418,7 @@ export class TalosRenderer implements TalosView {
     this.advance(dt, !animating);
     this.renderer.render(this.scene, this.camera);
     this.needsRender = false;
-    if (animating) this.frameHandle = requestAnimationFrame(this.tick);
+    if (this.animating) this.frameHandle = requestAnimationFrame(this.tick);
   };
 
   private shedLoad() {
@@ -415,6 +430,37 @@ export class TalosRenderer implements TalosView {
 
   private advance(dt: number, still: boolean) {
     this.time += dt;
+    if (this.options.home) {
+      const pose = this.options.home.sample();
+      this.system.position.set(0, 0, 0);
+      this.system.scale.setScalar(1);
+      const response = still ? 1 : 1 - Math.exp(-dt * 3);
+      const interactive = this.pointer !== null && !still && pose.mother.radius > 45;
+      const unit = this.worldHeight() / this.height;
+      const pointer = this.pointer;
+      const px = pointer ? (pointer.x - this.width / 2) * unit : 99;
+      const py = pointer ? (this.height / 2 - pointer.y) * unit : 99;
+      const tiltY = interactive && pointer ? Math.max(-1, Math.min(1, (pointer.x - pose.mother.x) / pose.mother.radius / 3)) * 0.25 : 0;
+      const tiltX = interactive && pointer ? Math.max(-1, Math.min(1, (pointer.y - pose.mother.y) / pose.mother.radius / 3)) * 0.2 : 0;
+      this.tiltX += (tiltX - this.tiltX) * response;
+      this.tiltY += (tiltY - this.tiltY) * response;
+      this.pointerStrength += ((interactive ? 1 : 0) - this.pointerStrength) * response;
+      this.field.stepHome(pose, this.width, this.height, this.worldHeight(), this.time, this.tiltX, this.tiltY);
+      this.geometry.setDrawRange(0, this.field.active);
+      this.positionAttr.needsUpdate = true;
+      this.colorAttr.needsUpdate = true;
+      this.paramsAttr.needsUpdate = true;
+      const u = this.particleMaterial.uniforms;
+      u.uTime.value = this.time;
+      u.uPointer.value.set(px, py, 0);
+      u.uPointerStrength.value = this.pointerStrength;
+      u.uScale.value = Math.max(0.01, pose.mother.radius * this.worldHeight() / this.height);
+      u.uBaseSize.value = 2.2;
+      this.ring.visible = this.checkpoint.visible = false;
+      this.threadGeometry.setDrawRange(0, 0);
+      this.paused = pose.opacity < 0.005 || this.options.home.active === false;
+      return;
+    }
     const k = (rate: number) => (still ? 1 : 1 - Math.exp(-rate * dt));
     this.center.lerp(this.targetCenter, k(3));
     this.scale += (this.targetScale - this.scale) * k(3);

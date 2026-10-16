@@ -1,4 +1,3 @@
-import { useCallback, useState } from "react";
 import { Countdown } from "../components/Countdown";
 import { Cta } from "../components/Cta";
 import { Reveal } from "../components/Reveal";
@@ -9,8 +8,8 @@ import { ProductBlock } from "../components/ProductBlock";
 import { Console } from "../components/mock/Console";
 import { TaskGraph } from "../components/mock/TaskGraph";
 import { Compare } from "../components/mock/Compare";
-import { TalosStage } from "../talos/react/TalosStage";
-import { useIdleEngine } from "../talos/react/hooks.ts";
+import { StaticOrb } from "../talos/react/TalosStage";
+import { HomeJourney } from "../talos/react/HomeJourney";
 
 const FAQ: [string, string][] = [
   [
@@ -42,51 +41,22 @@ const PRINCIPLES: [string, string][] = [
   ["Proven, then patched.", "A finding is reproduced before it is reported, and a second model reviews every patch."],
 ];
 
-/**
- * Where the orb sits in the hero. Wide screens put it to the right of the
- * copy so the headline reads on clear ground; tablets lift it above the copy;
- * phones tuck it into the top-right corner, partly off-canvas. Breakpoints
- * match the hero rules in styles.css.
- */
-function heroFrame(w: number, h: number) {
-  if (w >= 1024) {
-    const radius = Math.min(w * 0.19, (h * 0.8) / 2 / 1.24);
-    return { x: w * 0.73, y: h * 0.53, radius };
-  }
-  if (w >= 768) {
-    // Tablet: orb in the upper field, copy anchored to the bottom (see CSS).
-    const radius = Math.min(w * 0.26, h * 0.2);
-    return { x: w * 0.66, y: Math.max(radius * 1.3 + 70, h * 0.26), radius };
-  }
-  return { x: w * 0.82, y: Math.min(h * 0.2, 190), radius: Math.min(w * 0.36, 220) };
-}
-
 export function Home() {
-  const engine = useIdleEngine();
-  const frame = useCallback(heroFrame, []);
-  // Phones get fewer particles on top of the renderer's own hardware tiers.
-  const [particleScale] = useState(() => (window.matchMedia("(max-width: 767px)").matches ? 0.55 : 1));
-
   return (
-    <>
+    <div className="home-page">
+      <HomeJourney />
       <title>Wiresharks | The world's most dangerous AI.</title>
 
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-backdrop" aria-hidden="true">
-          <TalosStage
-            engine={engine}
-            frame={frame}
-            interactive
-            particleScale={particleScale}
-            className="hero-stage"
-          />
+          <StaticOrb />
         </div>
         <div className="hero-inner wrap">
           <Reveal as="p" className="label hero-eyebrow">
             Wiresharks / Autonomous cybersecurity
           </Reveal>
           <Reveal as="h1" delay={60}>
-            <span id="hero-title">The world's most dangerous AI.</span>
+            <span id="hero-title">The world's most <span className="dangerous">dangerous</span> AI.</span>
           </Reveal>
           <Reveal delay={120} className="hero-glass">
             <p>A local, open-weight cybersecurity model and the autonomous agent built around it.</p>
@@ -114,6 +84,7 @@ export function Home() {
       <section className="products section tone-dark" id="products" aria-labelledby="products-title">
         <div className="wrap">
           <header className="section-head">
+            <span className="home-landing" data-home-stop="products" aria-hidden="true" />
             <Reveal as="p" className="label">
               01 / Products
             </Reveal>
@@ -141,21 +112,24 @@ export function Home() {
             to="/talon"
             linkLabel="Explore Talon-1"
             visual={
-              <Console
-                title="talon-1 / local"
-                lines={[
-                  "$ talos model use talon-1",
-                  "# talon-1 · 27B · Q4_K_M · 16.2 GB",
-                  "loaded in 3.1s on Apple M4 Max (metal)",
-                  "context 128k · tools on · network off",
-                  "",
-                  '$ talos ask "triage scan.json by exploitability"',
-                  "3 critical · 11 high · 128 informational",
-                  "critical/1  CVE-2024-3094  reachable from sshd",
-                  "critical/2  CWE-78         exec in deploy.sh:41",
-                  "critical/3  CWE-502        pickle.loads on upload",
-                ]}
-              />
+              <div className="home-console">
+                <span className="home-local-landing" data-home-stop="talon" aria-hidden="true" />
+                <Console
+                  title="talon-1 / local"
+                  lines={[
+                    "$ talos model use talon-1",
+                    "# talon-1 · 27B · Q4_K_M · 16.2 GB",
+                    "loaded in 3.1s on Apple M4 Max (metal)",
+                    "context 128k · tools on · network off",
+                    "",
+                    '$ talos ask "triage scan.json by exploitability"',
+                    "3 critical · 11 high · 128 informational",
+                    "critical/1  CVE-2024-3094  reachable from sshd",
+                    "critical/2  CWE-78         exec in deploy.sh:41",
+                    "critical/3  CWE-502        pickle.loads on upload",
+                  ]}
+                />
+              </div>
             }
           >
             <p>
@@ -194,6 +168,7 @@ export function Home() {
             flip
             visual={
               <TaskGraph
+                journey
                 root={{ name: "Security review · acme/api", model: "talon-1" }}
                 workers={[
                   { name: "Map attack surface", model: "talon-1", engine: "hermes", state: "done" },
@@ -218,11 +193,15 @@ export function Home() {
         </div>
       </section>
 
-      <Platform />
+      <div className="home-platform">
+        <span className="home-section-landing" data-home-stop="platform" aria-hidden="true" />
+        <Platform />
+      </div>
 
-      <section className="principles section tone-soft" aria-labelledby="principles-title">
+      <section className="principles section tone-soft" id="principles" aria-labelledby="principles-title">
         <div className="wrap">
           <header className="section-head">
+            <span className="home-landing" data-home-stop="principles" aria-hidden="true" />
             <Reveal as="p" className="label">
               03 / Principles
             </Reveal>
@@ -233,7 +212,7 @@ export function Home() {
           <ul className="principle-grid">
             {PRINCIPLES.map(([title, text], i) => (
               <Reveal as="li" key={title} delay={i * 70}>
-                <span className="label">{String(i + 1).padStart(2, "0")}</span>
+                <span className="principle-number label">{String(i + 1).padStart(2, "0")}<i data-home-principle={i} aria-hidden="true" /></span>
                 <h3>{title}</h3>
                 <p>{text}</p>
               </Reveal>
@@ -264,10 +243,13 @@ export function Home() {
 
       <Faq items={FAQ} />
 
-      <Closing
-        title="No cloud. No refusals."
-        text="Talon-1 weights, evaluations and the Talos harness ship together on December 25, 2026."
-      />
-    </>
+      <div className="home-closing">
+        <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
+        <Closing
+          title="No cloud. No refusals."
+          text="Talon-1 weights, evaluations and the Talos harness ship together on December 25, 2026."
+        />
+      </div>
+    </div>
   );
 }

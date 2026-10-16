@@ -1,3 +1,4 @@
+import type { HomeFrame } from "../home/journey.ts";
 import type { ClusterTarget, Vec3 } from "./layout.ts";
 import { ACCENT_RATIO, TONES } from "./palette.ts";
 import type { ToneStyle } from "./palette.ts";
@@ -81,6 +82,8 @@ export class ParticleField {
   private clusters: (Cluster | null)[] = [];
   private keyToSlot = new Map<string, number>();
   private time = 0;
+  private homeCos = new Float32Array(3);
+  private homeSin = new Float32Array(3);
 
   constructor(capacity: number) {
     this.capacity = capacity;
@@ -341,6 +344,61 @@ export class ParticleField {
       this.velocity[i * 3] += (dx / len) * kick + nx * 1.4;
       this.velocity[i * 3 + 1] += (dy / len) * kick + ny * 1.4;
       this.velocity[i * 3 + 2] += (dz / len) * kick;
+    }
+  }
+
+  /** Fixed cohorts morph from their original lattice without changing event ownership. */
+  stepHome(frame: HomeFrame, width: number, height: number, worldHeight: number, time: number, tiltX = 0, tiltY = 0) {
+    const unit = worldHeight / height;
+    const base = TONES.idle;
+    const cx = Math.cos(tiltX);
+    const sx = Math.sin(tiltX);
+    const cy = Math.cos(tiltY);
+    const sy = Math.sin(tiltY);
+    const warmth = Math.max(0, Math.min(1, (160 - frame.mother.radius) / 100));
+    for (let shell = 0; shell < SHELLS.length; shell++) {
+      this.homeCos[shell] = Math.cos(time * SHELLS[shell].speed);
+      this.homeSin[shell] = Math.sin(time * SHELLS[shell].speed);
+    }
+    for (let i = 0; i < this.active; i++) {
+      const i3 = i * 3;
+      const i4 = i * 4;
+      const satellite = frame.satellites[i % 50];
+      const mix = satellite?.mix ?? 0;
+      const mother = frame.mother;
+      const target = satellite?.frame ?? mother;
+      const x = mother.x + (target.x - mother.x) * mix;
+      const y = mother.y + (target.y - mother.y) * mix;
+      const radius = (mother.radius + (target.radius - mother.radius) * mix) * unit;
+      const angle = time * 0.38 * mix;
+      const cosOffset = Math.cos(angle);
+      const sinOffset = Math.sin(angle);
+      const shellCos = this.homeCos[this.shell[i]];
+      const shellSin = this.homeSin[this.shell[i]];
+      const cos = shellCos * cosOffset - shellSin * sinOffset;
+      const sin = shellSin * cosOffset + shellCos * sinOffset;
+      const breath = 1 + mix * 0.065 * Math.sin(time * 1.9 + (i % 50) * 0.85);
+      const r = this.radial[i] * radius * breath;
+      const dx = this.dir[i3] * cos + this.dir[i3 + 2] * sin;
+      const dz = -this.dir[i3] * sin + this.dir[i3 + 2] * cos;
+      const tx = dx * cy + dz * sy;
+      const tz = -dx * sy + dz * cy;
+      this.position[i3] = (x - width / 2) * unit + tx * r;
+      this.position[i3 + 1] = (height / 2 - y) * unit + (this.dir[i3 + 1] * cx - tz * sx) * r;
+      this.position[i3 + 2] = (this.dir[i3 + 1] * sx + tz * cx) * r;
+      const color = this.accentMask[i] ? base.accent : base.base;
+      const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
+      for (let j = 0; j < 3; j++) this.color[i3 + j] = color[j] + (bronze[j] - color[j]) * warmth;
+      const pixelRadius = radius / unit;
+      const cohortCount = this.capacity * (1 - 0.98 * mix);
+      const density = Math.min(1, pixelRadius * pixelRadius * 0.9 / cohortCount);
+      const edge = Math.min(0.08, Math.max(0.002, density * 0.2));
+      const alpha = Math.max(0, Math.min(1, (density - this.seed[i]) / edge));
+      this.params[i4] = base.alpha * frame.opacity * alpha;
+      const size = Math.max(0.5, Math.min(1, mother.radius / 160));
+      this.params[i4 + 1] = size + (0.7 - size) * mix;
+      this.params[i4 + 2] = 0;
+      this.params[i4 + 3] = this.seed[i];
     }
   }
 

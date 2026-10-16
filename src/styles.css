@@ -557,7 +557,7 @@ button {
   background: var(--bg);
   overflow: hidden;
 }
-/* Every decorative layer lives in here and can never take a pointer. */
+/* Static hero fallback and its scrim. */
 .hero-backdrop {
   position: absolute;
   inset: 0;
@@ -566,10 +566,6 @@ button {
 }
 .hero-backdrop * {
   pointer-events: none;
-}
-.hero-stage {
-  position: absolute;
-  inset: 0;
 }
 /* Scrims: soften particles under the copy column, fade into the next section. */
 .hero-backdrop::after {
@@ -1812,5 +1808,131 @@ button {
   .cta:hover .cta-arrow,
   .text-link:hover span {
     transform: none;
+  }
+}
+
+/* Homepage presentation shares one viewport field across its reserved landing spaces. */
+.home-page {
+  position: relative;
+  isolation: isolate;
+}
+.home-journey {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.home-journey * { pointer-events: none; }
+.home-page[data-journey="ready"] .hero-backdrop { visibility: hidden; }
+.home-page:not([data-journey="ready"]) .home-journey { visibility: hidden; }
+.dangerous {
+  color: #9c3430;
+  background: linear-gradient(175deg, transparent 35%, rgba(184, 76, 53, 0.14) 35%, rgba(184, 76, 53, 0.14) 88%, transparent 88%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  text-decoration: underline;
+  text-decoration-color: #b68a65;
+  text-decoration-thickness: 0.045em;
+  text-underline-offset: 0.1em;
+  text-decoration-skip-ink: none;
+}
+.home-page .section-head {
+  position: relative;
+  max-width: none;
+  padding-right: 150px;
+}
+.home-page .section-head h2 { max-width: 760px; }
+.home-landing,
+.home-local-landing,
+.home-section-landing {
+  display: block;
+  width: 88px;
+  height: 88px;
+  pointer-events: none;
+}
+.home-landing {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.home-console { padding-top: 96px; }
+.home-local-landing {
+  position: absolute;
+  top: 0;
+  right: 24px;
+  width: 72px;
+  height: 72px;
+}
+.home-graph-dock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 104px;
+  border-bottom: 1px solid var(--line);
+}
+.home-graph-dock i { display: block; width: 68px; height: 68px; }
+.home-graph .graph-workers li { grid-template-columns: 24px minmax(0, 1fr) auto auto; }
+.home-graph .graph-workers i {
+  width: 22px;
+  height: 22px;
+  border: 1px solid color-mix(in srgb, var(--bronze-deep) 35%, transparent);
+  background: radial-gradient(circle at 35% 30%, var(--bronze-deep), transparent 70%);
+  box-shadow: none;
+}
+.home-page[data-journey="ready"] .home-graph .graph-workers i {
+  background: transparent;
+  border-color: transparent;
+}
+.principle-number { display: flex; align-items: center; gap: 14px; min-height: 24px; }
+.principle-number i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--bronze-deep) 40%, transparent);
+  background: radial-gradient(circle at 35% 30%, var(--bronze-deep), transparent 70%);
+}
+.home-page[data-journey="ready"] .principle-number i { visibility: hidden; }
+.home-platform,
+.home-closing { position: relative; }
+.home-section-landing {
+  position: absolute;
+  top: var(--section-y);
+  right: max(var(--pad), calc((100% - var(--maxw)) / 2));
+  z-index: 1;
+}
+.home-closing .closing-inner { padding-top: 100px; }
+.home-closing .home-section-landing { width: 60px; height: 60px; }
+@media (max-width: 1023px) {
+  .home-page .section-head { padding-right: 100px; }
+  .home-landing, .home-section-landing { width: 64px; height: 64px; }
+}
+@media (max-width: 767px) {
+  .home-page .wrap { padding-right: 34px; }
+  .home-page .hero { padding-top: calc(var(--header-height) + clamp(180px, 46vw, 220px) + 40px); }
+  .home-page .hero-backdrop .tpe-static {
+    top: calc(80px + min(23vw, 110px));
+    left: auto;
+    right: 24px;
+    width: min(46vw, 220px);
+    transform: translateY(-50%);
+  }
+  .home-page .section-head { padding-right: 0; }
+  .home-page .section-head h2 { margin-top: 32px; }
+  .home-landing, .home-section-landing { width: 40px; height: 40px; top: -10px; }
+  .home-section-landing { top: calc(var(--section-y) - 10px); }
+  .home-console { padding-top: 66px; }
+  .home-local-landing { width: 44px; height: 44px; right: 12px; }
+  .home-graph-dock { height: 76px; }
+  .home-graph-dock i { width: 44px; height: 44px; }
+  .home-graph .graph-workers li { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; }
+  .home-closing .closing-inner { padding-top: 56px; }
+  .home-closing .home-section-landing { width: 40px; height: 40px; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .home-page .wrap { padding-right: 80px; }
+  .home-page .hero {
+    align-items: flex-start;
+    padding-top: calc(var(--header-height) + 520px);
   }
 }

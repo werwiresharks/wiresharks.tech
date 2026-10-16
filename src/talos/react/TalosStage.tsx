@@ -88,7 +88,7 @@ export function TalosStage({
 }
 
 /** Non-WebGL stand-in: the same composition, drawn once. */
-function StaticOrb() {
+export function StaticOrb() {
   const dots = [];
   for (let ring = 0; ring < 9; ring++) {
     const r = 18 + ring * 9;

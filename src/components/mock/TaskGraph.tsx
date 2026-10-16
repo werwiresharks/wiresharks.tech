@@ -13,22 +13,25 @@ const LABEL: Record<TaskState, string> = {
 export function TaskGraph({
   root,
   workers,
+  journey = false,
 }: {
+  journey?: boolean;
   root: { name: string; model: string };
   workers: { name: string; model: string; engine: string; state: TaskState }[];
 }) {
   return (
-    <div className="panel graph" data-ui aria-label="Talos task graph">
+    <div className={`panel graph${journey ? " home-graph" : ""}`} data-ui aria-label="Talos task graph">
       <PanelBar title="talos / tasks" />
+      {journey && <div className="home-graph-dock" aria-hidden="true"><i data-home-stop="talos" /></div>}
       <div className="graph-root">
         <span className="tag">Coordinator</span>
         <b>{root.name}</b>
         <span className="mono">{root.model}</span>
       </div>
       <ol className="graph-workers">
-        {workers.map((w) => (
+        {workers.map((w, index) => (
           <li key={w.name} className={`state-${w.state}`}>
-            <i aria-hidden="true" />
+            <i data-home-worker={journey ? index : undefined} aria-hidden="true" />
             <b>{w.name}</b>
             <span className="mono">
               {w.engine} · {w.model}
