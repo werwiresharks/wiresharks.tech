@@ -133,3 +133,19 @@ test("wheel jumps ease into place without overshoot and leave docked markers ali
   }
   assert.ok(Math.abs(previous - 1000) < 0.01);
 });
+
+test("a settled harness sphere stays attached to its panel until the reader moves on", () => {
+  const g = geometry();
+  g.width = 1280;
+  g.stops = [
+    { at: 1400, frame: { x: 300, y: 1700, radius: 34 } },
+    { at: 2000, frame: { x: 300, y: 1700, radius: 34 } },
+  ];
+  g.docks[0].holdFrom = 1400;
+  g.docks[0].leave = 2000;
+  for (const scroll of [1500, 1700, 1900]) {
+    const pose = sampleHomeFrame(g, scroll, createHomeFrame());
+    assert.deepEqual(pose.mother, { x: 300, y: 1700 - scroll, radius: 34 });
+    assert.ok(pose.satellites.slice(0, 6).every((satellite) => satellite.mix === 1));
+  }
+});

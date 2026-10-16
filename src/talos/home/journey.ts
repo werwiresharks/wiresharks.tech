@@ -10,6 +10,7 @@ export type JourneyStop = { at: number; frame: Framing; opacity?: number };
 export type JourneyDock = {
   enter: number;
   leave: number;
+  holdFrom?: number;
   satellites: { key: string; frame: Framing }[];
 };
 export type HomeGeometry = {
@@ -97,7 +98,8 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
   out.mother.x = left.frame.x + (right.frame.x - left.frame.x) * t + arc;
   out.mother.y = left.frame.y + (right.frame.y - left.frame.y) * t - scroll;
   out.mother.radius = left.frame.radius + (right.frame.radius - left.frame.radius) * t;
-  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1)) {
+  const docked = geometry.docks.some((dock) => dock.holdFrom !== undefined && scroll >= dock.holdFrom && scroll <= dock.leave);
+  if (geometry.width !== undefined && scroll > (geometry.heroExit ?? -1) && !docked) {
     const header = geometry.mobile ? 64 : 76;
     const edge = geometry.mobile ? 11 : geometry.width < 1024 ? 12 : 22;
     const margin = geometry.mobile ? 4 : geometry.width < 1024 ? 8 : 24;

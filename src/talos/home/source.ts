@@ -65,12 +65,16 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         const before = at - height * (mobile ? 0.42 : 0.32);
         appendStops({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 120 : hold) } });
       }
-      const after = at + height * 0.32;
+      const panel = key === "talos" ? node.closest(".home-graph") : null;
+      const release = panel
+        ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
+        : at + height * 0.08;
+      const after = release + height * 0.24;
       appendStops(
         { at: at - height * (mobile ? 0.24 : 0.18), frame: { ...rail, x: edge, y: frame.y } },
         { at, frame },
-        { at: at + height * 0.08, frame },
-        { at: at + height * 0.18, frame: { ...rail, x: edge, y: frame.y } },
+        { at: release, frame },
+        { at: release + height * 0.1, frame: { ...rail, x: edge, y: frame.y } },
         { at: after, frame: { ...rail, x: edge, y: after + (mobile ? 120 : hold) } },
       );
       previousRail = edge;
@@ -83,8 +87,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const last = satellites.at(-1);
       if (!last) continue;
       const enter = at - height * 0.18;
-      const leave = Math.max(at + height * 0.14, last.frame.y - height * 0.42);
-      docks.push({ enter, leave, satellites });
+      const leave = panel ? release : Math.max(at + height * 0.14, last.frame.y - height * 0.42);
+      docks.push({ enter, leave, holdFrom: panel ? at : undefined, satellites });
     }
     const faq = root.querySelector(".faq");
     if (faq) {
