@@ -83,11 +83,11 @@ const smooth = (n: number) => { const t = clamp(n); return t * t * (3 - 2 * t); 
 
 export function heroFrame(width: number, height: number): Framing {
   if (width >= 1024) {
-    return { x: width * 0.73, y: height * 0.53, radius: Math.min(width * 0.19, height * 0.8 / 2 / 1.24) };
+    return { x: width * 0.5, y: height * 0.53, radius: Math.min(width * 0.19, height * 0.8 / 2 / 1.24) };
   }
   if (width >= 768) {
     const radius = Math.min(width * 0.26, height * 0.2);
-    return { x: width * 0.66, y: 112 + radius, radius };
+    return { x: width * 0.5, y: 112 + radius, radius };
   }
   const radius = Math.min(width * 0.23, 110);
   return { x: width / 2, y: height - radius - 36, radius };

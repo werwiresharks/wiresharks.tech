@@ -26,7 +26,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const hero = root.querySelector<HTMLElement>(".hero");
     if (!hero) return;
     const rect = hero.getBoundingClientRect();
-    const heroPose = heroFrame(rect.width, rect.height);
+    // Frame the orb in the part of the hero visible on first load, so all of it shows.
+    const heroPose = heroFrame(rect.width, mobile ? rect.height : Math.min(rect.height, height - (rect.top + window.scrollY)));
     heroPose.y += rect.top + window.scrollY;
     const stops: JourneyStop[] = [{ at: 0, frame: heroPose }];
     const narrow = window.innerWidth < 1024;
