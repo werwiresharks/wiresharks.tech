@@ -1,3 +1,5 @@
+import { PanelBar } from "./PanelBar";
+
 /** Side-by-side: the same prompt to Talon-1 and to a typical hosted model. */
 export function Compare({
   prompt,
@@ -10,10 +12,7 @@ export function Compare({
 }) {
   return (
     <div className="panel compare" data-ui aria-label="Talon-1 compared with other models">
-      <div className="panel-bar">
-        <span className="panel-dots" aria-hidden="true" />
-        <span>talos / compare</span>
-      </div>
+      <PanelBar title="talos / compare" />
       <div className="compare-prompt">
         <span className="tag">User</span>
         <p>{prompt}</p>

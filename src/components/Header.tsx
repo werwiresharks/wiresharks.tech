@@ -77,16 +77,22 @@ export function Header() {
           aria-label={open ? "Close menu" : "Open menu"}
           onClick={() => setOpen(!open)}
         >
-          {open ? <X size={22} /> : <List size={22} />}
+          {open ? <X size={20} /> : <List size={20} />}
         </button>
         <nav id="navigation" ref={menu} className={open ? "nav open" : "nav"} aria-label="Main navigation">
-          {NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
-              {item.label}
-            </NavLink>
-          ))}
+          {NAV.map((item) =>
+            item.to.includes("#") ? (
+              <Link key={item.to} to={item.to} onClick={() => setOpen(false)}>
+                {item.label}
+              </Link>
+            ) : (
+              <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
+                {item.label}
+              </NavLink>
+            ),
+          )}
           <a className="nav-cta" href={CONTACT_HREF} onClick={() => setOpen(false)}>
-            Contact <ArrowUpRight size={14} />
+            Contact <ArrowUpRight size={13} weight="bold" />
           </a>
         </nav>
       </div>

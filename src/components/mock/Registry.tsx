@@ -1,3 +1,5 @@
+import { PanelBar } from "./PanelBar";
+
 /** A keyed list panel, used for skills, memory and engine catalogs. */
 export function Registry({
   title,
@@ -8,10 +10,7 @@ export function Registry({
 }) {
   return (
     <div className="panel registry" data-ui aria-label={title}>
-      <div className="panel-bar">
-        <span className="panel-dots" aria-hidden="true" />
-        <span>{title}</span>
-      </div>
+      <PanelBar title={title} />
       <ol>
         {rows.map((r) => (
           <li key={r.key} className={r.active ? "is-active" : undefined}>

@@ -1,10 +1,13 @@
 /** The only public contact address on the site. */
 export const CONTACT_EMAIL = "hello@wiresharks.tech";
 export const CONTACT_HREF = `mailto:${CONTACT_EMAIL}`;
+export const GITHUB_HREF = "https://github.com/werwiresharks";
 
+/** Primary navigation. Every entry is a real route or an anchor on one. */
 export const NAV = [
-  { to: "/talos", label: "Talos" },
   { to: "/talon", label: "Talon-1" },
+  { to: "/talos", label: "Talos" },
+  { to: "/#platform", label: "Platform" },
 ] as const;
 
 /** Talon-1 release: midnight, December 25, 2026, US Eastern. */

@@ -1,4 +1,5 @@
-import { Countdown } from "../components/Countdown";
+import { PageHead } from "../components/PageHead";
+import { Reveal } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
 import { Compare } from "../components/mock/Compare";
@@ -39,18 +40,14 @@ export function Talon() {
   return (
     <>
       <title>Talon-1 | Wiresharks</title>
-      <header className="page-head section-wrap">
-        <div>
-          <h1>The world's most dangerous model.</h1>
-          <p className="page-lede">
-            A locally runnable, fine-tuned, abliterated open-weight model built for frontier-level
-            cybersecurity capability. It is the intelligence inside Talos. It needs no cloud.
-          </p>
-        </div>
-        <Countdown />
-      </header>
+      <PageHead label="Model / Talon-1" title="The world's most dangerous model.">
+        A locally runnable, fine-tuned, abliterated open-weight model built for frontier-level
+        cybersecurity capability. It is the intelligence inside Talos. It needs no cloud.
+      </PageHead>
 
       <Feature
+        index="01"
+        eyebrow="Abliteration"
         title="Nothing held back."
         panel={
           <Compare
@@ -73,7 +70,10 @@ export function Talon() {
       </Feature>
 
       <Feature
+        index="02"
+        eyebrow="Local inference"
         title="Runs on your machine. Stays there."
+        tone="soft"
         flip
         panel={
           <Console
@@ -102,6 +102,8 @@ export function Talon() {
       </Feature>
 
       <Feature
+        index="03"
+        eyebrow="Training"
         title="Six disciplines. One model."
         panel={
           <Registry
@@ -131,21 +133,33 @@ export function Talon() {
         </p>
       </Feature>
 
-      <section className="block section-wrap" aria-labelledby="pipeline-title">
-        <h2 id="pipeline-title">Not trained from scratch. Sharpened.</h2>
-        <ol className="pipeline">
-          {PIPELINE.map(([name, text]) => (
-            <li key={name}>
-              <h3>{name}</h3>
-              <p>{text}</p>
-            </li>
-          ))}
-        </ol>
+      <section className="section tone-dark" aria-labelledby="pipeline-title">
+        <div className="wrap">
+          <header className="section-head">
+            <Reveal as="p" className="label">
+              04 / Pipeline
+            </Reveal>
+            <Reveal as="h2" delay={60}>
+              <span id="pipeline-title">Not trained from scratch. Sharpened.</span>
+            </Reveal>
+          </header>
+          <ol className="pipeline">
+            {PIPELINE.map(([name, text], i) => (
+              <Reveal as="li" key={name} delay={i * 60}>
+                <span className="label">{String(i + 1).padStart(2, "0")}</span>
+                <h3>{name}</h3>
+                <p>{text}</p>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
       </section>
 
       <Feature
+        index="05"
+        eyebrow="Evaluation"
         title="Benchmarked in the open."
-        tone="tint"
+        tone="soft"
         flip
         panel={
           <Console
@@ -169,8 +183,10 @@ export function Talon() {
         </p>
       </Feature>
 
-      <section className="block two-col section-wrap" aria-labelledby="spec-title">
+      <section className="section" aria-labelledby="spec-title">
+        <div className="wrap spec-layout">
         <div>
+          <p className="label">06 / Specification</p>
           <h2 id="spec-title">Frontier-class is the target, not the claim.</h2>
           <p className="muted">
             Talon-1 ships with reproducible benchmarks against its base, its abliterated variant,
@@ -180,7 +196,7 @@ export function Talon() {
             <b>Talon-2.</b> In research.
           </p>
         </div>
-        <dl className="spec spec-list">
+        <dl className="spec-list">
           {SPEC.map(([term, value]) => (
             <div key={term}>
               <dt>{term}</dt>
@@ -188,6 +204,7 @@ export function Talon() {
             </div>
           ))}
         </dl>
+        </div>
       </section>
 
       <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations and the Talos harness." />

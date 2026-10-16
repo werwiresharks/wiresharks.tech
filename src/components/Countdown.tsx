@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { RELEASE } from "../site";
 
 const UNITS = [
-  ["Days", 86400],
-  ["Hours", 3600],
-  ["Minutes", 60],
-  ["Seconds", 1],
+  ["Days", "D", 86400],
+  ["Hours", "H", 3600],
+  ["Minutes", "M", 60],
+  ["Seconds", "S", 1],
 ] as const;
 
 function useNow() {
@@ -17,29 +17,31 @@ function useNow() {
   return now;
 }
 
-export function Countdown() {
+/** A compact launch indicator: label, then D / H / M / S in monospace. */
+export function Countdown({ className = "" }: { className?: string }) {
   const left = Math.max(0, Math.floor((RELEASE.getTime() - useNow()) / 1000));
-  if (left === 0) {
-    return (
-      <div className="countdown" data-ui>
-        <p className="countdown-live">Talon-1 is out now.</p>
-      </div>
-    );
-  }
   return (
-    <div className="countdown" data-ui>
-      <ol role="timer" aria-label="Time until Talon-1">
-        {UNITS.map(([label, size], i) => {
-          const value = i === 0 ? Math.floor(left / size) : Math.floor((left % UNITS[i - 1][1]) / size);
-          return (
-            <li key={label}>
-              <b>{String(value).padStart(2, "0")}</b>
-              <span>{label}</span>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="countdown-note">Until Talon-1 · December 25, 2026</p>
+    <div className={`countdown ${className}`}>
+      <p className="countdown-label">
+        <i aria-hidden="true" />
+        Talon-1 / <time dateTime="2026-12-25">December 25, 2026</time>
+      </p>
+      {left === 0 ? (
+        <p className="countdown-live">Available now.</p>
+      ) : (
+        <ol role="timer" aria-label="Time until Talon-1">
+          {UNITS.map(([label, short, size], i) => {
+            const value = i === 0 ? Math.floor(left / size) : Math.floor((left % UNITS[i - 1][2]) / size);
+            return (
+              <li key={label}>
+                <b>{String(value).padStart(2, "0")}</b>
+                <span aria-hidden="true">{short}</span>
+                <span className="sr-only">{label}</span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }

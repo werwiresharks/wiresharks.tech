@@ -1,3 +1,5 @@
+import { PanelBar } from "./PanelBar";
+
 export type TaskState = "done" | "running" | "queued" | "review";
 
 const LABEL: Record<TaskState, string> = {
@@ -17,10 +19,7 @@ export function TaskGraph({
 }) {
   return (
     <div className="panel graph" data-ui aria-label="Talos task graph">
-      <div className="panel-bar">
-        <span className="panel-dots" aria-hidden="true" />
-        <span>talos / tasks</span>
-      </div>
+      <PanelBar title="talos / tasks" />
       <div className="graph-root">
         <span className="tag">Coordinator</span>
         <b>{root.name}</b>

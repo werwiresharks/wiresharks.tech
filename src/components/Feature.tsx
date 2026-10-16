@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { Reveal } from "./Reveal";
 
 /**
- * A centered product section in the apple.com manner: a title, a short lead,
- * the working panel below, on a toned field. `index`/`eyebrow` are accepted
- * for older callers but not shown — the title and position carry the section.
+ * An editorial two-column section: an indexed title and copy on one side,
+ * the working panel on the other. `flip` swaps the sides on wide screens.
  */
 export function Feature({
+  index,
+  eyebrow,
   title,
   children,
   cta,
@@ -22,27 +23,36 @@ export function Feature({
   cta?: { to: string; label: string };
   panel: ReactNode;
   flip?: boolean;
-  tone?: "light" | "tint" | "dark" | "ink";
+  tone?: "light" | "soft" | "dark";
 }) {
   return (
-    <section className={`ptile tone-${tone}${flip ? " visual-first" : ""}`} aria-label={title}>
-      <div className="ptile-head">
-        <Reveal as="h2">{title}</Reveal>
-        <Reveal className="ptile-text" delay={70}>
-          {children}
-        </Reveal>
-        {cta && (
-          <Reveal className="ptile-links" delay={140}>
-            <Link className="learn" to={cta.to}>
-              {cta.label}
-              <span aria-hidden="true"> ›</span>
-            </Link>
+    <section className={`feature section tone-${tone}`} aria-label={title}>
+      <div className={`wrap split${flip ? " is-flipped" : ""}`}>
+        <div className="split-copy">
+          {(index || eyebrow) && (
+            <Reveal as="p" className="label">
+              {[index, eyebrow].filter(Boolean).join(" / ")}
+            </Reveal>
+          )}
+          <Reveal as="h2" delay={60}>
+            {title}
           </Reveal>
-        )}
+          <Reveal className="split-text" delay={120}>
+            {children}
+          </Reveal>
+          {cta && (
+            <Reveal delay={180}>
+              <Link className="text-link" to={cta.to}>
+                {cta.label}
+                <span aria-hidden="true">→</span>
+              </Link>
+            </Reveal>
+          )}
+        </div>
+        <Reveal className="split-visual" delay={140}>
+          {panel}
+        </Reveal>
       </div>
-      <Reveal className="ptile-visual" delay={180}>
-        {panel}
-      </Reveal>
     </section>
   );
 }

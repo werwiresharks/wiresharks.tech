@@ -1,9 +1,11 @@
-import { Countdown } from "../components/Countdown";
+import { PageHead } from "../components/PageHead";
+import { Reveal } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
 import { Console } from "../components/mock/Console";
 import { Registry } from "../components/mock/Registry";
 import { TaskGraph } from "../components/mock/TaskGraph";
+import { REVIEW_STEPS } from "../content";
 
 const LAYERS = [
   ["Experience", "Chat, files, diffs, tool traces, approvals, background jobs."],
@@ -16,35 +18,21 @@ const LAYERS = [
   ["Verification", "Tests, cross-model review, provenance, rollback."],
 ];
 
-const STEPS = [
-  ["Scope", "A repository and an explicit scope."],
-  ["Map", "Repository context and likely risk."],
-  ["Find", "Parallel workers, source evidence."],
-  ["Prove", "Every finding evaluated. A guess is not a vulnerability."],
-  ["Patch", "Minimal changes in an isolated worktree."],
-  ["Verify", "Tests run. A second model reviews."],
-  ["Report", "Evidence, patch, rollback path."],
-];
-
 const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento", "Pi", "P-Stack", "OpenClaw", "LangGraph", "OpenHands", "Aider"];
 
 export function Talos() {
   return (
     <>
       <title>Talos | Wiresharks</title>
-      <header className="page-head section-wrap">
-        <div>
-          <h1>The world's most capable harness.</h1>
-          <p className="page-lede">
-            Talos is a model-independent autonomous agent platform. It keeps the strongest parts
-            of Hermes Agent, adds first-class engines for Claude Code and Codex, and owns the
-            orchestration, memory and skills that make them work as one system.
-          </p>
-        </div>
-        <Countdown />
-      </header>
+      <PageHead label="Agent / Talos" title="The world's most capable harness.">
+        Talos is a model-independent autonomous agent platform. It keeps the strongest parts of
+        Hermes Agent, adds first-class engines for Claude Code and Codex, and owns the
+        orchestration, memory and skills that make them work as one system.
+      </PageHead>
 
       <Feature
+        index="01"
+        eyebrow="Engines"
         title="Three engines. One workspace."
         panel={
           <Registry
@@ -66,7 +54,10 @@ export function Talos() {
       </Feature>
 
       <Feature
+        index="02"
+        eyebrow="Orchestration"
         title="Parallel workers. Durable checkpoints."
+        tone="soft"
         flip
         panel={
           <TaskGraph
@@ -92,6 +83,8 @@ export function Talos() {
       </Feature>
 
       <Feature
+        index="03"
+        eyebrow="Knowledge"
         title="Skills on demand. Memory that lasts."
         panel={
           <Registry
@@ -117,7 +110,10 @@ export function Talos() {
       </Feature>
 
       <Feature
+        index="04"
+        eyebrow="Workflow"
         title="Authorized repository security review."
+        tone="soft"
         flip
         panel={
           <Console
@@ -144,7 +140,7 @@ export function Talos() {
       >
         <p>The first thing Talos ships end to end.</p>
         <ol className="steps">
-          {STEPS.map(([name, text]) => (
+          {REVIEW_STEPS.map(([name, text]) => (
             <li key={name}>
               <b>{name}</b>
               <span>{text}</span>
@@ -153,24 +149,40 @@ export function Talos() {
         </ol>
       </Feature>
 
-      <section className="block section-wrap" aria-labelledby="arch-title">
-        <h2 id="arch-title">Eight layers. One system.</h2>
-        <ol className="stack">
-          {LAYERS.map(([name, text]) => (
-            <li key={name}>
-              <h3>{name}</h3>
-              <p>{text}</p>
-            </li>
-          ))}
-        </ol>
+      <section className="section tone-dark" aria-labelledby="arch-title">
+        <div className="wrap">
+          <header className="section-head">
+            <Reveal as="p" className="label">
+              05 / Architecture
+            </Reveal>
+            <Reveal as="h2" delay={60}>
+              <span id="arch-title">Eight layers. One system.</span>
+            </Reveal>
+          </header>
+          <ol className="layers">
+            {LAYERS.map(([name, text], i) => (
+              <Reveal as="li" key={name} delay={i * 40}>
+                <span className="label">L{i + 1}</span>
+                <h3>{name}</h3>
+                <p>{text}</p>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
       </section>
 
-      <section className="block section-wrap" aria-labelledby="lineage-title">
-        <ul className="lineage">
-          {LINEAGE.map((name) => (
-            <li key={name}>{name}</li>
-          ))}
-        </ul>
+      <section className="section section-compact" aria-labelledby="lineage-title">
+        <div className="wrap lineage-layout">
+          <div>
+            <p className="label">06 / Lineage</p>
+            <h2 id="lineage-title">Informed by the field.</h2>
+          </div>
+          <ul className="lineage">
+            {LINEAGE.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <Closing title="Talos runs Talon-1 first." text="Both ship together. December 25, 2026." />
