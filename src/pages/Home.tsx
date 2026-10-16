@@ -14,7 +14,7 @@ import { HomeJourney } from "../talos/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is Talon-1?",
-    "A 27B open-weight model, abliterated and fine-tuned for cybersecurity. It runs locally and powers Talos. Weights and evaluations ship December 25, 2026.",
+    "Our premier cyber-capable frontier model. Talon-1 pairs Pareto-efficient performance with fine-tuning for additional offensive and defensive cybersecurity capability. The 27B open-weight model runs locally and powers Talos. Weights and evaluations ship December 25, 2026.",
   ],
   [
     "What is Talos?",
@@ -102,7 +102,7 @@ export function Home() {
             index="01.1"
             kind="Model / Open weights"
             name="Talon-1"
-            summary="A local, open-weight model, abliterated and fine-tuned for cybersecurity."
+            summary="Our premier cyber-capable frontier model."
             specs={[
               ["Parameters", "27B"],
               ["Context", "128k"],
@@ -138,8 +138,9 @@ export function Home() {
               stay on the machine.
             </p>
             <p>
-              Post-trained across vulnerability research, reverse engineering, secure coding, SOC
-              analysis and authorized red teaming.
+              Frontier-level capability with Pareto-efficient performance. Fine-tuned for additional
+              offensive and defensive cybersecurity capability across vulnerability research,
+              reverse engineering, secure coding, SOC analysis and authorized red teaming.
             </p>
           </ProductBlock>
 

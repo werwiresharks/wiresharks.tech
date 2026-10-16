@@ -41,8 +41,9 @@ export function Talon() {
     <>
       <title>Talon-1 | Wiresharks</title>
       <PageHead label="Model / Talon-1" title="The world's most dangerous model.">
-        A locally runnable, fine-tuned, abliterated open-weight model built for frontier-level
-        cybersecurity capability. It is the intelligence inside Talos. It needs no cloud.
+        Our premier cyber-capable frontier model. Pareto-efficient performance, fine-tuned for
+        additional capability in offensive and defensive cybersecurity. Open weights, frontier-level
+        capability, running locally. The intelligence inside Talos.
       </PageHead>
 
       <Feature
