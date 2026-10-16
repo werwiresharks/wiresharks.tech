@@ -62,7 +62,12 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     if (!hero) return;
     const rect = hero.getBoundingClientRect();
     // Frame the orb in the part of the hero visible on first load, so all of it shows.
-    const heroPose = heroFrame(rect.width, mobile ? rect.height : Math.min(rect.height, height - (rect.top + window.scrollY)));
+    // The eyebrow is a full-width block, so it bounds the copy's top but not its right edge.
+    const copy = Array.from(hero.querySelectorAll("#hero-title, .hero-glass, .hero-ctas > *, .hero-launch"), (node) => readBox(node));
+    const [eyebrow] = Array.from(hero.querySelectorAll(".hero-eyebrow"), (node) => readBox(node));
+    const copyRight = copy.length ? Math.max(...copy.map((box) => box.right)) - rect.left : undefined;
+    const copyTop = eyebrow ? eyebrow.top - (rect.top + window.scrollY) : undefined;
+    const heroPose = heroFrame(rect.width, mobile ? rect.height : Math.min(rect.height, height - (rect.top + window.scrollY)), copyRight, copyTop);
     heroPose.y += rect.top + window.scrollY;
     const stops: JourneyStop[] = [{ at: 0, frame: heroPose }];
     const narrow = window.innerWidth < 1024;

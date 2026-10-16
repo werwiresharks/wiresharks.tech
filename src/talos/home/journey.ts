@@ -85,10 +85,20 @@ export class HomeMotion {
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 const smooth = (n: number) => { const t = clamp(n); return t * t * (3 - 2 * t); };
 
-export function heroFrame(width: number, height: number): Framing {
+/**
+ * `copyRight` and `copyTop` bound the hero copy: the desktop orb stays to its right and the tablet
+ * orb, which sits above the stacked copy, ends before it.
+ */
+export function heroFrame(width: number, height: number, copyRight = width * 0.5, copyTop = Infinity): Framing {
+  if (width >= 1024) {
+    // Anchor to the right edge, clear of the copy, centred in the visible hero below the header.
+    const margin = Math.max(24, width * 0.03);
+    const radius = Math.min(width * 0.45, (height - 140 - 24) / 2, (width - margin - copyRight - margin) / 2);
+    return { x: width - margin - radius, y: (140 + height - 24) / 2, radius };
+  }
   if (width >= 768) {
-    // Fill the visible hero between the fixed header and the bottom edge.
-    const radius = Math.min(width * 0.45, (height - 140 - 24) / 2);
+    // Fill the visible hero between the fixed header and the copy (or the bottom edge).
+    const radius = Math.min(width * 0.45, (height - 140 - 24) / 2, (copyTop - 140 - 24) / 2);
     return { x: width * 0.5, y: 140 + radius, radius };
   }
   const radius = Math.min(width * 0.23, 110);

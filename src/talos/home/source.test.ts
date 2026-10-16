@@ -59,6 +59,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     parentElement: root,
     getBoundingClientRect: () => ({ left: rect[0], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),
     closest: (selector: string) => selector === panel ? nodes.get(panel) : null,
+    querySelectorAll: () => [],
   });
   nodes.set(".hero", node([0, 0, layout.width, layout.hero]));
   const landingSize = layout.width < 768 ? 40 : layout.width < 1024 ? 64 : 88;
@@ -163,6 +164,7 @@ test("the release orb grows smoothly into the space beside its copy and stays wi
     children,
     getBoundingClientRect: () => ({ left: rect[0], right: rect[0] + rect[2], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),
     closest: () => null,
+    querySelectorAll: () => [],
   });
   const section = [0, 6911, 1440, 697];
   const copy = [80, 7169, 719, 281];

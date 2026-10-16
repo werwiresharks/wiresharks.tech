@@ -83,7 +83,13 @@ test("particle cohorts retain buffers, budget and identity through a complete mo
 });
 
 test("hero framing keeps the original desktop and smaller mobile compositions", () => {
-  assert.equal(heroFrame(1440, 1000).x, 1440 * 0.5);
+  const desktop = heroFrame(1440, 1000, 685);
+  assert.ok(desktop.x - desktop.radius >= 685, "the desktop orb clears the hero copy");
+  assert.ok(desktop.x + desktop.radius <= 1440, "the desktop orb stays fully visible");
+  assert.ok(desktop.radius > 300, "the desktop orb stays prominent");
+  const tablet = heroFrame(768, 1024, 688, 598);
+  assert.ok(tablet.y + tablet.radius <= 598 - 24, "the tablet orb ends above the stacked copy");
+  assert.ok(tablet.radius > 200, "the tablet orb stays prominent");
   assert.ok(heroFrame(390, 844).radius < heroFrame(1440, 1000).radius);
   const mobile = heroFrame(390, 844);
   assert.equal(mobile.x, 195);

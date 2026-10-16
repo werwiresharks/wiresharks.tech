@@ -600,7 +600,7 @@ button {
 .tpe-static {
   position: absolute;
   top: 53%;
-  left: 50%;
+  left: calc(100% - 3vw - min(19vw, 300px));
   width: min(38vw, 600px);
   transform: translate(-50%, -50%);
   opacity: 0.7;
