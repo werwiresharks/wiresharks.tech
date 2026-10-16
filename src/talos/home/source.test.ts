@@ -138,3 +138,65 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     assert.ok(Math.abs(crossing.y + crossingMiddle - gap) < 0.01, "rail crossing stays in the section gap");
   }
 });
+
+test("the release orb grows smoothly into the space beside its copy and stays within the section", (t) => {
+  let source: ReturnType<typeof createHomeSource> | undefined;
+  t.after(() => source?.dispose());
+  const viewport = { innerWidth: 1440, innerHeight: 900, scrollY: 0, addEventListener() {}, removeEventListener() {} };
+  const observer = class { observe() {} disconnect() {} };
+  const globals = {
+    window: viewport,
+    document: { documentElement: { scrollHeight: 8017 }, fonts: { addEventListener() {}, removeEventListener() {}, ready: Promise.resolve() } },
+    ResizeObserver: observer, MutationObserver: observer,
+    getComputedStyle: () => ({ transform: "none" }),
+    cancelAnimationFrame() {}, requestAnimationFrame: () => 1,
+  };
+  for (const [key, value] of Object.entries(globals)) {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, key);
+    Object.defineProperty(globalThis, key, { configurable: true, value });
+    t.after(() => previous ? Object.defineProperty(globalThis, key, previous) : Reflect.deleteProperty(globalThis, key));
+  }
+  // Rectangles captured from the homepage at 1440×900.
+  const root = { querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
+  const node = (rect: number[], children: unknown[] = []) => ({
+    parentElement: root,
+    children,
+    getBoundingClientRect: () => ({ left: rect[0], right: rect[0] + rect[2], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),
+    closest: () => null,
+  });
+  const section = [0, 6911, 1440, 697];
+  const copy = [80, 7169, 719, 281];
+  const nodes = new Map<string, unknown>([
+    [".hero", node([0, 0, 1440, 900])],
+    [".faq", node([0, 6233, 1440, 678])],
+    [".closing", node(section)],
+    [".closing-inner > div", node(copy)],
+    [".closing-launch", node([847, 7406, 513, 44])],
+    [".closing-ctas", node([80, 7402, 719, 48], [node([80, 7402, 175, 48]), node([267, 7402, 146, 48])])],
+    [".closing .section-lede", node([80, 7290, 719, 56])],
+  ]);
+  const created = createHomeSource(root as unknown as HTMLElement, () => {});
+  source = created;
+  const sample = (scroll: number) => { viewport.scrollY = scroll; return structuredClone(created.sample()); };
+  const settle = section[1] + section[3] / 2 - 450;
+  const full = sample(settle);
+  assert.ok(full.mother.radius > section[3] * 0.45, `release orb radius ${full.mother.radius}`);
+  assert.ok(full.mother.x - full.mother.radius >= copy[0] + copy[2], "orb clears the copy column");
+  assert.ok(full.mother.x + full.mother.radius <= 1440 + full.mother.radius * 0.3 + 0.01, "at most 30% leaves the right edge");
+  assert.equal(full.warm, 1);
+  assert.equal(full.docked, true);
+  let previous = sample(6000);
+  for (const [from, to, step] of [[6000, 7117, 2], [7117, 6000, -2]]) {
+    for (let scroll = from; step > 0 ? scroll <= to : scroll >= to; scroll += step) {
+      const current = sample(scroll);
+      const { mother } = current;
+      assert.ok(Math.hypot(mother.x - previous.mother.x, mother.y - previous.mother.y) < 12 && Math.abs(mother.radius - previous.mother.radius) < 6, `continuous growth at ${scroll}`);
+      if (mother.radius > 30) {
+        assert.ok(mother.y + scroll - mother.radius >= section[1] - 0.01, `no spill above the section at ${scroll}`);
+        assert.ok(mother.y + scroll + mother.radius <= section[1] + section[3] + 0.01, `no spill below the section at ${scroll}`);
+      }
+      previous = current;
+    }
+  }
+  assert.ok(sample(7117).opacity > 0.99, "the release orb does not fade at the end of the page");
+});

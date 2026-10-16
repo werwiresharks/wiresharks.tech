@@ -1844,6 +1844,10 @@ button {
 .home-page[data-journey="ready"] .hero { isolation: auto; }
 .home-page[data-journey="ready"] .hero-inner { z-index: auto; }
 .home-page[data-journey="ready"] .hero-glass { position: relative; z-index: 4; }
+/* The release orb passes behind its copy and countdown; keep both above the particles. */
+.home-page[data-journey="ready"] .home-closing .closing-inner > * { position: relative; z-index: 4; }
+/* A halo in the section colour clears particles from around the countdown's small type. */
+.home-page[data-journey="ready"] .home-closing .closing-launch { text-shadow: 0 0 4px var(--bg), 0 0 10px var(--bg), 0 0 18px var(--bg); }
 .dangerous {
   color: #9c3430;
   background: linear-gradient(175deg, transparent 35%, rgba(184, 76, 53, 0.14) 35%, rgba(184, 76, 53, 0.14) 88%, transparent 88%);

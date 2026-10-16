@@ -6,9 +6,11 @@ export type HomeFrame = {
   scroll: number;
   satellites: { key: string; frame: Framing; mix: number }[];
   opacity: number;
+  /** 0–1: how far particles take the bronze tone used over dark sections. */
+  warm: number;
 };
 
-export type JourneyStop = { at: number; frame: Framing; opacity?: number };
+export type JourneyStop = { at: number; frame: Framing; opacity?: number; warm?: number };
 export type JourneyDock = {
   enter: number;
   leave: number;
@@ -38,6 +40,7 @@ export function createHomeFrame(): HomeFrame {
     scroll: 0,
     satellites: HOME_KEYS.map((key) => ({ key, frame: { x: 0, y: 0, radius: 0 }, mix: 0 })),
     opacity: 1,
+    warm: 0,
   };
 }
 
@@ -66,6 +69,7 @@ export class HomeMotion {
     }
     const blend = immediate ? 1 : 1 - Math.exp(-10 * dt);
     this.frame.opacity += (target.opacity - this.frame.opacity) * blend;
+    this.frame.warm += (target.warm - this.frame.warm) * blend;
     for (let i = 0; i < this.frame.satellites.length; i++) {
       const current = this.frame.satellites[i];
       const next = target.satellites[i];
@@ -127,6 +131,7 @@ export function sampleHomeFrame(geometry: HomeGeometry, scroll: number, out: Hom
     out.mother.x = Math.max(out.mother.radius + 4, Math.min(geometry.width - out.mother.radius - 4, out.mother.x));
   }
   const opacity = (left.opacity ?? 1) + ((right.opacity ?? 1) - (left.opacity ?? 1)) * t;
+  out.warm = (left.warm ?? 0) + ((right.warm ?? 0) - (left.warm ?? 0)) * t;
   out.opacity = opacity * (1 - smooth((scroll - (geometry.end - height * 0.6)) / (height * 0.45)));
   for (const satellite of out.satellites) {
     satellite.mix = 0;

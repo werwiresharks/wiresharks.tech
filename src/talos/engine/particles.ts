@@ -353,7 +353,7 @@ export class ParticleField {
   stepHome(frame: HomeFrame, width: number, height: number, worldHeight: number, time: number, tiltX = 0, tiltY = 0) {
     const unit = worldHeight / height;
     const base = TONES.idle;
-    const warmth = Math.max(0, Math.min(1, (160 - frame.mother.radius) / 100));
+    const warmth = Math.max(frame.warm, Math.min(1, (160 - frame.mother.radius) / 100), 0);
     // Small orbs (the docked coordinator, rail marker and worker icons) need visible life:
     // a rigid spin of an even sphere reads as static at a few dozen pixels.
     const small = Math.max(0, Math.min(1, (70 - frame.mother.radius) / 40));

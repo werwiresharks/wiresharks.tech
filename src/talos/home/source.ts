@@ -10,15 +10,50 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   let quietEnd = Infinity;
   let pending = 0;
   let disposed = false;
-  const readFrame = (node: Element, radius?: number): Framing => {
-    const rect = node.getBoundingClientRect();
-    // Reveal translates its contents. Layout coordinates remain stable throughout its entrance.
+  // Reveal translates its contents. Layout coordinates remain stable throughout its entrance.
+  const revealOffset = (node: Element) => {
     let offset = 0;
     for (let parent: Element | null = node; parent && parent !== root; parent = parent.parentElement) {
       const transform = getComputedStyle(parent).transform;
       if (transform !== "none") offset += new DOMMatrixReadOnly(transform).m42;
     }
-    return { x: rect.left + rect.width / 2, y: rect.top + window.scrollY - offset + rect.height / 2, radius: radius ?? rect.width / 2 };
+    return offset;
+  };
+  const readFrame = (node: Element, radius?: number): Framing => {
+    const rect = node.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + window.scrollY - revealOffset(node) + rect.height / 2, radius: radius ?? rect.width / 2 };
+  };
+  /** Document box of a node, or of its laid-out children when the node itself spans the column. */
+  const readBox = (node: Element, children = false) => {
+    const rects = children && node.children.length ? Array.from(node.children, (child) => child.getBoundingClientRect()) : [node.getBoundingClientRect()];
+    const top = Math.min(...rects.map((rect) => rect.top)) + window.scrollY - revealOffset(node);
+    const bottom = Math.max(...rects.map((rect) => rect.bottom)) + window.scrollY - revealOffset(node);
+    return { left: Math.min(...rects.map((rect) => rect.left)), right: Math.max(...rects.map((rect) => rect.right)), top, bottom };
+  };
+  /**
+   * The release section's orb fills the empty space beside its copy. With the countdown in the right
+   * column, it takes the whole column height and may run off the right edge; when the copy stacks, it
+   * takes the space beside the buttons and countdown. Returns null when there is no room (phones).
+   */
+  const closingFrame = (): Framing | null => {
+    const section = root.querySelector(".closing");
+    const copy = root.querySelector(".closing-inner > div");
+    const launch = root.querySelector(".closing-launch");
+    const ctas = root.querySelector(".closing-ctas");
+    const lede = root.querySelector(".closing .section-lede");
+    if (!section || !copy || !launch || !ctas || !lede) return null;
+    const width = window.innerWidth;
+    const area = readBox(section);
+    const column = readBox(copy);
+    const countdown = readBox(launch);
+    const beside = countdown.left > (column.left + column.right) / 2;
+    const left = beside ? column.right + width * 0.04 : Math.max(readBox(ctas, true).right, countdown.right) + 24;
+    const top = beside ? area.top : readBox(lede).bottom + 16;
+    const bottom = area.bottom - (beside ? 0 : 8);
+    // At most 30% of the radius may leave the right edge.
+    const radius = Math.min((bottom - top) * 0.46, (width - left) / 1.7, 480);
+    if (radius < 90) return null;
+    return { x: (left + radius + width - radius * 0.7) / 2, y: (top + bottom) / 2, radius };
   };
   const measure = () => {
     const height = window.innerHeight;
@@ -52,7 +87,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       while (stops.length > 1 && stops[stops.length - 1].at >= first.at) stops.pop();
       stops.push(...next);
     };
+    const releaseFrame = mobile ? null : closingFrame();
     for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
+      if (key === "closing" && releaseFrame) continue;
       const node = root.querySelector(`[data-home-stop="${key}"]`);
       if (!node) continue;
       const frame = readFrame(node);
@@ -117,10 +154,24 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const closing = root.querySelector(".closing");
       quietEnd = closing ? Math.max(quietStart, closing.getBoundingClientRect().top + window.scrollY - height * 0.75) : top;
       stops.push({ at: quietStart, frame, opacity: 0.5 });
-      stops.push({ at: quietEnd, frame: { ...frame, y: top + height * 0.7 }, opacity: 0.5 });
+      stops.push({ at: quietEnd, frame: { ...frame, y: top + height * 0.7 }, opacity: 0.5, warm: 1 });
+    }
+    const closing = root.querySelector(".closing");
+    if (releaseFrame && closing) {
+      // Grow from the rail into the release section, reaching full size as the section centres.
+      const box = readBox(closing);
+      const start = Number.isFinite(quietEnd) ? quietEnd : box.top - height * 0.75;
+      const settle = Math.max(start + height * 0.3, Math.min((box.top + box.bottom - height) / 2, document.documentElement.scrollHeight - height));
+      if (!Number.isFinite(quietEnd)) stops.push({ at: start, frame: { ...rail, y: start + height * 0.5 }, warm: 1 });
+      // Enter the section's top corner while still small, then grow; its top edge never leaves the dark section.
+      const enter = { ...rail, y: box.top + rail.radius + 24 };
+      stops.push({ at: start + (settle - start) * 0.35, frame: enter, warm: 1 }, { at: settle, frame: releaseFrame, warm: 1 });
+      // The section holds the orb from here on; exempt it from the viewport rail clamp.
+      docks.push({ enter: start, leave: Infinity, holdFrom: start, satellites: [] });
     }
     stops.sort((a, b) => a.at - b.at);
-    const end = document.documentElement.scrollHeight - height + height * 0.15;
+    // The release orb stays inside its section, which scrolls away by itself; it needs no fade at the page end.
+    const end = releaseFrame && closing ? Infinity : document.documentElement.scrollHeight - height + height * 0.15;
     geometry = { stops, docks, end, height, mobile, width: window.innerWidth, heroExit };
     dirty = false;
   };
