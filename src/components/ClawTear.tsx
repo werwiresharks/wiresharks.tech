@@ -6,8 +6,8 @@ import type { Box } from "./claw";
 const DISTANCE = 0.55;
 /** Under reduced motion the tear does not hold the page; it fades in past this point. */
 const STILL_AT = 0.12;
-/** Touch momentum this recent is still the user's swipe, so it is held at the lock too. */
-const TOUCH_MS = 1500;
+/** Scrolling this soon after wheel, touch or key input is still that input (smooth scrolling, momentum), so it is held too. */
+const INPUT_MS = 1500;
 
 /**
  * The hero's surface as a torn skin. When the page reaches its lock point it
@@ -41,7 +41,8 @@ export function ClawTear() {
     let last = -1;
     let frame = 0;
     let touchY: number | null = null;
-    let touchAt = -Infinity;
+    let inputAt = -Infinity;
+    let measured = false;
 
     const draw = (progress: number) => {
       if (progress === last) return;
@@ -71,12 +72,13 @@ export function ClawTear() {
     const consume = (delta: number) => {
       if (motion.matches || delta === 0) return false;
       const y = window.scrollY;
+      // Release follows the drawing, not the target, so the page never moves before the cut finishes.
       if (delta > 0) {
-        if (target >= 1 || y + delta <= lock || y > lock + 1) return false;
+        if (current >= 1 || y + delta <= lock || y > lock + 1) return false;
         if (y < lock) hold();
         target = Math.min(1, target + (delta - Math.max(0, lock - y)) / distance);
       } else {
-        if (target <= 0 || y + delta >= lock || y < lock - 1) return false;
+        if (current <= 0 || y + delta >= lock || y < lock - 1) return false;
         if (y > lock) hold();
         target = Math.max(0, target + (delta + Math.max(0, y - lock)) / distance);
       }
@@ -84,23 +86,24 @@ export function ClawTear() {
       return true;
     };
 
-    // Scrolls that got past the input handlers: scrollbar drags, anchors, focus,
-    // find-in-page and restored positions set the tear to match where the page
-    // is. Touch momentum is the user's own swipe, so it is held at the lock.
+    // Scrolls that got past the input handlers. Ones that follow the user's own
+    // scrolling (smooth-scroll tails, touch momentum) are held at the lock;
+    // scrollbar drags, anchors, focus, find-in-page and restored positions are
+    // never trapped and set the tear to match where the page landed.
     const onScroll = () => {
       const y = window.scrollY;
       if (motion.matches) {
         node.dataset.torn = String(y > lock + window.innerHeight * STILL_AT);
         return;
       }
-      const swiping = performance.now() - touchAt < TOUCH_MS;
-      if (y > lock + 1 && target < 1) {
+      const swiping = performance.now() - inputAt < INPUT_MS;
+      if (y > lock + 1 && current < 1) {
         if (swiping) {
           hold();
           target = Math.min(1, target + (y - lock) / distance);
         } else target = 1;
         animate();
-      } else if (y < lock - 1 && target > 0) {
+      } else if (y < lock - 1 && current > 0) {
         if (swiping) {
           hold();
           target = Math.max(0, target - (lock - y) / distance);
@@ -109,9 +112,13 @@ export function ClawTear() {
       }
     };
 
-    const outside = (event: Event) => event.target instanceof Element && event.target.closest("header, input, textarea, select, [contenteditable]");
+    const outside = (event: Event) => event.target instanceof Element && event.target.closest(".menu-open, input, textarea, select, [contenteditable]");
+    const navigating = () => {
+      inputAt = -Infinity;
+    };
     const onWheel = (event: WheelEvent) => {
       if (event.ctrlKey || outside(event)) return;
+      inputAt = performance.now();
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
       if (consume(event.deltaY * unit)) event.preventDefault();
     };
@@ -123,7 +130,7 @@ export function ClawTear() {
       const y = event.touches[0].clientY;
       const delta = touchY - y;
       touchY = y;
-      touchAt = performance.now();
+      inputAt = performance.now();
       if (consume(delta) && event.cancelable) event.preventDefault();
     };
     const KEYS: Record<string, number> = { ArrowDown: 40, ArrowUp: -40, PageDown: 0.85, PageUp: -0.85, " ": 0.85 };
@@ -132,6 +139,7 @@ export function ClawTear() {
       if (event.key === " " && event.target instanceof Element && event.target.closest("a, button, summary")) return;
       const step = KEYS[event.key];
       const delta = (Math.abs(step) < 1 ? step * window.innerHeight : step) * (event.key === " " && event.shiftKey ? -1 : 1);
+      inputAt = performance.now();
       if (consume(delta)) event.preventDefault();
     };
 
@@ -179,11 +187,12 @@ export function ClawTear() {
       node.dataset.ready = "true";
       if (motion.matches) {
         target = current = 1;
-      } else if (target > 0 && target < 1) {
-        hold();
-      } else {
+      } else if (!measured) {
         target = current = window.scrollY > lock + 1 ? 1 : 0;
+      } else if (current > 0 && current < 1) {
+        hold();
       }
+      measured = true;
       last = -1;
       draw(current);
       onScroll();
@@ -194,6 +203,11 @@ export function ClawTear() {
     measure();
     void document.fonts?.ready.then(measure);
     window.addEventListener("scroll", onScroll, { passive: true });
+    // The lock depends on the viewport height too, which can change without the hero resizing.
+    window.addEventListener("resize", measure);
+    window.addEventListener("focusin", navigating);
+    window.addEventListener("click", navigating);
+    window.addEventListener("hashchange", navigating);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -203,6 +217,10 @@ export function ClawTear() {
       cancelAnimationFrame(frame);
       resize.disconnect();
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("focusin", navigating);
+      window.removeEventListener("click", navigating);
+      window.removeEventListener("hashchange", navigating);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
