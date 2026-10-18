@@ -12,7 +12,7 @@ const LAYERS = [
   ["Control plane", "Sessions, identity, normalized events, task graph, scheduler."],
   ["Engines", "Hermes native, Claude Code, Codex."],
   ["Inference", "Talon-1 local, commercial APIs, private endpoints."],
-  ["Orchestration", "Bounded swarms, recursive tasks, reviewers, schedules."],
+  ["Orchestration", "Bounded parallel workers, recursive tasks, reviewers, schedules."],
   ["Knowledge", "Context, evidence, working and durable memory, skills."],
   ["Execution", "Scoped tools, containers, browser, terminal, MCP."],
   ["Verification", "Tests, cross-model review, provenance, rollback."],
@@ -25,7 +25,7 @@ export function Raptor() {
     <>
       <title>Raptor | Wiresharks</title>
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
-      <PageHead label="Agent / Raptor" title="The world's most capable harness.">
+      <PageHead label="Agent / Raptor" title="The autonomous cybersecurity agent.">
         Raptor is a model-independent autonomous agent. It runs on Harness, which keeps the
         strongest parts of Hermes Agent, adds first-class engines for Claude Code and Codex, and
         owns the orchestration, memory and skills that make them work as one system.

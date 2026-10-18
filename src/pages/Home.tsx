@@ -21,7 +21,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What is Raptor?",
-    "The autonomous cybersecurity agent. It plans, delegates to subagent swarms, executes on real systems and verifies the result. It runs Talon-1 locally, or any other model you point it at. Harness is the execution and orchestration infrastructure it runs on.",
+    "The autonomous cybersecurity agent. It plans, splits work across parallel workers in isolated worktrees, executes on real systems and verifies the result. It runs Talon-1 locally, or any other model you point it at. Harness is the execution and orchestration infrastructure it runs on.",
   ],
   [
     "What does abliterated mean?",
