@@ -42,7 +42,8 @@ export function ClawTear() {
     let frame = 0;
     let touchY: number | null = null;
     let inputAt = -Infinity;
-    let measured = false;
+    let mapped = false;
+    let still = motion.matches;
 
     const draw = (progress: number) => {
       if (progress === last) return;
@@ -185,17 +186,25 @@ export function ClawTear() {
       skin.current?.setAttribute("viewBox", `0 0 ${w} ${h}`);
       under.current?.style.setProperty("inset", `${zone.y}px ${w - zone.x - zone.w}px ${Math.max(0, h - zone.y - zone.h)}px ${zone.x}px`);
       node.dataset.ready = "true";
-      if (motion.matches) {
+      const y = window.scrollY;
+      // The tear's state comes from the page position only on first load and when
+      // the motion preference flips; later re-measures keep it, so a viewport
+      // change never reseals a finished tear or skips an unfinished one.
+      if (motion.matches !== still) {
+        still = motion.matches;
+        mapped = false;
+      }
+      if (still) {
         target = current = 1;
-      } else if (!measured) {
-        target = current = window.scrollY > lock + 1 ? 1 : 0;
+        node.dataset.torn = String(y > lock + window.innerHeight * STILL_AT);
+      } else if (!mapped) {
+        target = current = y > lock + 1 ? 1 : 0;
       } else if (current > 0 && current < 1) {
         hold();
       }
-      measured = true;
+      mapped = true;
       last = -1;
       draw(current);
-      onScroll();
     };
 
     const resize = new ResizeObserver(measure);
