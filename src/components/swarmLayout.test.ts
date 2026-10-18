@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ROW_MIN_WIDTH, stageProgress, swarmFrame, swarmLayout } from "./swarm.ts";
-import type { Rect, SwarmLayout } from "./swarm.ts";
+import { ROW_MIN_WIDTH, stageProgress, swarmFrame, swarmLayout } from "./swarmLayout.ts";
+import type { Rect, SwarmLayout } from "./swarmLayout.ts";
 
 const desktop = swarmLayout(880, 560);
 const phones = [

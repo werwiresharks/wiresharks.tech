@@ -7,7 +7,7 @@ import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
 import { Platform } from "../components/Platform";
 import { ProductBlock } from "../components/ProductBlock";
-import { Swarm } from "../components/Swarm.tsx";
+import { Swarm } from "../components/Swarm";
 import { Console } from "../components/mock/Console";
 import { TaskGraph } from "../components/mock/TaskGraph";
 import { Compare } from "../components/mock/Compare";

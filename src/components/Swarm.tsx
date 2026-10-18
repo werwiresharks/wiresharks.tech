@@ -2,8 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { CLAWS } from "./ProductIcons";
 import { Reveal } from "./Reveal";
-import { stageProgress, swarmFrame, swarmLayout } from "./swarm.ts";
-import type { Phase, SwarmLayout } from "./swarm.ts";
+import { stageProgress, swarmFrame, swarmLayout } from "./swarmLayout";
+import type { Phase, SwarmLayout } from "./swarmLayout";
 
 const STEPS: [Phase, string, string][] = [
   ["split", "Split", "One Raptor divides into specialized agents."],
