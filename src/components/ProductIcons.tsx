@@ -11,7 +11,7 @@ export function TalonIcon() {
 }
 
 /** The three claw marks of the Raptor mark, on a 32-unit grid. */
-const CLAWS = ["M12 4Q1.93 13.98 4 28Q8.57 16.19 12 4Z", "M21 1Q9.41 13.87 12 31Q17.07 16.17 21 1Z", "M29 5Q18.99 13.81 21 27Q25.56 16.21 29 5Z"];
+export const CLAWS = ["M12 4Q1.93 13.98 4 28Q8.57 16.19 12 4Z", "M21 1Q9.41 13.87 12 31Q17.07 16.17 21 1Z", "M29 5Q18.99 13.81 21 27Q25.56 16.21 29 5Z"];
 
 /** Raptor, the agent, at button size: the claw marks in the current text colour. */
 export function RaptorIcon() {

@@ -7,6 +7,7 @@ import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
 import { Platform } from "../components/Platform";
 import { ProductBlock } from "../components/ProductBlock";
+import { Swarm } from "../components/Swarm.tsx";
 import { Console } from "../components/mock/Console";
 import { TaskGraph } from "../components/mock/TaskGraph";
 import { Compare } from "../components/mock/Compare";
@@ -205,6 +206,8 @@ export function Home() {
         </div>
       </section>
 
+      <Swarm />
+
       <div className="home-platform">
         <span className="home-section-landing" data-home-stop="platform" aria-hidden="true" />
         <Platform />
@@ -215,7 +218,7 @@ export function Home() {
           <header className="section-head">
             <span className="home-landing" data-home-stop="principles" aria-hidden="true" />
             <Reveal as="p" className="label">
-              03 / Principles
+              04 / Principles
             </Reveal>
             <Reveal as="h2" delay={60}>
               <span id="principles-title">Built for security intelligence.</span>
