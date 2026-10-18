@@ -3,7 +3,7 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
-import { Talos } from "./pages/Talos";
+import { Raptor } from "./pages/Raptor";
 import { Talon } from "./pages/Talon";
 
 function NotFound() {
@@ -47,7 +47,8 @@ export default function App() {
       <main id="main">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/talos" element={<Talos />} />
+          <Route path="/raptor" element={<Raptor />} />
+          <Route path="/talos" element={<Navigate to="/raptor" replace />} />
           <Route path="/talon" element={<Talon />} />
           <Route path="/products/*" element={<Navigate to="/" replace />} />
           <Route path="/research/*" element={<Navigate to="/" replace />} />

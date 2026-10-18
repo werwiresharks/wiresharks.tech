@@ -16,11 +16,11 @@ import { HomeJourney } from "../talos/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is Talon-1?",
-    "Our premier cyber-capable frontier model. Talon-1 pairs Pareto-efficient performance with fine-tuning for additional offensive and defensive cybersecurity capability. The 27B open-weight model runs locally and powers Talos. Weights and evaluations ship December 25, 2026.",
+    "Our premier cyber-capable frontier model. Talon-1 pairs Pareto-efficient performance with fine-tuning for additional offensive and defensive cybersecurity capability. The 27B open-weight model runs locally and powers Raptor. Weights and evaluations ship December 25, 2026.",
   ],
   [
-    "What is Talos?",
-    "The agent harness. It plans, delegates to subagent swarms, executes on real systems and verifies the result. It runs Talon-1 locally, or any other model you point it at.",
+    "What is Raptor?",
+    "The autonomous cybersecurity agent. It plans, delegates to subagent swarms, executes on real systems and verifies the result. It runs Talon-1 locally, or any other model you point it at. Harness is the execution and orchestration infrastructure it runs on.",
   ],
   [
     "What does abliterated mean?",
@@ -39,7 +39,7 @@ const FAQ: [string, string][] = [
 const PRINCIPLES: [string, string][] = [
   ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. No network after install, no telemetry to turn off."],
   ["Answers what others won't.", "Abliterated, so it stops refusing, then fine-tuned so it actually helps with real security work."],
-  ["Open weights.", "The model, its evaluations and the Talos harness ship together, for you to run and inspect."],
+  ["Open weights.", "The model, its evaluations, Raptor and Harness ship together, for you to run and inspect."],
   ["Proven, then patched.", "A finding is reproduced before it is reported, and a second model reviews every patch."],
 ];
 
@@ -68,7 +68,7 @@ export function Home() {
                 <b>Talon-1</b> Model
               </span>
               <span>
-                <b>Talos</b> Agent
+                <b>Raptor</b> Agent
               </span>
             </p>
           </Reveal>
@@ -76,8 +76,8 @@ export function Home() {
             <Cta to="/talon" icon={<TalonIcon />}>
               Explore Talon-1
             </Cta>
-            <Cta to="/talos" variant="secondary" icon={<RaptorIcon />}>
-              Meet Talos
+            <Cta to="/raptor" variant="secondary" icon={<RaptorIcon />}>
+              Meet Raptor
             </Cta>
           </Reveal>
           {/* Phones stack the orb here, in flow, with the countdown beneath it. */}
@@ -103,8 +103,8 @@ export function Home() {
               <span id="products-title">A model, and the agent that puts it to work.</span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              Talon-1 is the intelligence. Talos is the system around it that plans, acts and
-              checks its own work. They ship together, and Talos runs Talon-1 first.
+              Talon-1 is the intelligence. Raptor is the agent around it that plans, acts and
+              checks its own work. They ship together, and Raptor runs Talon-1 first.
             </Reveal>
           </header>
 
@@ -128,12 +128,12 @@ export function Home() {
                 <Console
                   title="talon-1 / local"
                   lines={[
-                    "$ talos model use talon-1",
+                    "$ raptor model use talon-1",
                     "# talon-1 · 27B · Q4_K_M · 16.2 GB",
                     "loaded in 3.1s on Apple M4 Max (metal)",
                     "context 128k · tools on · network off",
                     "",
-                    '$ talos ask "triage scan.json by exploitability"',
+                    '$ raptor ask "triage scan.json by exploitability"',
                     "3 critical · 11 high · 128 informational",
                     "critical/1  CVE-2024-3094  reachable from sshd",
                     "critical/2  CWE-78         exec in deploy.sh:41",
@@ -160,14 +160,14 @@ export function Home() {
             <i />
             <span className="label">powers</span>
             <i />
-            <span className="label">Talos</span>
+            <span className="label">Raptor</span>
           </div>
 
           <ProductBlock
             id="talos"
             index="01.2"
-            kind="Agent / Harness"
-            name="Talos"
+            kind="Agent / Runs on Harness"
+            name="Raptor"
             summary="The autonomous agent built around Talon-1."
             specs={[
               ["Engines", "Hermes · Claude Code · Codex"],
@@ -175,8 +175,8 @@ export function Home() {
               ["Workers", "Isolated git worktrees"],
               ["Merges", "Serialized, nothing unreviewed"],
             ]}
-            to="/talos"
-            linkLabel="Meet Talos"
+            to="/raptor"
+            linkLabel="Meet Raptor"
             flip
             visual={
               <TaskGraph
@@ -194,7 +194,7 @@ export function Home() {
             }
           >
             <p>
-              Talos plans a task, splits it across parallel workers, executes with scoped tools and
+              Raptor plans a task, splits it across parallel workers, executes with scoped tools and
               verifies the result before anything lands.
             </p>
             <p>
@@ -259,7 +259,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="Talon-1 weights, evaluations and the Talos harness ship together on December 25, 2026."
+          text="Talon-1 weights, evaluations, Raptor and Harness ship together on December 25, 2026."
         />
       </div>
     </div>

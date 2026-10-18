@@ -20,14 +20,15 @@ const LAYERS = [
 
 const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento", "Pi", "P-Stack", "OpenClaw", "LangGraph", "OpenHands", "Aider"];
 
-export function Talos() {
+export function Raptor() {
   return (
     <>
-      <title>Talos | Wiresharks</title>
-      <PageHead label="Agent / Talos" title="The world's most capable harness.">
-        Talos is a model-independent autonomous agent platform. It keeps the strongest parts of
-        Hermes Agent, adds first-class engines for Claude Code and Codex, and owns the
-        orchestration, memory and skills that make them work as one system.
+      <title>Raptor | Wiresharks</title>
+      <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
+      <PageHead label="Agent / Raptor" title="The world's most capable harness.">
+        Raptor is a model-independent autonomous agent. It runs on Harness, which keeps the
+        strongest parts of Hermes Agent, adds first-class engines for Claude Code and Codex, and
+        owns the orchestration, memory and skills that make them work as one system.
       </PageHead>
 
       <Feature
@@ -36,7 +37,7 @@ export function Talos() {
         title="Three engines. One workspace."
         panel={
           <Registry
-            title="talos / engines"
+            title="raptor / engines"
             rows={[
               { key: "hermes", name: "Hermes native runtime", meta: "providers · gateway · sessions · MCP", active: true },
               { key: "claude", name: "Claude Code", meta: "skills · hooks · streaming events" },
@@ -88,7 +89,7 @@ export function Talos() {
         title="Skills on demand. Memory that lasts."
         panel={
           <Registry
-            title="talos / skills"
+            title="raptor / skills"
             rows={[
               { key: "sec-review", name: "Repository security review", meta: "v4 · 20 evals · active", active: true },
               { key: "swarm", name: "Fan-out coverage", meta: "v2 · 12 evals" },
@@ -117,9 +118,9 @@ export function Talos() {
         flip
         panel={
           <Console
-            title="talos / review"
+            title="raptor / review"
             lines={[
-              "$ talos review ./acme-api --scope auth,upload,deploy",
+              "$ raptor review ./acme-api --scope auth,upload,deploy",
               "mapping 1,912 files · 3 entrypoints · 41 external calls",
               "spawning 4 workers (talon-1 · hermes/claude-code/codex)",
               "",
@@ -138,7 +139,7 @@ export function Talos() {
           />
         }
       >
-        <p>The first thing Talos ships end to end.</p>
+        <p>The first thing Raptor ships end to end.</p>
         <ol className="steps">
           {REVIEW_STEPS.map(([name, text]) => (
             <li key={name}>
@@ -185,7 +186,7 @@ export function Talos() {
         </div>
       </section>
 
-      <Closing title="Talos runs Talon-1 first." text="Both ship together. December 25, 2026." />
+      <Closing title="Raptor runs Talon-1 first." text="Both ship together. December 25, 2026." />
     </>
   );
 }

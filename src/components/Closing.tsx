@@ -20,8 +20,8 @@ export function Closing({ title, text }: { title: string; text: string }) {
             <Cta to="/talon" variant="inverse">
               Explore Talon-1
             </Cta>
-            <Cta to="/talos" variant="secondary">
-              Meet Talos
+            <Cta to="/raptor" variant="secondary">
+              Meet Raptor
             </Cta>
           </Reveal>
         </div>

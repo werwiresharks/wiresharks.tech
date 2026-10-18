@@ -4,6 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
+    { "source": "/talos", "destination": "/raptor", "permanent": true },
     { "source": "/products/:path*", "destination": "/", "permanent": true },
     { "source": "/research/:path*", "destination": "/", "permanent": true }
   ],

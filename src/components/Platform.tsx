@@ -13,8 +13,8 @@ const TIERS = [
   {
     index: "02",
     layer: "Agent",
-    name: "Talos",
-    role: "Agent orchestration",
+    name: "Raptor",
+    role: "Agent orchestration on Harness",
     text: "Plans the task, delegates to parallel workers and routes each step to a model and an engine. Memory and skills persist between runs.",
     facts: ["Hermes · Claude Code · Codex", "Bounded swarms, reviewers", "Durable memory, versioned skills"],
   },
@@ -70,7 +70,7 @@ export function Platform() {
             Authorized repository security review
           </Reveal>
           <Reveal as="p" delay={60} className="loop-lede">
-            The first workflow Talos runs end to end.
+            The first workflow Raptor runs end to end.
           </Reveal>
           <ol className="loop-steps">
             {REVIEW_STEPS.map(([name, text], i) => (
@@ -87,8 +87,8 @@ export function Platform() {
           <div className="evidence-head">
             <Reveal as="h3">Evidence, not claims.</Reveal>
             <Reveal as="p" delay={60}>
-              No benchmark numbers are published yet. Results ship with the weights, alongside the
-              harness that produced them.
+              No benchmark numbers are published yet. Results ship with the weights, alongside
+              the benchmark harness that produced them.
             </Reveal>
           </div>
           <dl className="evidence-list">

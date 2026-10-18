@@ -6,7 +6,7 @@ import { Wordmark } from "./Wordmark";
 
 const PRODUCTS = [
   { to: "/talon", label: "Talon-1", note: "Model" },
-  { to: "/talos", label: "Talos", note: "Agent" },
+  { to: "/raptor", label: "Raptor", note: "Agent" },
   { to: "/#platform", label: "Platform", note: "Architecture" },
   { to: "/#faq", label: "FAQ", note: "Questions" },
 ];
@@ -50,7 +50,7 @@ export function Footer() {
       </div>
       <div className="footer-meta wrap">
         <span>© {new Date().getFullYear()} Wiresharks</span>
-        <span>Talon-1 / Talos / Built for authorized security work</span>
+        <span>Talon-1 / Raptor / Built for authorized security work</span>
       </div>
     </footer>
   );
