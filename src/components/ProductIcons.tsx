@@ -10,13 +10,24 @@ export function TalonIcon() {
   );
 }
 
-/** Talos, the agent: a node with a satellite moving on its orbit. */
-export function TalosIcon() {
+/** The three claw marks of the Raptor mark, on a 32-unit grid. */
+const CLAWS = ["M12 4Q1.93 13.98 4 28Q8.57 16.19 12 4Z", "M21 1Q9.41 13.87 12 31Q17.07 16.17 21 1Z", "M29 5Q18.99 13.81 21 27Q25.56 16.21 29 5Z"];
+
+/** Raptor, the agent, at button size: the claw marks in the current text colour. */
+export function RaptorIcon() {
   return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M13.42 7.04A5.5 5.5 0 1 1 8.96 2.58" />
-      <circle cx="8" cy="8" r="2" fill="currentColor" stroke="none" />
-      <circle cx="11.89" cy="4.11" r="1.4" fill="currentColor" stroke="none" />
+    <svg viewBox="0 0 32 32" fill="currentColor">
+      <path d={CLAWS.join("")} />
+    </svg>
+  );
+}
+
+/** The Raptor brand mark: three claw marks, the trailing one in the accent red. */
+export function RaptorMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+      <path d={CLAWS[0] + CLAWS[1]} fill="currentColor" />
+      <path d={CLAWS[2]} fill="var(--red)" />
     </svg>
   );
 }
