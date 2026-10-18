@@ -65,6 +65,8 @@ const f = (v: number) => Math.round(v * 10) / 10;
 export type ClawShape = {
   /** Closed hole outlines, one subpath per mark. Empty before the strike. */
   holes: string;
+  /** Outline of the trailing mark alone, edged in red like the Raptor mark's trailing claw. */
+  trailing: string;
   /** Centre lines of the marks, drawn as the red strike cue. */
   strike: string;
   /** 0 while the marks are hairlines, 1 when fully open. */
@@ -76,7 +78,8 @@ export function clawShape(layout: ClawLayout, zone: Box, progress: number): Claw
   const open = easeInOut(clamp((p - STRIKE) / (1 - STRIKE)));
   let holes = "";
   let strike = "";
-  if (p <= 0) return { holes, strike, open };
+  let trailing = "";
+  if (p <= 0) return { holes, trailing, strike, open };
   layout.slashes.forEach((slash, i) => {
     const reach = easeOut(clamp((p - slash.delay) / (STRIKE - 0.04)));
     if (reach <= 0) return;
@@ -110,8 +113,10 @@ export function clawShape(layout: ClawLayout, zone: Box, progress: number): Claw
       right.push(`${f(cx - nx * r)} ${f(cy - ny * r)}`);
       line.push(`${f(cx)} ${f(cy)}`);
     }
-    holes += `M${left.join("L")}L${right.reverse().join("L")}Z`;
+    const outline = `M${left.join("L")}L${right.reverse().join("L")}Z`;
+    holes += outline;
+    if (i === layout.slashes.length - 1) trailing = outline;
     strike += `M${line.join("L")}`;
   });
-  return { holes, strike, open };
+  return { holes, trailing, strike, open };
 }

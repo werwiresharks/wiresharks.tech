@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { CLAW_LAYOUTS, clawShape } from "./claw";
+import { RaptorMark } from "./ProductIcons";
 import type { Box } from "./claw";
 
 /** Scroll input, in viewport heights, that takes the tear from intact to fully open. */
@@ -12,7 +13,7 @@ const INPUT_MS = 1500;
 /**
  * The hero's surface as a torn skin. When the page reaches its lock point it
  * holds still, and scroll input drives three claw marks through the surface
- * to expose the Talon-1 layer beneath. Only a finished tear lets the page
+ * to expose the Raptor layer beneath. Only a finished tear lets the page
  * scroll on; scrolling back up at the lock point seals it again.
  */
 export function ClawTear() {
@@ -20,6 +21,7 @@ export function ClawTear() {
   const skin = useRef<SVGSVGElement>(null);
   const surface = useRef<SVGPathElement>(null);
   const lip = useRef<SVGPathElement>(null);
+  const trail = useRef<SVGPathElement>(null);
   const shade = useRef<SVGPathElement>(null);
   const strike = useRef<SVGPathElement>(null);
   const under = useRef<HTMLDivElement>(null);
@@ -52,6 +54,7 @@ export function ClawTear() {
       const shape = clawShape(layout, zone, progress);
       surface.current?.setAttribute("d", outer + shape.holes);
       lip.current?.setAttribute("d", shape.holes);
+      trail.current?.setAttribute("d", shape.trailing);
       shade.current?.setAttribute("d", shape.holes);
       strike.current?.setAttribute("d", shape.strike);
       node.style.setProperty("--claw", shape.open.toFixed(3));
@@ -250,12 +253,15 @@ export function ClawTear() {
       <div className="claw-under tone-dark">
         <div ref={under} className="claw-under-inner">
           <p className="label">
-            <i /> Talon-1 / 27B / Open weights
+            <i /> Raptor / Autonomous agent / Talon-1 inside
           </p>
-          <p className="claw-under-name">Talon-1</p>
+          <p className="claw-under-name">
+            <RaptorMark className="claw-under-mark" />
+            Raptor
+          </p>
           <p className="claw-under-code">
-            <span>$ talos model use talon-1</span>
-            <span>loaded · Q4_K_M · network off</span>
+            <span>$ raptor review acme/api</span>
+            <span>talon-1 · local · network off</span>
             <span>3 critical · 11 high · 128 info</span>
           </p>
         </div>
@@ -267,6 +273,7 @@ export function ClawTear() {
         <path ref={shade} className="claw-shade" filter="url(#claw-blur)" />
         <path ref={surface} className="claw-surface" d="M0 0H1V1H0Z" fillRule="evenodd" />
         <path ref={lip} className="claw-lip" />
+        <path ref={trail} className="claw-trail" />
         <path ref={strike} className="claw-strike" />
       </svg>
       <div className="claw-seal" />

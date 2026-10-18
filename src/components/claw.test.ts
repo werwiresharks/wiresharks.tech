@@ -8,7 +8,7 @@ const xs = (d: string) => [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => N
 
 test("the surface is intact before the strike and after scrolling back", () => {
   for (const layout of Object.values(CLAW_LAYOUTS)) {
-    assert.deepEqual(clawShape(layout, zone, 0), { holes: "", strike: "", open: 0 });
+    assert.deepEqual(clawShape(layout, zone, 0), { holes: "", trailing: "", strike: "", open: 0 });
     assert.equal(clawShape(layout, zone, -0.4).holes, "");
   }
 });

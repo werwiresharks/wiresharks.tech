@@ -2053,10 +2053,19 @@ button {
   background: var(--red);
 }
 .claw-under-name {
+  display: flex;
+  align-items: center;
+  gap: 0.12em;
   font-size: clamp(64px, 10.5vw, 176px);
   font-weight: 500;
   line-height: 0.9;
   letter-spacing: -0.06em;
+}
+.claw-under-mark {
+  flex: none;
+  width: 0.78em;
+  height: 0.78em;
+  color: var(--fg);
 }
 .claw-under-code {
   display: grid;
@@ -2087,6 +2096,13 @@ button {
   stroke: #fff;
   stroke-width: 1.25;
   stroke-linejoin: round;
+}
+.claw-trail {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  opacity: calc(0.75 * var(--claw));
 }
 .claw-strike {
   fill: none;
@@ -2129,7 +2145,8 @@ button {
     transform-origin: 50% 50%;
   }
   .claw-under-name {
-    font-size: clamp(56px, 19vw, 96px);
+    justify-content: center;
+    font-size: clamp(52px, 17vw, 92px);
   }
   .claw-under-code span:not(:first-child) {
     display: none;
