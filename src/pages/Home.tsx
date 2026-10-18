@@ -1,3 +1,4 @@
+import { ClawTear } from "../components/ClawTear";
 import { Countdown } from "../components/Countdown";
 import { Cta } from "../components/Cta";
 import { TalonIcon, TalosIcon } from "../components/ProductIcons";
@@ -49,6 +50,7 @@ export function Home() {
       <title>Wiresharks | The world's most dangerous AI.</title>
 
       <section className="hero" aria-labelledby="hero-title">
+        <ClawTear />
         <div className="hero-backdrop" aria-hidden="true">
           <StaticOrb />
         </div>
