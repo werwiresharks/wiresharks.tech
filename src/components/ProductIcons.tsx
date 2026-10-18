@@ -1,6 +1,6 @@
 /** Tiny product marks for buttons: 16-unit grid, stroked in the current text colour. */
 
-/** Talon-1, the harness: a bracketed frame holding a core. */
+/** Talon-1, the model: a bracketed frame holding a core. */
 export function TalonIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">

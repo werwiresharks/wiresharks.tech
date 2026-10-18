@@ -6,7 +6,7 @@ export const GITHUB_HREF = "https://github.com/werwiresharks";
 /** Primary navigation. Every entry is a real route or an anchor on one. */
 export const NAV = [
   { to: "/talon", label: "Talon-1" },
-  { to: "/talos", label: "Talos" },
+  { to: "/raptor", label: "Raptor" },
 ] as const;
 
 /** Talon-1 release: midnight, December 25, 2026, US Eastern. */

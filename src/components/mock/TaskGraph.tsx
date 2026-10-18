@@ -9,7 +9,7 @@ const LABEL: Record<TaskState, string> = {
   review: "in review",
 };
 
-/** A coordinator with its workers, as the Talos control plane reports them. */
+/** A coordinator with its workers, as the Harness control plane reports them. */
 export function TaskGraph({
   root,
   workers,
@@ -20,8 +20,8 @@ export function TaskGraph({
   workers: { name: string; model: string; engine: string; state: TaskState }[];
 }) {
   return (
-    <div className={`panel graph${journey ? " home-graph" : ""}`} data-ui aria-label="Talos task graph">
-      <PanelBar title="talos / tasks" />
+    <div className={`panel graph${journey ? " home-graph" : ""}`} data-ui aria-label="Raptor task graph">
+      <PanelBar title="raptor / tasks" />
       {journey && <div className="home-graph-dock" aria-hidden="true"><i data-home-stop="talos" /></div>}
       <div className="graph-root">
         <span className="tag">Coordinator</span>

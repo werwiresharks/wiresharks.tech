@@ -43,7 +43,7 @@ export function Talon() {
       <PageHead label="Model / Talon-1" title="The world's most dangerous model.">
         Our premier cyber-capable frontier model. Pareto-efficient performance, fine-tuned for
         additional capability in offensive and defensive cybersecurity. Open weights, frontier-level
-        capability, running locally. The intelligence inside Talos.
+        capability, running locally. The intelligence inside Raptor.
       </PageHead>
 
       <Feature
@@ -80,14 +80,14 @@ export function Talon() {
           <Console
             title="talon-1 / install"
             lines={[
-              "$ talos model pull talon-1",
+              "$ raptor model pull talon-1",
               "talon-1-q4_k_m.gguf  16.2 GB  sha256 verified",
               "talon-1-mlx-4bit     15.1 GB  sha256 verified",
-              "$ talos model use talon-1 --offline",
+              "$ raptor model use talon-1 --offline",
               "backend metal · context 128k · tools on",
               "network: disabled",
               "",
-              "$ talos ask \"explain the ifunc hook in liblzma 5.6.0\"",
+              "$ raptor ask \"explain the ifunc hook in liblzma 5.6.0\"",
               "streaming · 41 tok/s",
             ]}
           />
@@ -115,7 +115,7 @@ export function Talon() {
               { key: "sec", name: "Secure coding and remediation", meta: "patched/unpatched pairs" },
               { key: "soc", name: "SOC and incident response", meta: "threat intel · detections" },
               { key: "red", name: "Authorized red teaming", meta: "scoped engagements · CTF", active: true },
-              { key: "tools", name: "Tool-use reasoning traces", meta: "Talos sessions" },
+              { key: "tools", name: "Tool-use reasoning traces", meta: "Raptor sessions" },
             ]}
           />
         }
@@ -166,7 +166,7 @@ export function Talon() {
           <Console
             title="talon-1 / eval"
             lines={[
-              "$ talos eval talon-1 --suite cyber-bench --compare base,abliterated",
+              "$ raptor eval talon-1 --suite cyber-bench --compare base,abliterated",
               "running 1,200 tasks · vuln-id, re, secure-coding, soc",
               "",
               "talon-1        ███████████████████  topline",
@@ -180,7 +180,7 @@ export function Talon() {
       >
         <p>
           Talon-1 ships with reproducible benchmarks against its base, its abliterated variant,
-          leading open-weight models and frontier models. The harness is public.
+          leading open-weight models and frontier models. The benchmark harness is public.
         </p>
       </Feature>
 
@@ -208,7 +208,7 @@ export function Talon() {
         </div>
       </section>
 
-      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations and the Talos harness." />
+      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations, Raptor and Harness." />
     </>
   );
 }
