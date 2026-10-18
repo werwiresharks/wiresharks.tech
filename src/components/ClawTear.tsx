@@ -43,6 +43,7 @@ export function ClawTear() {
     let touchY: number | null = null;
     let inputAt = -Infinity;
     let mapped = false;
+    let lastY = window.scrollY;
     let still = motion.matches;
 
     const draw = (progress: number) => {
@@ -67,7 +68,10 @@ export function ClawTear() {
     const animate = () => {
       if (!frame) frame = requestAnimationFrame(settle);
     };
-    const hold = () => window.scrollTo({ top: lock, behavior: "instant" });
+    const hold = () => {
+      lastY = lock;
+      window.scrollTo({ top: lock, behavior: "instant" });
+    };
 
     /** Spends a scroll intent on the tear. True when the page must not move. */
     const consume = (delta: number) => {
@@ -87,25 +91,28 @@ export function ClawTear() {
       return true;
     };
 
-    // Scrolls that got past the input handlers. Ones that follow the user's own
-    // scrolling (smooth-scroll tails, touch momentum) are held at the lock;
-    // scrollbar drags, anchors, focus, find-in-page and restored positions are
-    // never trapped and set the tear to match where the page landed.
+    // Scrolls that got past the input handlers. Ones that carry the user's own
+    // scrolling across the lock (smooth-scroll tails, touch momentum) are held
+    // there; scrollbar drags, anchors, focus, find-in-page and restored
+    // positions are never trapped and finish or seal the tear in the direction
+    // the page moved. Moving away from the lock never changes the tear.
     const onScroll = () => {
       const y = window.scrollY;
+      const from = lastY;
+      lastY = y;
       if (motion.matches) {
         node.dataset.torn = String(y > lock + window.innerHeight * STILL_AT);
         return;
       }
       const swiping = performance.now() - inputAt < INPUT_MS;
-      if (y > lock + 1 && current < 1) {
-        if (swiping) {
+      if (y > lock + 1 && y > from && current < 1) {
+        if (swiping && from <= lock + 1) {
           hold();
           target = Math.min(1, target + (y - lock) / distance);
         } else target = 1;
         animate();
-      } else if (y < lock - 1 && current > 0) {
-        if (swiping) {
+      } else if (y < lock - 1 && y < from && current > 0) {
+        if (swiping && from >= lock - 1) {
           hold();
           target = Math.max(0, target - (lock - y) / distance);
         } else target = 0;
