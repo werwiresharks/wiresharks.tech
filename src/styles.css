@@ -2101,6 +2101,17 @@ button {
   visibility: hidden;
   background: var(--bg);
 }
+/* The static orb's scrims stay off the cuts, so the torn edges never wash out. */
+@media (min-width: 1024px) {
+  .home-page .hero-backdrop::after {
+    background: radial-gradient(ellipse 46% 58% at 18% 52%, rgba(247, 247, 245, 0.88) 0%, rgba(247, 247, 245, 0.5) 52%, rgba(247, 247, 245, 0) 100%);
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .home-page .hero-backdrop::after {
+    background: linear-gradient(180deg, rgba(247, 247, 245, 0) 42%, rgba(247, 247, 245, 0.7) 56%, rgba(247, 247, 245, 0.92) 70%, var(--soft) 100%);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .claw-seal {
     visibility: visible;
