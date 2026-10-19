@@ -1,0 +1,66 @@
+/* Generated from tokens.json by tools/build.mjs. Do not edit.
+   Observed public-site tokens (October 18, 2026), not a new design system. */
+:root {
+  --red: #e32626;
+  --red-text: #c41f1f;
+  --accent: var(--red);
+  --charcoal: #121212;
+  --charcoal-2: #1a1a1a;
+  --white: #ffffff;
+  --soft: #f7f7f5;
+  --bg: var(--white);
+  --fg: #121212;
+  --fg-2: #3a3a3a;
+  --muted: #6b6b6b;
+  --line: rgba(128, 128, 128, 0.2);
+  --line-strong: rgba(18, 18, 18, 0.16);
+  --panel-bg: #ffffff;
+  --panel-bar: #fafaf9;
+  --panel-shadow: 0 1px 0 rgba(18, 18, 18, 0.03), 0 28px 56px -32px rgba(18, 18, 18, 0.22);
+  --ok: #1f7a45;
+  --run: #2f6bb0;
+  --review: #9c7a3c;
+  --link-accent: var(--red);
+  --ink: var(--fg);
+  --bronze-deep: #9c7a3c;
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --fs-display: clamp(2.875rem, 4.6vw + 1.25rem, 6rem);
+  --fs-h1: clamp(2.625rem, 5.4vw, 5rem);
+  --fs-h2: clamp(2rem, 3.8vw, 3.5rem);
+  --fs-product: clamp(3.5rem, 8.4vw, 7.75rem);
+  --fs-lead: clamp(1.0625rem, 1.25vw, 1.25rem);
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+  --fs-label: 0.75rem;
+  --pad: clamp(20px, 4.4vw, 72px);
+  --maxw: 1280px;
+  --section-y: clamp(96px, 11vw, 160px);
+  --head-gap: clamp(56px, 7vw, 96px);
+  --header-height: 76px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --ease: cubic-bezier(0.22, 0.7, 0.18, 1);
+  --fast: 180ms;
+  --base: 320ms;
+}
+.tone-soft {
+  --bg: var(--soft);
+  --muted: #666664;
+}
+.tone-dark {
+  --bg: var(--charcoal);
+  --fg: #f2f2f0;
+  --fg-2: #d4d4d2;
+  --muted: #9b9b98;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.22);
+  --panel-bg: #181818;
+  --panel-bar: #1d1d1d;
+  --panel-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 40px 80px -40px rgba(0, 0, 0, 0.8);
+  --ok: #5fbf7f;
+  --run: #75aeea;
+  --review: #d2b07a;
+  --red-text: #ff5a52;
+}

@@ -52,3 +52,8 @@ Vercel builds `main` for production. `vercel.json` redirects the former
 `/products/*` and `/research/*` routes to `/` and serves `index.html` for
 client routes. `vercel.json` and `public/_redirects` both redirect the retired
 `/talos` route to `/raptor`.
+
+## Brand kit
+
+The brand kit lives in [docs/brand](docs/brand/README.md): tokens, guide, quick reference,
+templates, fonts and marks. It documents the live `src/styles.css` design.
