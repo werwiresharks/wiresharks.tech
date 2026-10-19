@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import type { HomeFrame } from "../home/journey.ts";
 import { HomeMotion } from "../home/journey.ts";
-import type { TalosView } from "./engine.ts";
+import type { RaptorView } from "./engine.ts";
 import type { Effect, Layout, ThreadTarget } from "./layout.ts";
-import type { TalosModel } from "./model.ts";
+import type { RaptorModel } from "./model.ts";
 import { COLORS } from "./palette.ts";
 import { ParticleField } from "./particles.ts";
 import { FrameGovernor, detectQuality } from "./quality.ts";
@@ -19,7 +19,7 @@ import {
 import type { Cut } from "../../components/claw.ts";
 
 /**
- * WebGL view for the Talos Particle Engine. Renders whatever the facade
+ * WebGL view for the Raptor Particle Engine. Renders whatever the facade
  * hands it; it never decides state. Handles framing, pointer response,
  * adaptive quality, visibility pausing, reduced motion, and cleanup.
  */
@@ -46,7 +46,7 @@ const MAX_THREADS = 40;
 
 type ThreadRuntime = ThreadTarget & { alpha: number; target: number; flow: number };
 
-export class TalosRenderer implements TalosView {
+export class RaptorRenderer implements RaptorView {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 50);
@@ -356,7 +356,7 @@ export class TalosRenderer implements TalosView {
     this.start();
   }
 
-  update(layout: Layout, model: TalosModel, effects: Effect[]) {
+  update(layout: Layout, model: RaptorModel, effects: Effect[]) {
     void model;
     if (this.options.home) return;
     this.field.setTargets(layout.clusters);

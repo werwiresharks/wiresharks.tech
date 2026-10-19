@@ -11,8 +11,8 @@ import { Swarm } from "../components/Swarm";
 import { Console } from "../components/mock/Console";
 import { TaskGraph } from "../components/mock/TaskGraph";
 import { Compare } from "../components/mock/Compare";
-import { StaticOrb } from "../talos/react/TalosStage";
-import { HomeJourney } from "../talos/react/HomeJourney";
+import { StaticOrb } from "../raptor/react/RaptorStage";
+import { HomeJourney } from "../raptor/react/HomeJourney";
 
 const FAQ: [string, string][] = [
   [
@@ -110,7 +110,7 @@ export function Home() {
           </header>
 
           <ProductBlock
-            id="talos"
+            id="raptor"
             index="01.1"
             kind="Agent / Runs on Harness"
             name="Raptor-1"

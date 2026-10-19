@@ -1,6 +1,6 @@
-import type { TalosEvent } from "./events.ts";
+import type { RaptorEvent } from "./events.ts";
 import { childrenOf, liveActions, rootAgent } from "./model.ts";
-import type { TalosModel } from "./model.ts";
+import type { RaptorModel } from "./model.ts";
 
 /** Plain-language descriptions for screen readers and the event log. */
 
@@ -13,7 +13,7 @@ const STATE_WORDS: Record<string, string> = {
   failed: "failed",
 };
 
-export function describeModel(model: TalosModel): string {
+export function describeModel(model: RaptorModel): string {
   const root = rootAgent(model);
   if (!root) return "No agent is active.";
   if (model.rollback) return "Rolling back to the last checkpoint.";
@@ -36,7 +36,7 @@ export function describeModel(model: TalosModel): string {
   return parts.join(", ") + ".";
 }
 
-export function describeEvent(event: TalosEvent, model: TalosModel): string {
+export function describeEvent(event: RaptorEvent, model: RaptorModel): string {
   const label = (id: string) => model.agents[id]?.label ?? id;
   switch (event.type) {
     case "session.reset":

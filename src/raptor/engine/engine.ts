@@ -1,35 +1,35 @@
-import type { TalosEvent } from "./events.ts";
+import type { RaptorEvent } from "./events.ts";
 import { computeLayout, deriveEffects } from "./layout.ts";
 import type { Effect, Layout } from "./layout.ts";
 import { createModel, reduce } from "./model.ts";
-import type { TalosModel } from "./model.ts";
+import type { RaptorModel } from "./model.ts";
 import { describeEvent } from "./describe.ts";
 
 /**
- * Talos Particle Engine facade.
+ * Raptor Particle Engine facade.
  *
  * Owns the validated model and fans updates out to an optional view (the
  * WebGL renderer, loaded lazily) and to UI listeners. Everything here works
  * without WebGL, so status text and controls stay usable if rendering fails.
  */
 
-export type TalosView = {
-  update(layout: Layout, model: TalosModel, effects: Effect[]): void;
+export type RaptorView = {
+  update(layout: Layout, model: RaptorModel, effects: Effect[]): void;
   dispose(): void;
 };
 
 export type IngestRecord = {
-  event: TalosEvent;
+  event: RaptorEvent;
   accepted: boolean;
   reason?: string;
   description: string;
 };
 
-type Listener = (model: TalosModel, record: IngestRecord | null) => void;
+type Listener = (model: RaptorModel, record: IngestRecord | null) => void;
 
-export class TalosEngine {
-  private state: TalosModel = createModel();
-  private view: TalosView | null = null;
+export class RaptorEngine {
+  private state: RaptorModel = createModel();
+  private view: RaptorView | null = null;
   private listeners = new Set<Listener>();
 
   get model() {
@@ -37,7 +37,7 @@ export class TalosEngine {
   }
 
   /** Apply one event. Invalid or out-of-order events are reported, not thrown. */
-  ingest(event: TalosEvent): IngestRecord {
+  ingest(event: RaptorEvent): IngestRecord {
     const prev = this.state;
     const result = reduce(prev, event);
     const record: IngestRecord = {
@@ -58,13 +58,13 @@ export class TalosEngine {
     return record;
   }
 
-  attach(view: TalosView) {
+  attach(view: RaptorView) {
     this.view?.dispose();
     this.view = view;
     view.update(computeLayout(this.state), this.state, []);
   }
 
-  detach(view?: TalosView) {
+  detach(view?: RaptorView) {
     if (view && view !== this.view) return;
     this.view?.dispose();
     this.view = null;

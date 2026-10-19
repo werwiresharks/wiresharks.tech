@@ -22,7 +22,7 @@ export function TaskGraph({
   return (
     <div className={`panel graph${journey ? " home-graph" : ""}`} data-ui aria-label="Raptor task graph">
       <PanelBar title="raptor / tasks" />
-      {journey && <div className="home-graph-dock" aria-hidden="true"><i data-home-stop="talos" /></div>}
+      {journey && <div className="home-graph-dock" aria-hidden="true"><i data-home-stop="raptor" /></div>}
       <div className="graph-root">
         <span className="tag">Coordinator</span>
         <b>{root.name}</b>

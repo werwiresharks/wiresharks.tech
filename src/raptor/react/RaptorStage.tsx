@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import type { TalosEngine } from "../engine/engine.ts";
-import type { Framing, TalosRenderer } from "../engine/renderer.ts";
+import type { RaptorEngine } from "../engine/engine.ts";
+import type { Framing, RaptorRenderer } from "../engine/renderer.ts";
 
 /**
  * Mounts the WebGL renderer for an engine. The renderer and Three.js load
  * lazily so page text paints first; if WebGL is unavailable or the context is
  * lost, a static illustration takes its place and the engine keeps working.
  */
-export function TalosStage({
+export function RaptorStage({
   engine,
   frame,
   frameKey = "",
@@ -16,7 +16,7 @@ export function TalosStage({
   particleScale = 1,
   className = "",
 }: {
-  engine: TalosEngine;
+  engine: RaptorEngine;
   frame: (width: number, height: number) => Framing;
   /** Change this to re-run `frame`, e.g. when surrounding layout changes. */
   frameKey?: string;
@@ -26,7 +26,7 @@ export function TalosStage({
   className?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const renderer = useRef<TalosRenderer | null>(null);
+  const renderer = useRef<RaptorRenderer | null>(null);
   const frameRef = useRef(frame);
   frameRef.current = frame;
   const [failed, setFailed] = useState(false);
@@ -34,16 +34,16 @@ export function TalosStage({
 
   useEffect(() => {
     let cancelled = false;
-    let instance: TalosRenderer | null = null;
+    let instance: RaptorRenderer | null = null;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     void import("../engine/renderer.ts")
-      .then(({ TalosRenderer, supportsWebGL }) => {
+      .then(({ RaptorRenderer, supportsWebGL }) => {
         if (cancelled || !host.current) return;
         if (!supportsWebGL()) {
           setFailed(true);
           return;
         }
-        instance = new TalosRenderer({
+        instance = new RaptorRenderer({
           host: host.current,
           frame: (w, h) => frameRef.current(w, h),
           interactive,
@@ -107,7 +107,7 @@ export function StaticOrb() {
     }
   }
   return (
-    <svg className="tpe-static" viewBox="0 0 300 300" role="img" aria-label="Talos, drawn as a sphere of particles inside a bronze boundary">
+    <svg className="tpe-static" viewBox="0 0 300 300" role="img" aria-label="Raptor, drawn as a sphere of particles inside a bronze boundary">
       <g fill="var(--ink)">{dots}</g>
       <circle cx="150" cy="150" r="120" fill="none" stroke="var(--bronze-deep)" strokeWidth="1" />
     </svg>

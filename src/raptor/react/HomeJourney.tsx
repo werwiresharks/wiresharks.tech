@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { TalosRenderer } from "../engine/renderer.ts";
+import type { RaptorRenderer } from "../engine/renderer.ts";
 import { createHomeSource } from "../home/source.ts";
 import { heroFrame } from "../home/journey.ts";
 import { clawFeed } from "../../components/claw.ts";
@@ -11,7 +11,7 @@ export function HomeJourney() {
     const root = node?.closest<HTMLElement>(".home-page");
     if (!node || !root) return;
     let cancelled = false;
-    let renderer: TalosRenderer | null = null;
+    let renderer: RaptorRenderer | null = null;
     let source: ReturnType<typeof createHomeSource> | null = null;
     let failed = false;
     let load = 0;
@@ -36,11 +36,11 @@ export function HomeJourney() {
         return;
       }
       if (failed || renderer) return;
-      void import("../engine/renderer.ts").then(({ TalosRenderer, supportsWebGL }) => {
+      void import("../engine/renderer.ts").then(({ RaptorRenderer, supportsWebGL }) => {
         if (cancelled || generation !== load) return;
         if (!supportsWebGL()) { fallback(); return; }
         source = createHomeSource(root, () => renderer?.requestPresentation());
-        renderer = new TalosRenderer({
+        renderer = new RaptorRenderer({
           host: node,
           frame: heroFrame,
           home: source,

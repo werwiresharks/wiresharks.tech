@@ -1,11 +1,11 @@
-import type { TalosEventSource } from "../adapters/source.ts";
-import type { TalosEvent, UnsequencedEvent } from "../engine/events.ts";
+import type { RaptorEventSource } from "../adapters/source.ts";
+import type { RaptorEvent, UnsequencedEvent } from "../engine/events.ts";
 import { childrenOf, liveActions, rootAgent } from "../engine/model.ts";
-import type { TalosModel } from "../engine/model.ts";
+import type { RaptorModel } from "../engine/model.ts";
 
 /**
  * Simulated event producer for the website demonstration. It emits the same
- * typed events a Talos runtime would, so the engine exercises real code
+ * typed events a Raptor runtime would, so the engine exercises real code
  * paths, but every event here is illustrative and generated in the browser.
  * The "policy layer" that approves or rejects is the visitor's button press.
  */
@@ -22,7 +22,7 @@ export type DemoCommand =
   | "complete"
   | "fail";
 
-export type Narration = { who: "you" | "talos" | "runtime"; text: string };
+export type Narration = { who: "you" | "raptor" | "runtime"; text: string };
 
 type Scheduler = {
   set(callback: () => void, ms: number): unknown;
@@ -43,7 +43,7 @@ const ACTIONS = [
 ];
 const AUTHORITY = "policy layer (simulated)";
 
-export function availableCommands(model: TalosModel): Record<DemoCommand, boolean> {
+export function availableCommands(model: RaptorModel): Record<DemoCommand, boolean> {
   const root = rootAgent(model);
   const actions = liveActions(model);
   const pending = actions.some((a) => a.state === "proposed" || a.state === "awaiting");
@@ -67,22 +67,22 @@ export function availableCommands(model: TalosModel): Record<DemoCommand, boolea
   };
 }
 
-export class DemoDirector implements TalosEventSource {
+export class DemoDirector implements RaptorEventSource {
   private seq = 0;
   private epoch = 0;
   private ids = 0;
   private timers = new Set<unknown>();
-  private listeners = new Set<(event: TalosEvent) => void>();
+  private listeners = new Set<(event: RaptorEvent) => void>();
   private narrators = new Set<(line: Narration) => void>();
-  private getModel: () => TalosModel;
+  private getModel: () => RaptorModel;
   private scheduler: Scheduler;
 
-  constructor(getModel: () => TalosModel, scheduler: Scheduler = browserScheduler) {
+  constructor(getModel: () => RaptorModel, scheduler: Scheduler = browserScheduler) {
     this.getModel = getModel;
     this.scheduler = scheduler;
   }
 
-  subscribe(listener: (event: TalosEvent) => void) {
+  subscribe(listener: (event: RaptorEvent) => void) {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
@@ -97,7 +97,7 @@ export class DemoDirector implements TalosEventSource {
   }
 
   private emit(event: UnsequencedEvent) {
-    const sequenced = { ...event, seq: ++this.seq, at: Date.now() } as TalosEvent;
+    const sequenced = { ...event, seq: ++this.seq, at: Date.now() } as RaptorEvent;
     this.listeners.forEach((listener) => listener(sequenced));
   }
 
@@ -124,7 +124,7 @@ export class DemoDirector implements TalosEventSource {
     this.timers.forEach((handle) => this.scheduler.clear(handle));
     this.timers.clear();
     this.emit({ type: "session.reset" });
-    this.emit({ type: "agent.spawned", agentId: this.id("talos"), parentId: null, label: "Talos" });
+    this.emit({ type: "agent.spawned", agentId: this.id("raptor"), parentId: null, label: "Raptor" });
     this.emit({ type: "checkpoint.created", checkpointId: this.id("cp") });
   }
 
@@ -148,7 +148,7 @@ export class DemoDirector implements TalosEventSource {
         this.say("you", "Audit the staging dependencies and patch what is safe to patch.");
         if (root.state === "idle") this.emit({ type: "agent.state", agentId: root.id, state: "proposing" });
         this.later(1500, () => {
-          this.say("talos", "Planning. I can split this into parallel reviews and ask before changing anything.");
+          this.say("raptor", "Planning. I can split this into parallel reviews and ask before changing anything.");
           const current = rootAgent(this.getModel());
           if (current?.state === "proposing")
             this.emit({ type: "agent.state", agentId: current.id, state: "idle" });
@@ -162,7 +162,7 @@ export class DemoDirector implements TalosEventSource {
         const count = Math.min(3, 6 - existing);
         this.emit({ type: "checkpoint.created", checkpointId: this.id("cp") });
         this.emit({ type: "agent.state", agentId: root.id, state: "running" });
-        this.say("talos", `Starting ${count} subagents in parallel.`);
+        this.say("raptor", `Starting ${count} subagents in parallel.`);
         for (let i = 0; i < count; i++) {
           const agentId = this.id("sub");
           const label = SUBAGENT_LABELS[(existing + i) % SUBAGENT_LABELS.length];
@@ -177,12 +177,12 @@ export class DemoDirector implements TalosEventSource {
 
       case "handoff": {
         if (!root) return;
-        const toAgentId = this.id("talos");
+        const toAgentId = this.id("raptor");
         this.emit({
           type: "agent.handoff",
           fromAgentId: root.id,
           toAgentId,
-          label: `Talos · generation ${root.generation + 1}`,
+          label: `Raptor · generation ${root.generation + 1}`,
         });
         this.say("runtime", `Context handed to generation ${root.generation + 1}. Lineage preserved.`);
         return;
@@ -196,7 +196,7 @@ export class DemoDirector implements TalosEventSource {
         const summary = ACTIONS[this.ids % ACTIONS.length];
         this.emit({ type: "action.proposed", actionId, agentId: agent.id, summary });
         this.emit({ type: "agent.state", agentId: agent.id, state: "proposing" });
-        this.say("talos", `Proposed: ${summary.toLowerCase()}.`);
+        this.say("raptor", `Proposed: ${summary.toLowerCase()}.`);
         this.later(900, () => {
           this.emit({ type: "authorization.requested", actionId });
           this.emit({ type: "agent.state", agentId: agent.id, state: "awaiting" });
@@ -232,7 +232,7 @@ export class DemoDirector implements TalosEventSource {
           if (!agent.retired && agent.state !== "running")
             this.emit({ type: "agent.state", agentId: id, state: "running" });
         }
-        this.say("talos", "Executing the plan within current permissions.");
+        this.say("raptor", "Executing the plan within current permissions.");
         return;
       }
 
@@ -250,7 +250,7 @@ export class DemoDirector implements TalosEventSource {
           const current = rootAgent(this.getModel());
           if (!current) return;
           this.emit({ type: "agent.state", agentId: current.id, state: "completed" });
-          this.say("talos", "Done. Results are ready for review.");
+          this.say("raptor", "Done. Results are ready for review.");
           this.later(1400, () => this.emit({ type: "agent.state", agentId: current.id, state: "idle" }));
         });
         return;

@@ -1,9 +1,9 @@
-import type { TalosEvent } from "./events.ts";
+import type { RaptorEvent } from "./events.ts";
 import { childrenOf, liveActions, rootAgent } from "./model.ts";
-import type { AgentNode, TalosModel } from "./model.ts";
+import type { AgentNode, RaptorModel } from "./model.ts";
 
 /**
- * Pure mapping from a Talos model to spatial targets, in "system units"
+ * Pure mapping from a Raptor model to spatial targets, in "system units"
  * (the idle primary agent has radius 1, centred on the origin). The renderer
  * owns framing, smoothing, and particles; nothing here touches WebGL.
  */
@@ -87,7 +87,7 @@ function childAngles(count: number) {
 
 type Placed = { center: Vec3; radius: number; angle: number };
 
-function lineage(model: TalosModel, head: AgentNode) {
+function lineage(model: RaptorModel, head: AgentNode) {
   const traces: AgentNode[] = [];
   let cursor = head.predecessorId;
   while (cursor && traces.length < MAX_TRACES) {
@@ -99,7 +99,7 @@ function lineage(model: TalosModel, head: AgentNode) {
   return traces;
 }
 
-export function computeLayout(model: TalosModel): Layout {
+export function computeLayout(model: RaptorModel): Layout {
   const clusters: ClusterTarget[] = [];
   const threads: ThreadTarget[] = [];
   const placed = new Map<string, Placed>();
@@ -327,9 +327,9 @@ export function computeLayout(model: TalosModel): Layout {
 
 /** One-shot visual effects implied by an accepted event. */
 export function deriveEffects(
-  prev: TalosModel,
-  next: TalosModel,
-  event: TalosEvent,
+  prev: RaptorModel,
+  next: RaptorModel,
+  event: RaptorEvent,
 ): Effect[] {
   switch (event.type) {
     case "authorization.resolved": {

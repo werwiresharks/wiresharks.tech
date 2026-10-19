@@ -4,34 +4,34 @@ import { createHomeSource } from "./source.ts";
 import { heroFrame, HomeMotion } from "./journey.ts";
 
 // Rectangles captured from the homepage at 1280×800, 1024×768, 768×1024, 375×667, and 390×844.
-// Raptor-1's task graph (the "talos" stop) sits above Talon-1's console (the "talon" stop).
+// Raptor-1's task graph (the "raptor" stop) sits above Talon-1's console (the "talon" stop).
 const layouts = [
   { width: 1280, height: 800, hero: 800, products: [1135.69, 940.8, 88, 88],
-    talos: [871.59, 1385.95, 68, 68], graph: [619.23, 1323.45, 572.72, 488.5],
+    raptor: [871.59, 1385.95, 68, 68], graph: [619.23, 1323.45, 572.72, 488.5],
     section: [56.31, 1192.77, 1167.38, 748.89], worker: [640.23, 1541.95, 22, 22], row: 47,
     talon: [564.75, 2217.67, 72, 72], console: [88.03, 2165.67, 572.72, 394.44],
     talonSection: [56.31, 1974.45, 1167.38, 775.89],
     platform: [1135.69, 5657.23, 88, 88], platformSection: [0, 5516.44, 1280, 1747.92] },
   { width: 1024, height: 768, hero: 768, products: [890.95, 880.63, 88, 88],
-    talos: [690.47, 1296.48, 68, 68], graph: [495.56, 1233.98, 457.81, 488.5],
+    raptor: [690.47, 1296.48, 68, 68], graph: [495.56, 1233.98, 457.81, 488.5],
     section: [45.05, 1104.55, 933.91, 746.39], worker: [516.56, 1452.48, 22, 22], row: 47,
     talon: [432.42, 2136.2, 72, 72], console: [70.61, 2084.2, 457.81, 394.44],
     talonSection: [45.05, 1883.73, 933.91, 794.39],
     platform: [890.95, 5313.7, 88, 88], platformSection: [0, 5201.08, 1024, 1756.64] },
   { width: 768, height: 1024, hero: 1213.97, products: [624, 1309.97, 64, 64],
-    talos: [326.89, 2221.77, 68, 68], graph: [53.2, 2159.27, 615.38, 488.5],
+    raptor: [326.89, 2221.77, 68, 68], graph: [53.2, 2159.27, 615.38, 488.5],
     section: [33.78, 1511.03, 654.22, 1204.16], worker: [74.2, 2377.77, 22, 22], row: 47,
     talon: [572.58, 3496.22, 72, 72], console: [53.2, 3444.22, 615.38, 394.44],
     talonSection: [33.78, 2747.98, 654.22, 1158.09],
     platform: [670.22, 7125.56, 64, 64], platformSection: [0, 7029.56, 768, 2474.23] },
   { width: 375, height: 667, hero: 880.92, products: [301, 966.92, 40, 40],
-    talos: [158.5, 2121.16, 44, 44], graph: [31, 2063.66, 299, 506],
+    raptor: [158.5, 2121.16, 44, 44], graph: [31, 2063.66, 299, 506],
     section: [20, 1248.75, 321, 1379.91], worker: [48, 2282.66, 22, 22], row: 55.5,
     talon: [274, 3600.36, 44, 44], console: [31, 3548.36, 299, 514.34],
     talonSection: [20, 2661.45, 321, 1460.25],
     platform: [315, 6468.67, 40, 40], platformSection: [0, 6382.67, 375, 3229.77] },
   { width: 390, height: 844, hero: 892.44, products: [316, 978.44, 40, 40],
-    talos: [166, 2132.67, 44, 44], graph: [31, 2075.17, 314, 489],
+    raptor: [166, 2132.67, 44, 44], graph: [31, 2075.17, 314, 489],
     section: [20, 1260.27, 336, 1362.91], worker: [48, 2294.17, 22, 22], row: 47,
     talon: [289, 3570.88, 44, 44], console: [31, 3518.88, 314, 514.34],
     talonSection: [20, 2655.97, 336, 1436.25],
@@ -76,9 +76,9 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   nodes.set('[data-home-stop="products"]', node(layout.products));
   nodes.set('[data-home-stop="talon"]', node(layout.talon, ".home-console"));
   nodes.set(".home-console", node(layout.console));
-  nodes.set('[data-home-stop="talos"]', node(layout.talos, ".home-graph"));
+  nodes.set('[data-home-stop="raptor"]', node(layout.raptor, ".home-graph"));
   nodes.set(".home-graph", node(layout.graph));
-  nodes.set("#talos", node(layout.section));
+  nodes.set("#raptor", node(layout.section));
   nodes.set("#talon", node(layout.talonSection));
   nodes.set('[data-home-stop="platform"]', node(layout.platform));
   nodes.set("#platform", node(layout.platformSection));
@@ -88,9 +88,9 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     const { mother } = source.sample();
     assert.deepEqual(mother, { x: layout.width / 2, y: slot[1] + orb / 2, radius: orb / 2 });
   }
-  const center = layout.talos[1] + layout.talos[3] / 2;
+  const center = layout.raptor[1] + layout.raptor[3] / 2;
   const satelliteLeave = layout.graph[1] + layout.graph[3] - layout.height * 0.28;
-  const leave = center - (layout.width < 768 ? 64 : 76) - layout.talos[2] / 2 - 40 - layout.height * 0.12;
+  const leave = center - (layout.width < 768 ? 64 : 76) - layout.raptor[2] / 2 - 40 - layout.height * 0.12;
   const sample = (scroll: number) => { viewport.scrollY = scroll; return structuredClone(source.sample()); };
   // The orb docks as the coordinator mark reaches the hold line, or a few pixels later when the
   // products departure just above leaves its approach less room. Bisect for that moment.
@@ -154,7 +154,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   if (layout.width >= 1024) {
     // Side by side, the graph sits right of Raptor-1's copy and the console left of Talon-1's.
     // The orb comes in on its panel's side, so it crosses the page above Talon-1's block.
-    for (const [mark, right] of [[layout.talos, true], [layout.talon, false]] as const) {
+    for (const [mark, right] of [[layout.raptor, true], [layout.talon, false]] as const) {
       const dock = mark[1] + mark[3] / 2 - layout.height * 0.5;
       for (let scroll = dock - layout.height * 0.12; scroll <= dock; scroll += 4) {
         const { x } = sample(scroll).mother;

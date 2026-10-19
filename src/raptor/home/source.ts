@@ -100,12 +100,12 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const releaseFrame = closingFrame();
     let releaseAt = 0;
     let talonDock: JourneyDock | null = null;
-    let talosDock: JourneyDock | null = null;
+    let raptorDock: JourneyDock | null = null;
     const marks: { key: string; frame: Framing }[] = [];
     // Dock in document order, top to bottom, so the stop sequence stays monotonic whichever order
     // the product blocks sit in. Raptor-1's task graph leads Talon-1's console on the page.
     const measured: { key: string; node: Element; frame: Framing }[] = [];
-    for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
+    for (const key of ["products", "talon", "raptor", "platform", "principles", "closing"]) {
       if (key === "closing" && releaseFrame) continue;
       const node = root.querySelector(`[data-home-stop="${key}"]`);
       if (!node) continue;
@@ -119,7 +119,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const edge = !mobile && frame.x < window.innerWidth / 2 ? (narrow ? 20 : 46) : rail.x;
       const approach: JourneyStop[] = [];
       if (!mobile && edge !== previousRail) {
-        const crossInto = key === "talos" ? "#talos" : key === "talon" ? "#talon" : "#platform";
+        const crossInto = key === "raptor" ? "#raptor" : key === "talon" ? "#talon" : "#platform";
         const section = root.querySelector(crossInto);
         const gap = section ? readFrame(section).y - section.getBoundingClientRect().height / 2 + (key === "platform" ? -40 : 24) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
@@ -137,7 +137,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         approach.push({ at: before, frame: { ...rail, x: edge, y: before + (mobile ? 160 : hold) } });
       }
       at = Math.max(at, approach[approach.length - 1].at + height * 0.12);
-      const panel = key === "talos" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
+      const panel = key === "raptor" ? node.closest(".home-graph") : key === "talon" ? node.closest(".home-console") : null;
       const panelRelease = panel
         ? Math.max(at + height * 0.3, panel.getBoundingClientRect().bottom + window.scrollY - height * 0.28)
         : at + height * 0.08;
@@ -162,11 +162,11 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         docks.push(talonDock);
         marks.push({ key: "console", frame });
       }
-      if (key === "talos") marks.push({ key: "coordinator", frame });
-      if (key !== "talos" && key !== "principles") continue;
-      const selector = key === "talos" ? "[data-home-worker]" : "[data-home-principle]";
+      if (key === "raptor") marks.push({ key: "coordinator", frame });
+      if (key !== "raptor" && key !== "principles") continue;
+      const selector = key === "raptor" ? "[data-home-worker]" : "[data-home-principle]";
       const satellites = Array.from(root.querySelectorAll(selector), (slot, index) => ({
-        key: `${key === "talos" ? "worker" : "principle"}-${index}`,
+        key: `${key === "raptor" ? "worker" : "principle"}-${index}`,
         frame: readFrame(slot, mobile ? 7 : 9),
       }));
       const last = satellites.at(-1);
@@ -174,7 +174,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const enter = at - height * 0.18;
       const leave = panel ? panelRelease : Math.max(at + height * 0.14, last.frame.y - height * 0.42);
       const dock = { enter, leave: panel ? release : leave, satelliteLeave: leave, holdFrom: panel ? at : undefined, satellites };
-      if (key === "talos") talosDock = dock;
+      if (key === "raptor") raptorDock = dock;
       docks.push(dock);
     }
     const faq = root.querySelector(".faq");
@@ -227,7 +227,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         };
         // The marks the orb used to dock into are fed from the stream instead.
         for (const mark of marks) {
-          const dock = mark.key === "console" ? talonDock : talosDock;
+          const dock = mark.key === "console" ? talonDock : raptorDock;
           if (dock) dock.satellites.push({ key: mark.key, frame: mark.frame });
         }
       }

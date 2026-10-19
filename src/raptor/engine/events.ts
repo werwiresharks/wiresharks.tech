@@ -1,7 +1,7 @@
 /**
- * Talos event vocabulary.
+ * Raptor event vocabulary.
  *
- * These are the only inputs the Talos Particle Engine accepts. A real Talos
+ * These are the only inputs the Raptor Particle Engine accepts. A real Raptor
  * runtime supplies them through an adapter (see ../adapters/source.ts); the
  * marketing site supplies simulated ones from ../demo/director.ts.
  *
@@ -34,7 +34,7 @@ type EventBase = {
   at?: number;
 };
 
-export type TalosEvent = EventBase &
+export type RaptorEvent = EventBase &
   (
     | { type: "session.reset" }
     | { type: "conversation.opened" }
@@ -81,11 +81,11 @@ export type TalosEvent = EventBase &
     | { type: "rollback.completed"; checkpointId: string }
   );
 
-export type TalosEventType = TalosEvent["type"];
+export type RaptorEventType = RaptorEvent["type"];
 
 /** An event without its sequence number, as produced before ordering. */
-export type UnsequencedEvent = TalosEvent extends infer E
-  ? E extends TalosEvent
+export type UnsequencedEvent = RaptorEvent extends infer E
+  ? E extends RaptorEvent
     ? Omit<E, "seq">
     : never
   : never;

@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { TalosEngine } from "./engine.ts";
+import { RaptorEngine } from "./engine.ts";
 import { computeLayout } from "./layout.ts";
 import { childrenOf, rootAgent } from "./model.ts";
 import { DemoDirector, availableCommands } from "../demo/director.ts";
 import type { DemoCommand } from "../demo/director.ts";
 
 function harness() {
-  const engine = new TalosEngine();
+  const engine = new RaptorEngine();
   const queue: { at: number; run: () => void }[] = [];
   let now = 0;
   const director = new DemoDirector(() => engine.model, {

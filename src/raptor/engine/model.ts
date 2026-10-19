@@ -1,7 +1,7 @@
-import type { ActionState, AgentState, TalosEvent } from "./events.ts";
+import type { ActionState, AgentState, RaptorEvent } from "./events.ts";
 
 /**
- * The engine's view of a Talos session: an agent hierarchy, pending actions,
+ * The engine's view of a Raptor session: an agent hierarchy, pending actions,
  * and the latest checkpoint. Updated only by `reduce`, which validates every
  * event so out-of-order or impossible input never reaches the renderer.
  */
@@ -36,7 +36,7 @@ export type Checkpoint = {
   order: string[];
 };
 
-export type TalosModel = {
+export type RaptorModel = {
   seq: number;
   mode: "focus" | "conversation";
   agents: Record<string, AgentNode>;
@@ -48,10 +48,10 @@ export type TalosModel = {
 };
 
 export type ReduceResult =
-  | { accepted: true; model: TalosModel }
-  | { accepted: false; model: TalosModel; reason: string };
+  | { accepted: true; model: RaptorModel }
+  | { accepted: false; model: RaptorModel; reason: string };
 
-export function createModel(): TalosModel {
+export function createModel(): RaptorModel {
   return {
     seq: 0,
     mode: "focus",
@@ -73,14 +73,14 @@ const ACTION_TRANSITIONS: Record<ActionState, ActionState[]> = {
   failed: [],
 };
 
-export function isActiveAgent(model: TalosModel, id: string | null) {
+export function isActiveAgent(model: RaptorModel, id: string | null) {
   if (!id) return false;
   const agent = model.agents[id];
   return !!agent && !agent.retired;
 }
 
 /** The current head of the primary lineage. */
-export function rootAgent(model: TalosModel): AgentNode | null {
+export function rootAgent(model: RaptorModel): AgentNode | null {
   for (const id of model.order) {
     const agent = model.agents[id];
     if (agent.parentId === null && !agent.retired) return agent;
@@ -88,14 +88,14 @@ export function rootAgent(model: TalosModel): AgentNode | null {
   return null;
 }
 
-export function childrenOf(model: TalosModel, parentId: string) {
+export function childrenOf(model: RaptorModel, parentId: string) {
   return model.order
     .map((id) => model.agents[id])
     .filter((agent) => agent.parentId === parentId && !agent.retired);
 }
 
 /** Actions that still hold particles away from their agent. */
-export function liveActions(model: TalosModel) {
+export function liveActions(model: RaptorModel) {
   return Object.values(model.actions).filter(
     (action) =>
       action.state !== "rejected" &&
@@ -104,12 +104,12 @@ export function liveActions(model: TalosModel) {
   );
 }
 
-function reject(model: TalosModel, reason: string): ReduceResult {
+function reject(model: RaptorModel, reason: string): ReduceResult {
   return { accepted: false, model, reason };
 }
 
 function withAgent(
-  model: TalosModel,
+  model: RaptorModel,
   id: string,
   patch: Partial<AgentNode>,
 ): Record<string, AgentNode> {
@@ -122,7 +122,7 @@ function cloneAgents(agents: Record<string, AgentNode>) {
   return copy;
 }
 
-export function reduce(model: TalosModel, event: TalosEvent): ReduceResult {
+export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
   if (!Number.isFinite(event.seq) || event.seq <= model.seq)
     return reject(model, `stale sequence ${event.seq} after ${model.seq}`);
   if (
@@ -131,7 +131,7 @@ export function reduce(model: TalosModel, event: TalosEvent): ReduceResult {
     event.type !== "session.reset"
   )
     return reject(model, "rollback in progress");
-  const next = (patch: Partial<TalosModel>): ReduceResult => ({
+  const next = (patch: Partial<RaptorModel>): ReduceResult => ({
     accepted: true,
     model: { ...model, ...patch, seq: event.seq },
   });
