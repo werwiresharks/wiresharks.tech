@@ -6,7 +6,7 @@ export type HomeFrame = {
   scroll: number;
   satellites: { key: string; frame: Framing; mix: number }[];
   opacity: number;
-  /** 0–1: how far particles take the bronze tone used over dark sections. */
+  /** 0–1: how far particles take the on-dark tone used over dark sections. */
   warm: number;
   flow: HomeFlow;
 };

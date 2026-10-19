@@ -2,9 +2,9 @@ import type { Tone } from "./layout.ts";
 
 /**
  * Visual vocabulary for each state. Colours are display (sRGB) values tuned
- * for a white page: graphite structure, cool-blue proposals, bronze execution
- * and authority. `activity` drives internal motion; `alpha` and `size` scale
- * the particles themselves.
+ * for a white page: graphite structure with the brand red as the single accent;
+ * state reads through intensity, not hue. `activity` drives internal motion;
+ * `alpha` and `size` scale the particles themselves.
  */
 
 export type ToneStyle = {
@@ -51,6 +51,12 @@ export const TONES: Record<Tone, ToneStyle> = {
   "action-executing": { base: COLORS.graphite, accent: COLORS.redGlow, activity: 0.9, alpha: 0.9, size: 1.05 },
   rollback: { base: COLORS.slate, accent: COLORS.redDeep, activity: 0.15, alpha: 0.7, size: 0.95 },
 };
+
+/** Orbs over dark (tone-dark) sections: light grey with the red accent. */
+export const ON_DARK = { base: hex(0xd4d4d2), accent: COLORS.red };
+
+/** The gutter stream crosses light and dark sections, so it takes a mid grey that reads on both. */
+export const STREAM = { base: hex(0x8a8f93), accent: COLORS.red };
 
 /** Portion of particles in every cluster that carry the accent colour. */
 export const ACCENT_RATIO = 0.16;

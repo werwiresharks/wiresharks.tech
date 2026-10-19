@@ -1,6 +1,6 @@
 import type { HomeFrame } from "../home/journey.ts";
 import type { ClusterTarget, Vec3 } from "./layout.ts";
-import { ACCENT_RATIO, TONES } from "./palette.ts";
+import { ACCENT_RATIO, ON_DARK, STREAM, TONES } from "./palette.ts";
 import type { ToneStyle } from "./palette.ts";
 
 /**
@@ -31,8 +31,8 @@ const departure = (t: number, dirX: number, seed: number) =>
 const smoothstep = (n: number) => { const t = Math.max(0, Math.min(1, n)); return t * t * (3 - 2 * t); };
 /** Small orbs (the docked coordinator, rail marker and worker icons) get visible life. */
 const smallness = (radius: number) => Math.max(0, Math.min(1, (70 - radius) / 40));
-/** Small orbs, which sit over dark sections, take the bronze tone. */
-const warmthOf = (radius: number) => Math.min(1, (160 - radius) / 100);
+/** Small orbs (rail markers and worker icons), which sit over dark sections, take the on-dark tone. */
+const warmthOf = (radius: number) => Math.max(0, Math.min(1, (40 - radius) / 20));
 const STIFFNESS = 16;
 
 type Cluster = {
@@ -479,10 +479,10 @@ export class ParticleField {
     body[out + 2] = (fract(seed * 61.7 + 0.3) - 0.5) * band * 2 * unit;
     body[out + 3] = Math.max(0, Math.min(1, (density - seed) / 0.02));
     body[out + 4] = 0.9;
-    const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
-    body[out + 5] = bronze[0];
-    body[out + 6] = bronze[1];
-    body[out + 7] = bronze[2];
+    const c = this.accentMask[i] ? STREAM.accent : STREAM.base;
+    body[out + 5] = c[0];
+    body[out + 6] = c[1];
+    body[out + 7] = c[2];
   }
 
   /**
@@ -501,12 +501,12 @@ export class ParticleField {
     body[26] = q * q * body[a + 2] + 2 * q * p * cz + p * p * body[b + 2];
     const fade = arriving ? smoothstep(p / 0.45) : smoothstep((p - 0.55) / 0.45);
     for (let k = 3; k < 5; k++) body[24 + k] = body[a + k] + (body[b + k] - body[a + k]) * fade;
-    // In flight, particles glow bronze to read over light and dark sections.
+    // In flight, particles take the stream tone to read over light and dark sections.
     const glow = Math.sin(Math.PI * p);
-    const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
+    const stream = this.accentMask[i] ? STREAM.accent : STREAM.base;
     for (let k = 5; k < 8; k++) {
       const tone = body[a + k] + (body[b + k] - body[a + k]) * p;
-      body[24 + k] = tone + (bronze[k - 5] - tone) * glow;
+      body[24 + k] = tone + (stream[k - 5] - tone) * glow;
     }
   }
 
@@ -574,8 +574,8 @@ export class ParticleField {
     const size = Math.max(0.5, Math.min(1, radiusPx / 160));
     body[out + 4] = (size + (0.7 - size) * mix) * (1 + 0.25 * (twinkle - 0.5 * lively));
     const color = this.accentMask[i] ? TONES.idle.accent : TONES.idle.base;
-    const bronze = this.accentMask[i] ? TONES.running.accent : TONES.completed.accent;
-    for (let j = 0; j < 3; j++) body[out + 5 + j] = color[j] + (bronze[j] - color[j]) * warmth;
+    const warm = this.accentMask[i] ? ON_DARK.accent : ON_DARK.base;
+    for (let j = 0; j < 3; j++) body[out + 5 + j] = color[j] + (warm[j] - color[j]) * warmth;
   }
 
   /**
@@ -676,7 +676,7 @@ export class ParticleField {
       cs[i3] += (src[0] - cs[i3]) * kParticleColor;
       cs[i3 + 1] += (src[1] - cs[i3 + 1]) * kParticleColor;
       cs[i3 + 2] += (src[2] - cs[i3 + 2]) * kParticleColor;
-      // Illumination warms toward bronze rather than blowing out to white.
+      // Illumination warms toward a soft highlight rather than blowing out to white.
       const fl = c.flash * 0.75;
       this.color[i3] = cs[i3] + (0.79 - cs[i3]) * fl;
       this.color[i3 + 1] = cs[i3 + 1] + (0.62 - cs[i3 + 1]) * fl;
