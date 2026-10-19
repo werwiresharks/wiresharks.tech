@@ -55,7 +55,7 @@ export function Talon() {
           </div>
         }
       >
-        Talon-1 is the open-weight security model that powers Raptor-1. It is fine-tuned for
+        Talon-1 is the open-weight security model that powers Raptor. It is fine-tuned for
         offensive and defensive cybersecurity. After install, it runs on your machine.
       </PageHead>
 
@@ -128,7 +128,7 @@ export function Talon() {
               { key: "sec", name: "Secure coding and remediation", meta: "patched/unpatched pairs" },
               { key: "soc", name: "SOC and incident response", meta: "threat intel · detections" },
               { key: "red", name: "Authorized red teaming", meta: "scoped engagements · CTF", active: true },
-              { key: "tools", name: "Tool-use reasoning traces", meta: "Raptor-1 sessions" },
+              { key: "tools", name: "Tool-use reasoning traces", meta: "Raptor sessions" },
             ]}
           />
         }
@@ -225,7 +225,7 @@ export function Talon() {
 
       <Closing
         title="Open weights. December 25."
-        text="Talon-1 ships with its evaluations, Raptor-1 and Harness."
+        text="Talon-1 ships with its evaluations, Raptor and Harness."
         mark={<StaticOrb />}
       />
     </>

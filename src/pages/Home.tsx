@@ -17,12 +17,12 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 
 const FAQ: [string, string][] = [
   [
-    "What is Raptor-1?",
-    "Raptor-1 is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code. Each worker tests on real systems. Raptor-1 checks the result. It runs Talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates Raptor-1's work.",
+    "What is Raptor?",
+    "Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code. Each worker tests on real systems. Raptor checks the result. It runs Talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates Raptor's work.",
   ],
   [
     "What is Talon-1?",
-    "Talon-1 is the open-weight security model that powers Raptor-1. It is a 27B model, fine-tuned for offensive and defensive cybersecurity. It runs on your machine. It ships with its evaluations on December 25, 2026.",
+    "Talon-1 is the open-weight security model that powers Raptor. It is a 27B model, fine-tuned for offensive and defensive cybersecurity. It runs on your machine. It ships with its evaluations on December 25, 2026.",
   ],
   [
     "Does the model refuse security questions?",
@@ -41,8 +41,8 @@ const FAQ: [string, string][] = [
 const PRINCIPLES: [string, string][] = [
   ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. After install, no network is needed. There is no telemetry to turn off."],
   ["Answers what others won't.", "We remove the model's refusal behavior, then fine-tune it for real security work."],
-  ["Open weights.", "Talon-1, its evaluations, Raptor-1 and Harness ship together. You run them. You inspect them."],
-  ["Proven, then patched.", "Raptor-1 reproduces every finding before it reports it. A second model reviews every patch."],
+  ["Open weights.", "Talon-1, its evaluations, Raptor and Harness ship together. You run them. You inspect them."],
+  ["Proven, then patched.", "Raptor reproduces every finding before it reports it. A second model reviews every patch."],
 ];
 
 export function Home() {
@@ -74,7 +74,7 @@ export function Home() {
             <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model that powers it.</p>
             <p className="hero-key label">
               <span>
-                <b>Raptor-1</b> Agent
+                <b>Raptor</b> Agent
               </span>
               <span>
                 <b>Talon-1</b> Model
@@ -83,7 +83,7 @@ export function Home() {
           </Reveal>
           <Reveal delay={180} className="hero-ctas">
             <Cta to="/raptor" icon={<RaptorIcon />}>
-              Meet Raptor-1
+              Meet Raptor
             </Cta>
             <Cta to="/talon" variant="secondary" icon={<TalonIcon />}>
               Explore Talon-1
@@ -112,8 +112,8 @@ export function Home() {
               <span id="products-title"><Words>An agent, and the model that powers it.</Words></span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              Raptor-1 is the agent. It plans, acts and checks its own work. Talon-1 is the model that
-              powers Raptor-1. The two ship together.
+              Raptor is the agent. It plans, acts and checks its own work. Talon-1 is the model that
+              powers Raptor. The two ship together.
             </Reveal>
           </header>
 
@@ -121,7 +121,7 @@ export function Home() {
             id="raptor"
             index="01.1"
             kind="Agent / Runs on Harness"
-            name="Raptor-1"
+            name="Raptor"
             summary="The autonomous agent that runs Talon-1 by default."
             specs={[
               ["Engines", "Hermes · Claude Code · Codex"],
@@ -130,7 +130,7 @@ export function Home() {
               ["Merges", "One at a time, always reviewed"],
             ]}
             to="/raptor"
-            linkLabel="Meet Raptor-1"
+            linkLabel="Meet Raptor"
             visual={
               <TaskGraph
                 journey
@@ -147,8 +147,8 @@ export function Home() {
             }
           >
             <p>
-              Raptor-1 plans a task and splits it across parallel workers. Workers act with scoped
-              tools. Raptor-1 verifies the result before anything lands.
+              Raptor plans a task and splits it across parallel workers. Workers act with scoped
+              tools. Raptor verifies the result before anything lands.
             </p>
             <p>
               By default, it runs Talon-1 on your machine. You can point it at any other model. You
@@ -157,7 +157,7 @@ export function Home() {
           </ProductBlock>
 
           <div className="product-link" aria-hidden="true">
-            <span className="label">Raptor-1</span>
+            <span className="label">Raptor</span>
             <i />
             <span className="label">powered by</span>
             <i />
@@ -169,7 +169,7 @@ export function Home() {
             index="01.2"
             kind="Model / Open weights"
             name="Talon-1"
-            summary="The open-weight model that powers Raptor-1."
+            summary="The open-weight model that powers Raptor."
             stats={[
               ["27B", "Parameters"],
               ["128k", "Context"],
@@ -273,7 +273,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="Talon-1 weights, evaluations, Raptor-1 and Harness ship together on December 25, 2026."
+          text="Talon-1 weights, evaluations, Raptor and Harness ship together on December 25, 2026."
         />
       </div>
     </div>

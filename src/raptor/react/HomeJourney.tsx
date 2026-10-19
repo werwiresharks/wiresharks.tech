@@ -63,5 +63,5 @@ export function HomeJourney() {
       delete root.dataset.journey;
     };
   }, []);
-  return <div ref={host} className="home-journey tpe-stage is-ready" aria-hidden="true" />;
+  return <div ref={host} className="home-journey rpe-stage is-ready" aria-hidden="true" />;
 }

@@ -297,7 +297,7 @@ export function ClawTear() {
       <div className="claw-under tone-dark">
         <div ref={under} className="claw-under-inner">
           <p className="label">
-            <i /> Raptor-1 / Autonomous agent / Powered by Talon-1
+            <i /> Raptor / Autonomous agent / Powered by Talon-1
           </p>
           <p className="claw-under-name">
             <RaptorMark className="claw-under-mark" />

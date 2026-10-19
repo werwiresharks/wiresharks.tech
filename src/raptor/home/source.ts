@@ -110,7 +110,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     let raptorDock: JourneyDock | null = null;
     const marks: { key: string; frame: Framing }[] = [];
     // Dock in document order, top to bottom, so the stop sequence stays monotonic whichever order
-    // the product blocks sit in. Raptor-1's task graph leads Talon-1's console on the page.
+    // the product blocks sit in. Raptor's task graph leads Talon-1's console on the page.
     const measured: { key: string; node: Element; frame: Framing }[] = [];
     for (const key of ["products", "talon", "raptor", "platform", "principles", "closing"]) {
       if (key === "closing" && releaseFrame) continue;

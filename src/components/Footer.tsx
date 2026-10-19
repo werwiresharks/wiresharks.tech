@@ -5,7 +5,7 @@ import { LogoMark } from "./LogoMark";
 import { Wordmark } from "./Wordmark";
 
 const PRODUCTS = [
-  { to: "/raptor", label: "Raptor-1", note: "Agent" },
+  { to: "/raptor", label: "Raptor", note: "Agent" },
   { to: "/talon", label: "Talon-1", note: "Model" },
   { to: "/#platform", label: "Platform", note: "Architecture" },
   { to: "/#faq", label: "FAQ", note: "Answers" },
@@ -51,7 +51,7 @@ export function Footer() {
       <div className="wrap">
         <div className="footer-meta">
           <span>© {new Date().getFullYear()} Wiresharks</span>
-          <span>Raptor-1 / Talon-1 / Built for authorized security work</span>
+          <span>Raptor / Talon-1 / Built for authorized security work</span>
         </div>
       </div>
       <p className="footer-mark" aria-hidden="true">

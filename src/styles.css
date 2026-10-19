@@ -775,7 +775,7 @@ button {
   pointer-events: none;
   clip-path: var(--claw-skin, none);
 }
-.hero-orb-slot .tpe-static {
+.hero-orb-slot .rpe-static {
   clip-path: var(--claw-slot-skin, none);
 }
 .hero-backdrop * {
@@ -790,20 +790,20 @@ button {
     radial-gradient(ellipse 46% 58% at 18% 52%, color-mix(in srgb, var(--soft) 88%, transparent) 0%, color-mix(in srgb, var(--soft) 50%, transparent) 52%, transparent 100%),
     linear-gradient(180deg, transparent 78%, var(--soft) 100%);
 }
-.tpe-stage {
+.rpe-stage {
   overflow: hidden;
 }
-.tpe-canvas {
+.rpe-canvas {
   display: block;
   width: 100%;
   height: 100%;
   opacity: 0;
   transition: opacity 900ms ease;
 }
-.tpe-stage.is-ready .tpe-canvas {
+.rpe-stage.is-ready .rpe-canvas {
   opacity: 1;
 }
-.tpe-static {
+.rpe-static {
   position: absolute;
   top: 53%;
   left: calc(100% - 6vw - min(19vw, 300px));
@@ -1867,8 +1867,8 @@ button {
   right: 0;
   border-left: 0;
 }
-.page-mark .tpe-static,
-.closing-mark .tpe-static {
+.page-mark .rpe-static,
+.closing-mark .rpe-static {
   position: static;
   width: 100%;
   transform: none;
@@ -2104,7 +2104,7 @@ button {
       linear-gradient(100deg, color-mix(in srgb, var(--soft) 86%, transparent) 0%, color-mix(in srgb, var(--soft) 55%, transparent) 55%, color-mix(in srgb, var(--soft) 10%, transparent) 100%),
       linear-gradient(180deg, transparent 80%, var(--soft) 100%);
   }
-  .tpe-static {
+  .rpe-static {
     top: 36%;
     left: 78%;
     width: min(60vw, 480px);
@@ -2169,7 +2169,7 @@ button {
     background:
       linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--soft) 70%, transparent) 52%, color-mix(in srgb, var(--soft) 92%, transparent) 70%, var(--soft) 100%);
   }
-  .tpe-static {
+  .rpe-static {
     top: 28%;
     left: 50%;
     width: 52vw;
@@ -2247,7 +2247,7 @@ button {
     background:
       linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--soft) 55%, transparent) 34%, color-mix(in srgb, var(--soft) 90%, transparent) 60%, var(--soft) 100%);
   }
-  .tpe-static {
+  .rpe-static {
     top: 190px;
     left: 82%;
     width: 80vw;
@@ -2529,13 +2529,13 @@ button {
     aspect-ratio: 1;
     margin-top: clamp(36px, 11vw, 56px);
   }
-  .home-page .hero-orb-slot .tpe-static {
+  .home-page .hero-orb-slot .rpe-static {
     inset: 0;
     width: 100%;
     transform: none;
   }
-  .home-page[data-journey="ready"] .hero-orb-slot .tpe-static { visibility: hidden; }
-  .home-page .hero-backdrop .tpe-static { display: none; }
+  .home-page[data-journey="ready"] .hero-orb-slot .rpe-static { visibility: hidden; }
+  .home-page .hero-backdrop .rpe-static { display: none; }
   .home-page .hero-launch { margin-top: clamp(28px, 8vw, 40px); }
   .home-page .hero-launch .countdown { justify-content: center; text-align: center; }
   .home-page .hero-backdrop::after { background: none; }

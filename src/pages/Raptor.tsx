@@ -24,11 +24,11 @@ const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento"
 export function Raptor() {
   return (
     <>
-      <title>Raptor-1 | Wiresharks</title>
+      <title>Raptor | Wiresharks</title>
       <link rel="canonical" href="https://wiresharks.tech/raptor" />
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
-      <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent." mark={<RaptorMarkDrawn />}>
-        Raptor-1 is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
+      <PageHead label="Agent / Raptor" title="The autonomous cybersecurity agent." mark={<RaptorMarkDrawn />}>
+        Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
         works with any model. It plans the work and keeps its own memory and skills. Harness runs
         and coordinates that work. Harness adds full support for Claude Code and Codex.
       </PageHead>
@@ -76,7 +76,7 @@ export function Raptor() {
         }
       >
         <p>
-          Raptor-1 keeps a task graph with stable IDs, parents, budgets and checkpoints. Each
+          Raptor keeps a task graph with stable IDs, parents, budgets and checkpoints. Each
           worker runs in its own copy of the code. Explicit limits set how many workers run at once
           and what they cost.
         </p>
@@ -142,7 +142,7 @@ export function Raptor() {
           />
         }
       >
-        <p>The first workflow Raptor-1 runs end to end.</p>
+        <p>The first workflow Raptor runs end to end.</p>
         <ol className="steps">
           {REVIEW_STEPS.map(([name, text]) => (
             <li key={name}>
@@ -198,7 +198,7 @@ export function Raptor() {
       </section>
 
       <Closing
-        title="Raptor-1 runs Talon-1 by default."
+        title="Raptor runs Talon-1 by default."
         text="Both ship together on December 25, 2026."
         mark={<RaptorMarkDrawn />}
       />

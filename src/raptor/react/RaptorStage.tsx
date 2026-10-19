@@ -80,7 +80,7 @@ export function RaptorStage({
   return (
     <div
       ref={host}
-      className={`tpe-stage${ready ? " is-ready" : ""}${failed ? " is-fallback" : ""} ${className}`}
+      className={`rpe-stage${ready ? " is-ready" : ""}${failed ? " is-fallback" : ""} ${className}`}
     >
       {failed && <StaticOrb />}
     </div>
@@ -107,7 +107,7 @@ export function StaticOrb() {
     }
   }
   return (
-    <svg className="tpe-static" viewBox="0 0 300 300" role="img" aria-label="Raptor, drawn as a sphere of particles inside a red boundary">
+    <svg className="rpe-static" viewBox="0 0 300 300" role="img" aria-label="Raptor, drawn as a sphere of particles inside a red boundary">
       <g fill="var(--ink)">{dots}</g>
       <circle cx="150" cy="150" r="120" fill="none" stroke="var(--bronze-deep)" strokeWidth="1" />
     </svg>

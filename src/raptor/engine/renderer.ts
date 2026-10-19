@@ -119,7 +119,7 @@ export class RaptorRenderer implements RaptorView {
     this.renderer.setClearColor(0xffffff, 0);
     const canvas = this.renderer.domElement;
     canvas.setAttribute("aria-hidden", "true");
-    canvas.className = "tpe-canvas";
+    canvas.className = "rpe-canvas";
     options.host.appendChild(canvas);
 
     this.camera.position.set(0, 0, CAMERA_Z);

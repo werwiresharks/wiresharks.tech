@@ -16,7 +16,7 @@ export function Closing({ title, text, mark }: { title: string; text: string; ma
           </Reveal>
           <Reveal delay={180} className="closing-ctas">
             <Cta to="/raptor" variant="inverse">
-              Meet Raptor-1
+              Meet Raptor
             </Cta>
             <Cta to="/talon" variant="secondary">
               Explore Talon-1

@@ -13,7 +13,7 @@ const TIERS = [
   {
     index: "02",
     layer: "Agent",
-    name: "Raptor-1",
+    name: "Raptor",
     role: "Agent orchestration on Harness",
     text: "Plans the task, delegates to parallel workers and routes each step to a model and an engine. Memory and skills persist between runs.",
     facts: ["Hermes · Claude Code · Codex", "Bounded parallel workers, reviewers", "Durable memory, versioned skills"],
@@ -70,7 +70,7 @@ export function Platform() {
             Authorized repository security review
           </Reveal>
           <Reveal as="p" delay={60} className="loop-lede">
-            The first workflow Raptor-1 runs end to end.
+            The first workflow Raptor runs end to end.
           </Reveal>
           <ol className="loop-steps">
             {REVIEW_STEPS.map(([name, text], i) => (

@@ -5,7 +5,7 @@ export const GITHUB_HREF = "https://github.com/werwiresharks";
 
 /** Primary navigation. Every entry is a real route or an anchor on one. */
 export const NAV = [
-  { to: "/raptor", label: "Raptor-1" },
+  { to: "/raptor", label: "Raptor" },
   { to: "/talon", label: "Talon-1" },
 ] as const;
 

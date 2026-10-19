@@ -5,7 +5,7 @@ import { createHomeSource } from "./source.ts";
 import { heroFrame, HomeMotion } from "./journey.ts";
 
 // Rectangles captured from the homepage at 1280×800, 1024×768, 768×1024, 375×667, and 390×844.
-// Raptor-1's task graph (the "raptor" stop) sits above Talon-1's console (the "talon" stop).
+// Raptor's task graph (the "raptor" stop) sits above Talon-1's console (the "talon" stop).
 const layouts = [
   { width: 1280, height: 800, hero: 800, products: [1135.69, 940.8, 88, 88],
     raptor: [871.59, 1385.95, 68, 68], graph: [619.23, 1323.45, 572.72, 488.5],
@@ -153,7 +153,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     previous = current;
   }
   if (layout.width >= 1024) {
-    // Side by side, the graph sits right of Raptor-1's copy and the console left of Talon-1's.
+    // Side by side, the graph sits right of Raptor's copy and the console left of Talon-1's.
     // The orb comes in on its panel's side, so it crosses the page above Talon-1's block.
     for (const [mark, right] of [[layout.raptor, true], [layout.talon, false]] as const) {
       const dock = mark[1] + mark[3] / 2 - layout.height * 0.5;

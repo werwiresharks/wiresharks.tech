@@ -170,7 +170,7 @@ export function Swarm() {
         <header className="section-head">
           <Reveal as="p" className="label swarm-label">
             <span><span className="index">02</span> / Swarm</span>
-            <span className="swarm-status">Included in Raptor-1</span>
+            <span className="swarm-status">Included in Raptor</span>
           </Reveal>
           <Reveal as="h2" delay={60} words>
             <span id="swarm-title"><Words>One worker is powerful. A swarm is unstoppable.</Words></span>
