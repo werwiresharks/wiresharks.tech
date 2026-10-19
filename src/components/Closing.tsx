@@ -1,15 +1,13 @@
+import type { ReactNode } from "react";
 import { Reveal, Words } from "./Reveal";
 import { Countdown } from "./Countdown";
 import { Cta } from "./Cta";
 
-export function Closing({ title, text }: { title: string; text: string }) {
+export function Closing({ title, text, mark }: { title: string; text: string; mark?: ReactNode }) {
   return (
     <section className="closing section tone-dark" aria-labelledby="closing-title">
       <div className="wrap closing-inner">
         <div>
-          <Reveal as="p" className="label">
-            Release
-          </Reveal>
           <Reveal as="h2" delay={60} words>
             <span id="closing-title"><Words>{title}</Words></span>
           </Reveal>
@@ -25,6 +23,11 @@ export function Closing({ title, text }: { title: string; text: string }) {
             </Cta>
           </Reveal>
         </div>
+        {mark && (
+          <div className="closing-mark" aria-hidden="true">
+            {mark}
+          </div>
+        )}
         <div className="closing-launch">
           <Countdown mega />
         </div>

@@ -20,7 +20,7 @@ export function Footer() {
             <LogoMark />
             <Wordmark />
           </Link>
-          <p>Autonomous cybersecurity. An agent, and the local, open-weight model it runs on.</p>
+          <p>Autonomous cybersecurity. An agent, and the local, open-weight model that powers it.</p>
         </div>
         <nav className="footer-col" aria-label="Products">
           <h2 className="label">Products</h2>
@@ -48,9 +48,11 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <div className="footer-meta wrap">
-        <span>© {new Date().getFullYear()} Wiresharks</span>
-        <span>Raptor-1 / Talon-1 / Built for authorized security work</span>
+      <div className="wrap">
+        <div className="footer-meta">
+          <span>© {new Date().getFullYear()} Wiresharks</span>
+          <span>Raptor-1 / Talon-1 / Built for authorized security work</span>
+        </div>
       </div>
       <p className="footer-mark" aria-hidden="true">
         WIRESHARKS

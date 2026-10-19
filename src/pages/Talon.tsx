@@ -28,18 +28,15 @@ const DOMAINS = [
 const STATS: [string, string][] = [
   ["27B", "Parameters"],
   ["128k", "Context"],
-  ["Off", "Network after install"],
+  ["Off", "Network"],
 ];
 
 const SPEC = [
   ["Foundation", "Qwen3.8-27B"],
-  ["Parameters", "27B"],
   ["Method", "Refusals removed, then security fine-tune"],
   ["Adapters", "QLoRA, rsLoRA"],
-  ["Context", "128k"],
   ["Inference", "llama.cpp, vLLM, Apple Silicon"],
   ["Platforms", "macOS, Windows, Linux"],
-  ["Network", "None required after install"],
   ["Weights", "Open"],
   ["Release", "December 25, 2026"],
 ];
@@ -48,6 +45,7 @@ export function Talon() {
   return (
     <>
       <title>Talon-1 | Wiresharks</title>
+      <link rel="canonical" href="https://wiresharks.tech/talon" />
       <PageHead
         label="Model / Talon-1"
         title="The world's most dangerous model."
@@ -57,7 +55,7 @@ export function Talon() {
           </div>
         }
       >
-        Talon-1 is the AI model that powers Raptor-1. It is open-weight and fine-tuned for
+        Talon-1 is the open-weight security model that powers Raptor-1. It is fine-tuned for
         offensive and defensive cybersecurity. After install, it runs on your machine.
       </PageHead>
 
@@ -189,7 +187,7 @@ export function Talon() {
               "no-refusals    ░░░░░░░░░░░░░░░░░░░  pending",
               "base model     ░░░░░░░░░░░░░░░░░░░  pending",
               "",
-              "illustrative · results ship Dec 25, 2026 · reproducible suite",
+              "reproducible suite",
             ]}
           />
         }
@@ -225,7 +223,11 @@ export function Talon() {
         </div>
       </section>
 
-      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations, Raptor-1 and Harness." />
+      <Closing
+        title="Open weights. December 25."
+        text="Talon-1 ships with its evaluations, Raptor-1 and Harness."
+        mark={<StaticOrb />}
+      />
     </>
   );
 }

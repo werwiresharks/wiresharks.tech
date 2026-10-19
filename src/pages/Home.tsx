@@ -18,11 +18,11 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is Raptor-1?",
-    "Raptor-1 is the autonomous cybersecurity agent. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code and tests on real systems. Raptor-1 checks the result. It runs Talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates the work.",
+    "Raptor-1 is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code. Each worker tests on real systems. Raptor-1 checks the result. It runs Talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates Raptor-1's work.",
   ],
   [
     "What is Talon-1?",
-    "Talon-1 is the model that powers Raptor-1. It is a 27B open-weight model, fine-tuned for offensive and defensive cybersecurity. It runs on your machine. It ships with its evaluations on December 25, 2026.",
+    "Talon-1 is the open-weight security model that powers Raptor-1. It is a 27B model, fine-tuned for offensive and defensive cybersecurity. It runs on your machine. It ships with its evaluations on December 25, 2026.",
   ],
   [
     "Does the model refuse security questions?",
@@ -50,6 +50,7 @@ export function Home() {
     <div className="home-page">
       <HomeJourney />
       <title>Wiresharks | The world's most dangerous AI.</title>
+      <link rel="canonical" href="https://wiresharks.tech/" />
 
       <section className="hero" aria-labelledby="hero-title">
         <ClawTear />
@@ -70,7 +71,7 @@ export function Home() {
             </span>
           </Reveal>
           <Reveal delay={120} className="hero-glass">
-            <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model it runs on.</p>
+            <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model that powers it.</p>
             <p className="hero-key label">
               <span>
                 <b>Raptor-1</b> Agent
@@ -108,11 +109,11 @@ export function Home() {
               <span className="index">01</span> / Products
             </Reveal>
             <Reveal as="h2" delay={60} words>
-              <span id="products-title"><Words>An agent, and the model it runs on.</Words></span>
+              <span id="products-title"><Words>An agent, and the model that powers it.</Words></span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              Raptor-1 is the agent. It plans, acts and checks its own work. Talon-1 is the model
-              Raptor-1 runs on. The two ship together.
+              Raptor-1 is the agent. It plans, acts and checks its own work. Talon-1 is the model that
+              powers Raptor-1. The two ship together.
             </Reveal>
           </header>
 
@@ -158,7 +159,7 @@ export function Home() {
           <div className="product-link" aria-hidden="true">
             <span className="label">Raptor-1</span>
             <i />
-            <span className="label">runs on</span>
+            <span className="label">powered by</span>
             <i />
             <span className="label">Talon-1</span>
           </div>
@@ -172,7 +173,7 @@ export function Home() {
             stats={[
               ["27B", "Parameters"],
               ["128k", "Context"],
-              ["Off", "Network after install"],
+              ["Off", "Network"],
             ]}
             specs={[
               ["Inference", "llama.cpp · vLLM · Apple Silicon"],

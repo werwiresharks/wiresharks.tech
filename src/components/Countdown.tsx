@@ -63,9 +63,11 @@ export function Countdown({ className = "", mega = false }: { className?: string
             const shown = progress === 1 ? value : Math.round(value * progress);
             return (
               <li key={label}>
-                <b>{String(shown).padStart(2, "0")}</b>
+                <b aria-hidden="true">{String(shown).padStart(2, "0")}</b>
                 <span aria-hidden="true">{mega ? label : short}</span>
-                <span className="sr-only">{label}</span>
+                <span className="sr-only">
+                  {value} {label}
+                </span>
               </li>
             );
           })}

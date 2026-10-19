@@ -25,11 +25,12 @@ export function Raptor() {
   return (
     <>
       <title>Raptor-1 | Wiresharks</title>
+      <link rel="canonical" href="https://wiresharks.tech/raptor" />
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
       <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent." mark={<RaptorMarkDrawn />}>
-        Raptor-1 is an autonomous agent that works with any model. It runs on Harness. Harness
-        keeps the strongest parts of Hermes Agent and adds full support for Claude Code and Codex.
-        Harness also handles the planning, memory and skills. These parts work as one system.
+        Raptor-1 is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
+        works with any model. It plans the work and keeps its own memory and skills. Harness runs
+        and coordinates that work. Harness adds full support for Claude Code and Codex.
       </PageHead>
 
       <Feature
@@ -196,7 +197,11 @@ export function Raptor() {
         </div>
       </section>
 
-      <Closing title="Raptor-1 runs Talon-1 by default." text="Both ship together on December 25, 2026." />
+      <Closing
+        title="Raptor-1 runs Talon-1 by default."
+        text="Both ship together on December 25, 2026."
+        mark={<RaptorMarkDrawn />}
+      />
     </>
   );
 }

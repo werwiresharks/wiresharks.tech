@@ -173,16 +173,12 @@ export function Swarm() {
             <span className="swarm-status">Included in Raptor-1</span>
           </Reveal>
           <Reveal as="h2" delay={60} words>
-            <span id="swarm-title"><Words>One agent is powerful. A swarm is unstoppable.</Words></span>
+            <span id="swarm-title"><Words>One worker is powerful. A swarm is unstoppable.</Words></span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
             Raptor Swarm puts specialized workers on complex work. The workers divide a task and run
             in parallel. They share what they find. Their results combine into one coordinated
             report.
-          </Reveal>
-          <Reveal as="p" delay={180} className="swarm-note">
-            <span className="swarm-name">Raptor-1</span> splits one task across parallel workers.
-            Each worker has its own copy of the code.
           </Reveal>
         </header>
 
