@@ -17,6 +17,7 @@ const wide = [
   [720, 516],
   [898, 553],
   [1200, 640],
+  [652, 327],
 ].map(([w, h]) => swarmLayout(w, h));
 const desktop = wide[3];
 const layouts = [...phones, ...wide];

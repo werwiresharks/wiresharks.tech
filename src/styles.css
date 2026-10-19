@@ -2397,6 +2397,14 @@ button {
   .swarm-steps {
     gap: 10px;
   }
+  /* Panels drop their note on phones; this one says the figure is planned, so it stays. */
+  .swarm-figure .panel-note {
+    display: block;
+  }
+}
+/* Phones, and short tablets that pin the figure, list each stage by number and name only. On a
+   short tablet the descriptions leave the canvas shorter than its six agent rows need. */
+@media (max-width: 767px), (prefers-reduced-motion: no-preference) and (max-width: 1023px) and (min-height: 541px) and (max-height: 649px) {
   .swarm-steps li {
     display: flex;
     align-items: baseline;
@@ -2412,9 +2420,11 @@ button {
   .swarm-steps li > span:last-child {
     display: none;
   }
-  /* Panels drop their note on phones; this one says the figure is planned, so it stays. */
-  .swarm-figure .panel-note {
-    display: block;
+}
+/* The room the short legend frees goes to the figure, so at 541px tall the canvas still fits two 20px pads and six 48px rows. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (max-width: 1023px) and (min-height: 541px) and (max-height: 649px) {
+  .swarm-figure {
+    height: calc(var(--swarm-pin) - 88px);
   }
 }
 @media (max-width: 767px) and (max-height: 700px) {
