@@ -6,7 +6,7 @@ export function Faq({ items }: { items: [string, string][] }) {
       <div className="wrap faq-layout">
         <header className="section-head">
           <Reveal as="p" className="label">
-            05 / Questions
+            <span className="index">05</span> / Questions
           </Reveal>
           <Reveal as="h2" delay={60}>
             <span id="faq-title">Questions, answered.</span>

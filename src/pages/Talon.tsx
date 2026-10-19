@@ -1,5 +1,6 @@
 import { PageHead } from "../components/PageHead";
 import { Reveal } from "../components/Reveal";
+import { Stats } from "../components/Stats";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
 import { Compare } from "../components/mock/Compare";
@@ -21,6 +22,12 @@ const DOMAINS = [
   ["SOC analysis", "Triage threat intelligence, build detections and respond to incidents."],
   ["Authorized red teaming", "Plan and execute within an explicit scope."],
   ["CTF", "Solve challenges from authorized competition environments."],
+];
+
+const STATS: [string, string][] = [
+  ["27B", "Parameters"],
+  ["128k", "Context"],
+  ["Off", "Network after install"],
 ];
 
 const SPEC = [
@@ -137,7 +144,7 @@ export function Talon() {
         <div className="wrap">
           <header className="section-head">
             <Reveal as="p" className="label">
-              04 / Pipeline
+              <span className="index">04</span> / Pipeline
             </Reveal>
             <Reveal as="h2" delay={60}>
               <span id="pipeline-title">Not trained from scratch. Sharpened.</span>
@@ -187,18 +194,25 @@ export function Talon() {
 
       <section className="section" aria-labelledby="spec-title">
         <div className="wrap spec-layout">
-        <div>
-          <p className="label">06 / Specification</p>
-          <h2 id="spec-title">Talon-1 at a glance.</h2>
-        </div>
-        <dl className="spec-list">
-          {SPEC.map(([term, value]) => (
-            <div key={term}>
-              <dt>{term}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
+          <div>
+            <Reveal as="p" className="label">
+              <span className="index">06</span> / Specification
+            </Reveal>
+            <Reveal as="h2" delay={60}>
+              <span id="spec-title">Talon-1 at a glance.</span>
+            </Reveal>
+          </div>
+          <Reveal delay={120}>
+            <Stats items={STATS} />
+            <dl className="spec-list">
+              {SPEC.map(([term, value]) => (
+                <div key={term}>
+                  <dt>{term}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
         </div>
       </section>
 

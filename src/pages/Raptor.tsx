@@ -155,7 +155,7 @@ export function Raptor() {
         <div className="wrap">
           <header className="section-head">
             <Reveal as="p" className="label">
-              05 / Architecture
+              <span className="index">05</span> / Architecture
             </Reveal>
             <Reveal as="h2" delay={60}>
               <span id="arch-title">Eight layers. One system.</span>
@@ -176,7 +176,7 @@ export function Raptor() {
       <section className="section section-compact" aria-labelledby="lineage-title">
         <div className="wrap lineage-layout">
           <div>
-            <p className="label">06 / Lineage</p>
+            <p className="label"><span className="index">06</span> / Lineage</p>
             <h2 id="lineage-title">Informed by the field.</h2>
           </div>
           <ul className="lineage">

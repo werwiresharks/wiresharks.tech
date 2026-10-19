@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Reveal } from "./Reveal";
+import { Stats } from "./Stats";
 
 /**
  * An editorial product section: a technical identifier, the product name set
@@ -13,6 +14,7 @@ export function ProductBlock({
   name,
   summary,
   children,
+  stats,
   specs,
   to,
   linkLabel,
@@ -25,6 +27,7 @@ export function ProductBlock({
   name: string;
   summary: string;
   children: ReactNode;
+  stats?: [string, string][];
   specs: [string, string][];
   to: string;
   linkLabel: string;
@@ -47,6 +50,11 @@ export function ProductBlock({
         <Reveal delay={160} className="product-text">
           {children}
         </Reveal>
+        {stats && (
+          <Reveal delay={180}>
+            <Stats items={stats} />
+          </Reveal>
+        )}
         <Reveal delay={200}>
           <dl className="product-specs">
             {specs.map(([term, value]) => (
@@ -59,7 +67,7 @@ export function ProductBlock({
         </Reveal>
         <Reveal delay={240}>
           <Link className="text-link" to={to}>
-            {linkLabel}
+            <span className="text-link-label">{linkLabel}</span>
             <span aria-hidden="true">→</span>
           </Link>
         </Reveal>

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { RELEASE } from "../site";
+import { useInView } from "./useInView";
 
 const UNITS = [
   ["Days", "D", 86400],
@@ -19,44 +20,25 @@ function useNow() {
   return now;
 }
 
-/**
- * 0 until the node first scrolls into view, then eases to 1 over ROLL_MS.
- * Stays at 1 when reduced motion is set or IntersectionObserver is missing.
- */
+/** Eases from 0 to 1 over ROLL_MS once the readout is seen; 1 when there is no entrance. */
 function useRoll(enabled: boolean) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(enabled ? 0 : 1);
+  const [ref, entrance] = useInView<HTMLDivElement>("0px 0px -20% 0px");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const node = ref.current;
-    if (!enabled) return;
-    if (!node || typeof IntersectionObserver === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setProgress(1);
-      return;
-    }
+    if (!enabled || entrance !== "play") return;
     let frame = 0;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        io.disconnect();
-        const start = performance.now();
-        const step = (time: number) => {
-          const t = Math.min(1, (time - start) / ROLL_MS);
-          setProgress(1 - Math.pow(1 - t, 4));
-          if (t < 1) frame = requestAnimationFrame(step);
-        };
-        frame = requestAnimationFrame(step);
-      },
-      { rootMargin: "0px 0px -20% 0px" },
-    );
-    io.observe(node);
-    return () => {
-      io.disconnect();
-      cancelAnimationFrame(frame);
+    const start = performance.now();
+    const step = (time: number) => {
+      const t = Math.min(1, (time - start) / ROLL_MS);
+      setProgress(1 - Math.pow(1 - t, 4));
+      if (t < 1) frame = requestAnimationFrame(step);
     };
-  }, [enabled]);
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [enabled, entrance]);
 
-  return [ref, progress] as const;
+  return [ref, !enabled || entrance === "still" ? 1 : progress] as const;
 }
 
 /**

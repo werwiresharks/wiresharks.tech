@@ -98,7 +98,7 @@ export function Home() {
           <header className="section-head">
             <span className="home-landing" data-home-stop="products" aria-hidden="true" />
             <Reveal as="p" className="label">
-              01 / Products
+              <span className="index">01</span> / Products
             </Reveal>
             <Reveal as="h2" delay={60}>
               <span id="products-title">An agent, and the model it runs on.</span>
@@ -162,11 +162,14 @@ export function Home() {
             kind="Model / Open weights"
             name="Talon-1"
             summary="The open-weight model that powers Raptor-1."
+            stats={[
+              ["27B", "Parameters"],
+              ["128k", "Context"],
+              ["Off", "Network after install"],
+            ]}
             specs={[
-              ["Parameters", "27B"],
-              ["Context", "128k"],
               ["Inference", "llama.cpp · vLLM · Apple Silicon"],
-              ["Network", "None after install"],
+              ["Weights", "Open"],
             ]}
             to="/talon"
             linkLabel="Explore Talon-1"
@@ -218,7 +221,7 @@ export function Home() {
           <header className="section-head">
             <span className="home-landing" data-home-stop="principles" aria-hidden="true" />
             <Reveal as="p" className="label">
-              04 / Principles
+              <span className="index">04</span> / Principles
             </Reveal>
             <Reveal as="h2" delay={60}>
               <span id="principles-title">Built for real security work.</span>

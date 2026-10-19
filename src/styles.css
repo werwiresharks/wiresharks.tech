@@ -301,6 +301,43 @@ button {
 .mono {
   font-family: var(--mono);
 }
+
+/* ---- Stats: big tabular numerals over a mono caption ---- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px 16px 4px;
+  border-left: 1px solid var(--line);
+}
+.stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.stat {
+  font: var(--w-display) var(--fs-stat) / 1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+}
+.spec-layout .stats {
+  margin: 0 0 40px;
+}
+@media (max-width: 599px) {
+  .stat {
+    font-size: clamp(1.75rem, 8.4vw, 2.25rem);
+  }
+  .stats > div {
+    padding-inline: 10px;
+  }
+}
 .muted {
   color: var(--muted);
 }
@@ -624,7 +661,7 @@ button {
   background: linear-gradient(var(--red), var(--red)) 0 100% / 0 1.5px no-repeat;
   transition: background-size var(--dur-2) var(--ease-out);
 }
-.text-link span {
+.text-link span[aria-hidden] {
   color: var(--red);
   transition: transform var(--fast) var(--ease);
 }
@@ -632,7 +669,7 @@ button {
   .text-link:hover .text-link-label {
     background-size: 100% 1.5px;
   }
-  .text-link:hover span {
+  .text-link:hover span[aria-hidden] {
     transform: translateX(3px);
   }
 }
@@ -899,7 +936,7 @@ button {
 .console pre {
   padding: 18px 20px;
   font-family: var(--mono);
-  font-size: 0.78rem;
+  font-size: var(--fs-mono);
   line-height: 1.75;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -909,8 +946,42 @@ button {
   color: var(--fg);
   font-weight: 500;
 }
+.console .prompt {
+  color: var(--red);
+}
 .console .dim {
   color: var(--muted);
+}
+.console .sev {
+  color: var(--red-text);
+}
+.console .ok {
+  color: var(--ok);
+}
+.console .id {
+  color: var(--fg);
+}
+.console .caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 0.4em;
+  vertical-align: -0.2em;
+  background: var(--red);
+  animation: caret 1.1s steps(1) infinite;
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+/* Lines stream in, 30ms apart, the first time the panel is seen. */
+.console.is-streaming .line {
+  opacity: 0;
+}
+.console.is-streaming.in .line {
+  opacity: 1;
+  transition: opacity 1ms linear calc(var(--i) * 30ms + 200ms);
 }
 
 .compare-prompt {
@@ -957,12 +1028,29 @@ button {
   left: 0;
   color: var(--ok);
 }
+.compare-grid > .compare-refused {
+  background: color-mix(in srgb, var(--red) 5%, var(--panel-bar));
+}
 .compare-refused .refused {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  padding-left: 14px;
+  border-left: 2px solid var(--red);
+  font-size: 1.5rem;
+  font-weight: var(--w-h);
+  line-height: 1.1;
+  letter-spacing: var(--tr-tight);
   color: var(--red-text);
+}
+/* Talon-1's lines land one after another, the first time the panel is seen. */
+.compare.is-streaming ol li {
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+}
+.compare.is-streaming.in ol li {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-2) var(--ease-out) calc(var(--i) * 140ms + 250ms),
+    transform var(--dur-2) var(--ease-out) calc(var(--i) * 140ms + 250ms);
 }
 .compare-refused p:last-child {
   font-size: var(--fs-small);
@@ -1126,6 +1214,8 @@ button {
   display: flex;
   gap: 16px;
 }
+/* Section and product indices read red, like a reticle number. */
+.label .index,
 .product-id span:first-child {
   color: var(--red-text);
 }
@@ -2122,7 +2212,7 @@ button {
   }
   .cta:hover,
   .cta:hover .cta-arrow,
-  .text-link:hover span {
+  .text-link:hover span[aria-hidden] {
     transform: none;
   }
 }

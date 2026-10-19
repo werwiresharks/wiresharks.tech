@@ -169,7 +169,7 @@ export function Swarm() {
       <div className="wrap">
         <header className="section-head">
           <Reveal as="p" className="label swarm-label">
-            <span>02 / Swarm</span>
+            <span><span className="index">02</span> / Swarm</span>
             <span className="swarm-status">Included in Raptor-1</span>
           </Reveal>
           <Reveal as="h2" delay={60}>

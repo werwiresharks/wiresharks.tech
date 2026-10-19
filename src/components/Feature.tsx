@@ -31,7 +31,9 @@ export function Feature({
         <div className="split-copy">
           {(index || eyebrow) && (
             <Reveal as="p" className="label">
-              {[index, eyebrow].filter(Boolean).join(" / ")}
+              {index && <span className="index">{index}</span>}
+              {index && eyebrow && " / "}
+              {eyebrow}
             </Reveal>
           )}
           <Reveal as="h2" delay={60}>
@@ -43,7 +45,7 @@ export function Feature({
           {cta && (
             <Reveal delay={180}>
               <Link className="text-link" to={cta.to}>
-                {cta.label}
+                <span className="text-link-label">{cta.label}</span>
                 <span aria-hidden="true">→</span>
               </Link>
             </Reveal>

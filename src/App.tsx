@@ -5,6 +5,7 @@ import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
 import { Raptor } from "./pages/Raptor";
 import { Talon } from "./pages/Talon";
+import { usePanelGlow } from "./components/usePanelGlow";
 
 function NotFound() {
   return (
@@ -37,6 +38,7 @@ function ScrollManager() {
 }
 
 export default function App() {
+  usePanelGlow();
   return (
     <>
       <a className="skip-link" href="#main">
