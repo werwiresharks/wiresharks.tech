@@ -2111,7 +2111,7 @@ button {
   .page-mark {
     order: -1;
     justify-self: start;
-    width: clamp(96px, 28vw, 180px);
+    width: clamp(88px, 24vw, 140px);
   }
   .page-head-launch {
     width: fit-content;
