@@ -1555,7 +1555,7 @@ button {
 }
 .faq-index {
   flex: none;
-  width: 3ch;
+  width: var(--faq-index-w);
   font-family: var(--mono);
   font-size: var(--fs-micro);
   font-weight: 400;
@@ -1570,6 +1570,9 @@ button {
   flex: 1;
 }
 .faq-list {
+  /* The index hangs in its own column; question and answer share the text column. */
+  --faq-index-w: 2rem;
+  --faq-gap: 24px;
   border-top: 1px solid var(--line);
 }
 .faq details {
@@ -1579,7 +1582,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--faq-gap);
   padding: 22px 0;
   font-size: 1.125rem;
   font-weight: 500;
@@ -1622,6 +1625,7 @@ button {
 }
 .faq details p {
   max-width: 62ch;
+  padding-left: calc(var(--faq-index-w) + var(--faq-gap));
   padding-bottom: 24px;
   line-height: 1.65;
   color: var(--muted);
@@ -1645,11 +1649,9 @@ button {
 .faq details[open] > summary {
   color: var(--fg);
 }
+/* The open item is marked by a red strike line along its top edge and its red index. */
 .faq details[open] {
-  box-shadow: inset 2px 0 0 var(--red);
-}
-.faq details[open] > summary {
-  padding-left: 16px;
+  box-shadow: inset 0 2px 0 var(--red);
 }
 
 /* ==========================================================================
@@ -2264,6 +2266,10 @@ button {
   .pipeline h3,
   .layers h3 {
     margin-top: 14px;
+  }
+  .faq-list {
+    --faq-index-w: 1.5rem;
+    --faq-gap: 14px;
   }
   .faq summary {
     font-size: 1rem;
