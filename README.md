@@ -1,6 +1,6 @@
 # Wiresharks
 
-The wiresharks.tech website: Talos, Talon-1, and the Talos Particle Engine.
+The wiresharks.tech website: Raptor, Talon-1, and the Talos Particle Engine.
 React, TypeScript, Vite, and Three.js.
 
 ## Run locally
@@ -23,7 +23,7 @@ npm run preview
 
 ## Structure
 
-- `src/sections/` page sections (hero, Talos, autonomy, Talon-1, philosophy, company).
+- `src/sections/` page sections (hero, Raptor, autonomy, Talon-1, philosophy, company).
 - `src/talos/engine/` the Talos Particle Engine:
   - `events.ts` typed event vocabulary.
   - `model.ts` validated state reducer (ordering, hierarchy, authorization transitions).

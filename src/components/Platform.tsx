@@ -14,7 +14,7 @@ const TIERS = [
     index: "02",
     layer: "Agent",
     name: "Raptor",
-    role: "Agent orchestration on Harness",
+    role: "Agent orchestration on the harness",
     text: "Plans the task, delegates to parallel workers and routes each step to a model and an engine. Memory and skills persist between runs.",
     facts: ["Hermes · Claude Code · Codex", "Bounded parallel workers, reviewers", "Durable memory, versioned skills"],
   },
@@ -24,7 +24,7 @@ const TIERS = [
     name: "Authorized scope",
     role: "Execution and verification",
     text: "Scoped tools, containers, browser and terminal inside an explicit boundary. Findings are reproduced, patched in isolation and reviewed.",
-    facts: ["Scoped tools · MCP", "Isolated git worktrees", "Tests, cross-model review, rollback"],
+    facts: ["Scoped tools · MCP", "Own copy of the code", "Tests, cross-model review, rollback"],
   },
 ];
 

@@ -23,10 +23,10 @@ const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento"
 export function Raptor() {
   return (
     <>
-      <title>Raptor | Wiresharks</title>
+      <title>Raptor-1 | Wiresharks</title>
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
-      <PageHead label="Agent / Raptor" title="The autonomous cybersecurity agent.">
-        Raptor is a model-independent autonomous agent. It runs on Harness, which keeps the
+      <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent.">
+        Raptor-1 is a model-independent autonomous agent. It runs on a harness that keeps the
         strongest parts of Hermes Agent, adds first-class engines for Claude Code and Codex, and
         owns the orchestration, memory and skills that make them work as one system.
       </PageHead>
@@ -74,12 +74,12 @@ export function Raptor() {
         }
       >
         <p>
-          A task graph with stable ids, parents, budgets and checkpoints. Workers run in isolated
-          git worktrees with explicit concurrency and cost limits.
+          A task graph with stable ids, parents, budgets and checkpoints. Each worker runs in its
+          own copy of the code, with explicit limits on how many run at once and what they cost.
         </p>
         <p>
-          When a worker stalls or outgrows its context, a fresh agent continues from a structured
-          handoff. A serialized landing queue merges nothing unreviewed.
+          When a worker stalls or runs out of context, a fresh agent continues from a structured
+          handoff. A single merge queue lands changes one at a time, and nothing merges unreviewed.
         </p>
       </Feature>
 
@@ -94,7 +94,7 @@ export function Raptor() {
               { key: "sec-review", name: "Repository security review", meta: "v4 · 20 evals · active", active: true },
               { key: "swarm", name: "Fan-out coverage", meta: "v2 · 12 evals" },
               { key: "interrogate", name: "Cross-model review", meta: "v3 · 9 evals", active: true },
-              { key: "landing", name: "Serialized merge queue", meta: "v1 · 6 evals" },
+              { key: "landing", name: "Merge queue, one at a time", meta: "v1 · 6 evals" },
               { key: "memory", name: "Durable memory · 1,284 entries", meta: "provenance · confidence · expiry" },
             ]}
           />

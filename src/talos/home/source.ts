@@ -102,17 +102,26 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     let talonDock: JourneyDock | null = null;
     let talosDock: JourneyDock | null = null;
     const marks: { key: string; frame: Framing }[] = [];
+    // Dock in document order, top to bottom, so the stop sequence stays monotonic whichever order
+    // the product blocks sit in. Raptor-1's task graph leads Talon-1's console on the page.
+    const measured: { key: string; node: Element; frame: Framing }[] = [];
     for (const key of ["products", "talon", "talos", "platform", "principles", "closing"]) {
       if (key === "closing" && releaseFrame) continue;
       const node = root.querySelector(`[data-home-stop="${key}"]`);
       if (!node) continue;
-      const frame = readFrame(node);
+      measured.push({ key, node, frame: readFrame(node) });
+    }
+    measured.sort((a, b) => a.frame.y - b.frame.y);
+    for (const { key, node, frame } of measured) {
       let at = Math.max(1, frame.y - hold);
-      const edge = !mobile && key === "talos" ? (narrow ? 20 : 46) : rail.x;
+      // Dock on the side the block's panel sits on. The graph and console swap sides with their
+      // `flip`, so read the side from the mark's position rather than its name.
+      const edge = !mobile && frame.x < window.innerWidth / 2 ? (narrow ? 20 : 46) : rail.x;
       const approach: JourneyStop[] = [];
       if (!mobile && edge !== previousRail) {
-        const section = root.querySelector(key === "talos" ? "#talos" : "#platform");
-        const gap = section ? readFrame(section).y - section.getBoundingClientRect().height / 2 + (key === "talos" ? 24 : -40) : frame.y - 180;
+        const crossInto = key === "talos" ? "#talos" : key === "talon" ? "#talon" : "#platform";
+        const section = root.querySelector(crossInto);
+        const gap = section ? readFrame(section).y - section.getBoundingClientRect().height / 2 + (key === "platform" ? -40 : 24) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
         const start = Math.max(crossing - height * 0.18, previousDeparture);
         const finish = Math.max(crossing + height * 0.18, start + height * 0.12);

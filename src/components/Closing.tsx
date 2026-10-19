@@ -17,11 +17,11 @@ export function Closing({ title, text }: { title: string; text: string }) {
             {text}
           </Reveal>
           <Reveal delay={180} className="closing-ctas">
-            <Cta to="/talon" variant="inverse">
-              Explore Talon-1
+            <Cta to="/raptor" variant="inverse">
+              Meet Raptor-1
             </Cta>
-            <Cta to="/raptor" variant="secondary">
-              Meet Raptor
+            <Cta to="/talon" variant="secondary">
+              Explore Talon-1
             </Cta>
           </Reveal>
         </div>

@@ -5,8 +5,8 @@ import { LogoMark } from "./LogoMark";
 import { Wordmark } from "./Wordmark";
 
 const PRODUCTS = [
+  { to: "/raptor", label: "Raptor-1", note: "Agent" },
   { to: "/talon", label: "Talon-1", note: "Model" },
-  { to: "/raptor", label: "Raptor", note: "Agent" },
   { to: "/#platform", label: "Platform", note: "Architecture" },
   { to: "/#faq", label: "FAQ", note: "Questions" },
 ];
@@ -20,7 +20,7 @@ export function Footer() {
             <LogoMark />
             <Wordmark />
           </Link>
-          <p>Autonomous cybersecurity. A local, open-weight model and the agent built around it.</p>
+          <p>Autonomous cybersecurity. An agent, and the local, open-weight model it runs on.</p>
         </div>
         <nav className="footer-col" aria-label="Products">
           <h2 className="label">Products</h2>
@@ -50,7 +50,7 @@ export function Footer() {
       </div>
       <div className="footer-meta wrap">
         <span>© {new Date().getFullYear()} Wiresharks</span>
-        <span>Talon-1 / Raptor / Built for authorized security work</span>
+        <span>Raptor-1 / Talon-1 / Built for authorized security work</span>
       </div>
     </footer>
   );
