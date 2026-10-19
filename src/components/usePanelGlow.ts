@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 /**
  * Feeds the panel glow in styles.css: one delegated pointer listener sets
- * --mx / --my (percent) on the instrument panel under a fine hovering pointer.
+ * --gx / --gy (pixel offsets) on the instrument panel under a fine hovering pointer.
  */
 export function usePanelGlow() {
   useEffect(() => {
@@ -14,8 +14,8 @@ export function usePanelGlow() {
       const panel = last?.target instanceof Element ? last.target.closest<HTMLElement>(".panel") : null;
       if (!panel || !last) return;
       const rect = panel.getBoundingClientRect();
-      panel.style.setProperty("--mx", `${((last.clientX - rect.left) / rect.width) * 100}%`);
-      panel.style.setProperty("--my", `${((last.clientY - rect.top) / rect.height) * 100}%`);
+      panel.style.setProperty("--gx", `${last.clientX - rect.left}px`);
+      panel.style.setProperty("--gy", `${last.clientY - rect.top}px`);
     };
     const onMove = (event: PointerEvent) => {
       last = event;

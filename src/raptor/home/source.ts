@@ -223,6 +223,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const wrap = root.querySelector(".products .wrap") ?? root.querySelector(".wrap");
       const contentRight = wrap ? wrap.getBoundingClientRect().right - parseFloat(getComputedStyle(wrap).paddingRight || "0") : window.innerWidth - rail.radius * 3;
       const gutter = Math.max(rail.radius * 2, window.innerWidth - contentRight);
+      // Particles reach about 1.7 widths from the centre line; the phone gutter is too narrow for the
+      // usual band, so there it is sized to keep that reach clear of the content's right-hand controls.
+      const riverWidth = mobile ? gutter / 4 : Math.max(rail.radius, gutter * 0.35);
       if (gatherStart < releaseAt - height * 0.2) {
         flow = {
           from: heroPose,
@@ -230,7 +233,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
           pinned,
           dissolve: [0, dissolveEnd],
           gather: [gatherStart, releaseAt],
-          river: { x: window.innerWidth - gutter / 2, width: Math.max(rail.radius, gutter * 0.35) },
+          river: { x: window.innerWidth - gutter / 2, width: riverWidth },
         };
         // The marks the orb used to dock into are fed from the stream instead.
         for (const mark of marks) {
@@ -256,7 +259,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", invalidate);
   window.visualViewport?.addEventListener("resize", invalidate);
-  root.addEventListener("transitionend", invalidate);
+  // Pseudo-element transitions (the panel glow) never move layout.
+  const onTransitionEnd = (e: TransitionEvent) => { if (!e.pseudoElement) invalidate(); };
+  root.addEventListener("transitionend", onTransitionEnd);
   document.fonts.addEventListener("loadingdone", invalidate);
   void document.fonts.ready.then(() => { if (!disposed) invalidate(); });
   return {
@@ -274,7 +279,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", invalidate);
       window.visualViewport?.removeEventListener("resize", invalidate);
-      root.removeEventListener("transitionend", invalidate);
+      root.removeEventListener("transitionend", onTransitionEnd);
       document.fonts.removeEventListener("loadingdone", invalidate);
     },
   };
