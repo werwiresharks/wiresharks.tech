@@ -32,9 +32,11 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   };
   /**
    * The release section's orb fills the empty space beside its copy. With the countdown in the right
-   * column, it takes the whole column height and may run off the right edge; when the copy stacks, it
-   * takes the space beside the buttons and countdown. Phones, with no room beside the copy, get a
-   * smaller orb in the section's top padding. Returns null only when even that does not fit.
+   * column, it takes the whole column height and may run off the right edge; with the countdown set
+   * full width under the copy, it takes the height above the countdown. When the copy stacks, it
+   * takes the space beside the buttons (and the countdown, when that sits beside them). Phones, with
+   * no room beside the copy, get a smaller orb in the section's top padding. Returns null only when
+   * even that does not fit.
    */
   const closingFrame = (): Framing | null => {
     const section = root.querySelector(".closing");
@@ -47,13 +49,18 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     const area = readBox(section);
     const column = readBox(copy);
     const countdown = readBox(launch);
-    const beside = countdown.left > (column.left + column.right) / 2;
-    const left = beside ? column.right + width * 0.04 : Math.max(readBox(ctas, true).right, countdown.right) + 24;
-    const top = beside ? area.top : readBox(lede).bottom + 16;
-    const bottom = area.bottom - (beside ? 0 : 8);
+    const buttons = readBox(ctas, true);
+    const under = countdown.top >= buttons.bottom;
     // At most 30% of the radius may leave the right edge.
-    const radius = Math.min((bottom - top) * 0.46, (width - left) / 1.7, 480);
-    if (radius >= 90) return { x: (left + radius + width - radius * 0.7) / 2, y: (top + bottom) / 2, radius };
+    const fit = (left: number, top: number, bottom: number): Framing => {
+      const radius = Math.min((bottom - top) * 0.46, (width - left) / 1.7, 480);
+      return { x: (left + radius + width - radius * 0.7) / 2, y: (top + bottom) / 2, radius };
+    };
+    const beside = countdown.left > (column.left + column.right) / 2;
+    const besideCopy = beside || under ? fit(column.right + width * 0.04, area.top, under ? countdown.top - 24 : area.bottom) : null;
+    if (besideCopy && besideCopy.radius >= 90) return besideCopy;
+    const stacked = fit(Math.max(buttons.right, under ? 0 : countdown.right) + 24, readBox(lede).bottom + 16, (under ? countdown.top : area.bottom) - 8);
+    if (stacked.radius >= 90) return stacked;
     const above = Math.min((column.top - area.top) * 0.42, width * 0.28);
     return above >= 30 ? { x: width / 2, y: (area.top + column.top) / 2, radius: above } : null;
   };

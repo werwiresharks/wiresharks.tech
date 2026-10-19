@@ -13,7 +13,7 @@ const PRODUCTS = [
 
 export function Footer() {
   return (
-    <footer className="footer">
+    <footer className="footer tone-dark">
       <div className="footer-inner wrap">
         <div className="footer-brand">
           <Link className="brand-link" to="/" aria-label="Wiresharks home">
@@ -52,6 +52,9 @@ export function Footer() {
         <span>© {new Date().getFullYear()} Wiresharks</span>
         <span>Raptor-1 / Talon-1 / Built for authorized security work</span>
       </div>
+      <p className="footer-mark" aria-hidden="true">
+        WIRESHARKS
+      </p>
     </footer>
   );
 }

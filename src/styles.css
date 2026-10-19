@@ -1510,9 +1510,67 @@ button {
   gap: 12px;
   margin-top: 40px;
 }
+/* The release readout runs full width under the copy: the page's last big image. */
 .closing-launch {
-  padding-top: 20px;
+  grid-column: 1 / -1;
+  margin-top: clamp(40px, 6vw, 88px);
+  padding-top: 24px;
   border-top: 1px solid var(--line);
+}
+
+/* ---- Monumental countdown ---- */
+.countdown-mega {
+  display: block;
+}
+.countdown-mega ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin-top: clamp(20px, 3vw, 40px);
+  padding-left: 0;
+  border-left: 0;
+}
+.countdown-mega li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-inline: clamp(12px, 2.4vw, 36px);
+  border-left: 1px solid var(--line);
+}
+.countdown-mega li:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.countdown-mega b {
+  font: var(--w-display) var(--fs-mega) / 0.82 var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.06em;
+  color: var(--fg);
+}
+.countdown-mega li > span[aria-hidden] {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+@media (max-width: 599px) {
+  .countdown-mega ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 28px;
+  }
+  .countdown-mega li:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .countdown-mega b {
+    font-size: clamp(4rem, 26vw, 7rem);
+  }
+}
+.countdown-mega .countdown-live {
+  margin-top: 24px;
+  font: var(--w-display) var(--fs-display) / 1 var(--sans);
+  letter-spacing: var(--tr-display);
 }
 
 /* ==========================================================================
@@ -1661,12 +1719,31 @@ button {
 /* ==========================================================================
    Footer
    ========================================================================== */
+/* The dark end-cap: continues the closing section, ends on a cropped wordmark. */
 .footer {
-  --bg: var(--soft);
-  --muted: #666664;
-  padding: clamp(64px, 8vw, 96px) 0 32px;
+  padding-top: clamp(64px, 8vw, 96px);
   border-top: 1px solid var(--line);
   background: var(--bg);
+  overflow: hidden;
+}
+.tone-dark.footer::before {
+  background: radial-gradient(60% 45% at 50% 100%, color-mix(in srgb, var(--red) 12%, transparent), transparent 70%);
+}
+.footer-mark {
+  margin: clamp(48px, 7vw, 96px) 0 0;
+  /* Pulls the wordmark's baseline below the footer edge so the letters crop. */
+  margin-bottom: -0.2em;
+  font-size: 15.4vw;
+  font-weight: 600;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  background: linear-gradient(180deg, var(--line-strong), transparent 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .footer-inner {
   display: grid;
@@ -1697,14 +1774,16 @@ button {
   color: var(--fg-2);
   transition: color var(--fast) var(--ease-out);
 }
-.footer-col a:hover {
-  color: var(--fg);
+@media (hover: hover) {
+  .footer-col a:hover {
+    color: var(--fg);
+  }
 }
 .footer-col a svg {
   color: var(--red);
 }
 .footer-col li .label {
-  font-size: 0.625rem;
+  font-size: var(--fs-micro);
 }
 .footer-meta {
   display: flex;
@@ -1789,8 +1868,7 @@ button {
   .tier h3 {
     margin-top: 24px;
   }
-  .page-head-launch,
-  .closing-launch {
+  .page-head-launch {
     width: fit-content;
     max-width: 100%;
   }

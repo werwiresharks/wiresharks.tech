@@ -25,9 +25,9 @@ export function Closing({ title, text }: { title: string; text: string }) {
             </Cta>
           </Reveal>
         </div>
-        <Reveal delay={200} className="closing-launch">
-          <Countdown />
-        </Reveal>
+        <div className="closing-launch">
+          <Countdown mega />
+        </div>
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import type { TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { createHomeSource } from "./source.ts";
 import { heroFrame, HomeMotion } from "./journey.ts";
@@ -169,14 +170,18 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   }
 });
 
-test("the stream runs the length of the page and gathers into the release orb beside its copy", (t) => {
+type Rect = number[];
+type ReleaseLayout = { scrollHeight: number; faq: Rect; section: Rect; copy: Rect; launch: Rect; ctas: Rect; buttons: Rect[]; lede: Rect };
+
+/** A home source over the hero, FAQ and release-section rectangles of a 1440×900 homepage. */
+function releaseSource(t: TestContext, layout: ReleaseLayout) {
   let source: ReturnType<typeof createHomeSource> | undefined;
   t.after(() => source?.dispose());
   const viewport = { innerWidth: 1440, innerHeight: 900, scrollY: 0, addEventListener() {}, removeEventListener() {} };
   const observer = class { observe() {} disconnect() {} };
   const globals = {
     window: viewport,
-    document: { documentElement: { scrollHeight: 8017 }, fonts: { addEventListener() {}, removeEventListener() {}, ready: Promise.resolve() } },
+    document: { documentElement: { scrollHeight: layout.scrollHeight }, fonts: { addEventListener() {}, removeEventListener() {}, ready: Promise.resolve() } },
     ResizeObserver: observer, MutationObserver: observer,
     getComputedStyle: () => ({ transform: "none" }),
     cancelAnimationFrame() {}, requestAnimationFrame: () => 1,
@@ -186,7 +191,6 @@ test("the stream runs the length of the page and gathers into the release orb be
     Object.defineProperty(globalThis, key, { configurable: true, value });
     t.after(() => previous ? Object.defineProperty(globalThis, key, previous) : Reflect.deleteProperty(globalThis, key));
   }
-  // Rectangles captured from the homepage at 1440×900.
   const root = { querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
   const node = (rect: number[], children: unknown[] = []) => ({
     parentElement: root,
@@ -196,21 +200,29 @@ test("the stream runs the length of the page and gathers into the release orb be
     querySelector: () => undefined,
     querySelectorAll: () => [],
   });
-  const section = [0, 6911, 1440, 697];
-  const copy = [80, 7169, 719, 281];
   const nodes = new Map<string, unknown>([
     [".hero", node([0, 0, 1440, 900])],
     [".products .wrap", node([80, 900, 1280, 600])],
-    [".faq", node([0, 6233, 1440, 678])],
-    [".closing", node(section)],
-    [".closing-inner > div", node(copy)],
-    [".closing-launch", node([847, 7406, 513, 44])],
-    [".closing-ctas", node([80, 7402, 719, 48], [node([80, 7402, 175, 48]), node([267, 7402, 146, 48])])],
-    [".closing .section-lede", node([80, 7290, 719, 56])],
+    [".faq", node(layout.faq)],
+    [".closing", node(layout.section)],
+    [".closing-inner > div", node(layout.copy)],
+    [".closing-launch", node(layout.launch)],
+    [".closing-ctas", node(layout.ctas, layout.buttons.map((button) => node(button)))],
+    [".closing .section-lede", node(layout.lede)],
   ]);
   const created = createHomeSource(root as unknown as HTMLElement, () => {});
   source = created;
-  const sample = (scroll: number) => { viewport.scrollY = scroll; return structuredClone(created.sample()); };
+  return (scroll: number) => { viewport.scrollY = scroll; return structuredClone(created.sample()); };
+}
+
+test("the stream runs the length of the page and gathers into the release orb beside its copy", (t) => {
+  // Rectangles captured from the homepage at 1440×900, countdown in the right column.
+  const section = [0, 6911, 1440, 697];
+  const copy = [80, 7169, 719, 281];
+  const sample = releaseSource(t, {
+    scrollHeight: 8017, faq: [0, 6233, 1440, 678], section, copy,
+    launch: [847, 7406, 513, 44], ctas: [80, 7402, 719, 48], buttons: [[80, 7402, 175, 48], [267, 7402, 146, 48]], lede: [80, 7290, 719, 56],
+  });
   const settle = section[1] + section[3] / 2 - 450;
   // The release orb fills the space beside its copy.
   const full = sample(settle);
@@ -240,4 +252,23 @@ test("the stream runs the length of the page and gathers into the release orb be
   assert.ok(Math.hypot(last.mother.x - full.mother.x, last.mother.y - full.mother.y) < 1 && Math.abs(last.mother.radius - full.mother.radius) < 1);
   // Scroll back up: identical states, in reverse.
   assert.deepEqual(sample(3000), sample(3000));
+});
+
+test("with the countdown set full width under the copy, the release orb fills the space above it", (t) => {
+  // Rectangles captured from the homepage at 1440×900, monumental countdown under the copy.
+  const section = [0, 10100.7, 1440, 1107.13];
+  const copy = [80, 10359.09, 718.66, 283.44];
+  const launch = [80, 10776.93, 1279.99, 272.5];
+  const sample = releaseSource(t, {
+    scrollHeight: 11813, faq: [0, 9422.9, 1440, 677.8], section, copy, launch,
+    ctas: [80, 10594.53, 718.66, 48], buttons: [[80, 10595, 168, 48], [260, 10595, 175, 48]], lede: [80, 10500.53, 692.17, 54],
+  });
+  const settle = section[1] + section[3] / 2 - 450;
+  const { mother } = sample(settle);
+  const y = mother.y + settle;
+  assert.ok(mother.radius >= 200, `release orb radius ${mother.radius}`);
+  assert.ok(mother.x - mother.radius >= copy[0] + copy[2], "orb clears the copy column");
+  assert.ok(y + mother.radius <= launch[1], "orb stays above the countdown");
+  assert.ok(y - mother.radius >= section[1], "orb stays inside the section");
+  assert.ok(mother.x + mother.radius <= 1440 + mother.radius * 0.3 + 0.01, "at most 30% leaves the right edge");
 });
