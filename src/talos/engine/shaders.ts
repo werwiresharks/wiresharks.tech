@@ -1,12 +1,5 @@
 /** GLSL for particles, the authority ring, and connecting threads. */
 
-/**
- * A mark cut through the page that the particles part around, in pixels. The chord runs `a` → `b`,
- * bowed `bow` sideways at its middle; `half` is half its full width once open and `reach` how far
- * along the chord it has been drawn. Same profile as the hero's claw marks, so the two agree.
- */
-export type Cut = { ax: number; ay: number; bx: number; by: number; bow: number; half: number; reach: number };
-
 /** How many cuts the particle shader takes. */
 export const MAX_CUTS = 3;
 

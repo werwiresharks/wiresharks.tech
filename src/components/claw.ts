@@ -3,9 +3,14 @@
  * scroll progress runs 0 → 1. Pure, so the shape can be tested without a DOM.
  */
 
-import type { Cut } from "../talos/engine/shaders.ts";
-
 export type Box = { x: number; y: number; w: number; h: number };
+
+/**
+ * A mark cut through the page that the particles part around, in pixels. The chord runs `a` → `b`,
+ * bowed `bow` sideways at its middle; `half` is half its full width once open and `reach` how far
+ * along the chord it has been drawn.
+ */
+export type Cut = { ax: number; ay: number; bx: number; by: number; bow: number; half: number; reach: number };
 
 /** The marks as last drawn, in document pixels. One tear per page; the particle orb parts around them. */
 export const clawFeed: { cuts: readonly Cut[] } = { cuts: [] };

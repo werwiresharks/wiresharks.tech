@@ -16,7 +16,7 @@ import {
   threadFragment,
   threadVertex,
 } from "./shaders.ts";
-import type { Cut } from "./shaders.ts";
+import type { Cut } from "../../components/claw.ts";
 
 /**
  * WebGL view for the Talos Particle Engine. Renders whatever the facade
@@ -92,9 +92,9 @@ export class TalosRenderer implements TalosView {
   private homeMotion = new HomeMotion();
   private cutChords = Array.from({ length: MAX_CUTS }, () => new THREE.Vector4());
   private cutMarks = Array.from({ length: MAX_CUTS }, () => new THREE.Vector4());
-  /** Per cut: the shove left by its strike, and whether it was drawn last frame. */
+  /** Per cut: the shove left by its strike, and whether it was drawn last frame (unset before the first). */
   private kicks = new Float32Array(MAX_CUTS);
-  private drawn = new Array<boolean>(MAX_CUTS).fill(false);
+  private drawn: boolean[] | null = null;
   private last = 0;
   private frameHandle = 0;
   private visible = true;
@@ -548,6 +548,8 @@ export class TalosRenderer implements TalosView {
   private partForCuts(scroll: number, dt: number) {
     const cuts = this.options.cuts?.() ?? [];
     const decay = Math.exp(-dt * 5);
+    // Marks already drawn when the page loads did not just strike.
+    this.drawn ??= Array.from({ length: MAX_CUTS }, (_, k) => (cuts[k]?.reach ?? 0) > 0);
     for (let k = 0; k < MAX_CUTS; k++) {
       const cut = cuts[k];
       const drawn = cut !== undefined && cut.reach > 0;
