@@ -6,18 +6,18 @@ import { pinProgress, routePath, swarmFrame, swarmLayout, TASK } from "./swarmLa
 import type { Stage, SwarmLayout } from "./swarmLayout";
 
 const STEPS: [Stage, string, string][] = [
-  ["split", "Split", "One task becomes smaller jobs. Each job goes to a specialized agent."],
-  ["execute", "Execute", "The agents work at the same time and share useful findings."],
-  ["combine", "Combine", "The results come together in one report."],
+  ["split", "Split", "One task becomes smaller jobs. Each job goes to a specialized worker."],
+  ["execute", "Execute", "The workers run at the same time and share useful findings."],
+  ["combine", "Combine", "The results combine into one report."],
 ];
 
 const f = (v: number) => v.toFixed(2);
 
 /**
- * The planned Raptor swarm. The figure pins under the header while scroll
- * steps it through three stages: one task splits into jobs for specialized
- * agents, the agents work in parallel, and their results combine in one
- * shared report. Under reduced motion it shows the finished figure, unpinned.
+ * The Raptor Swarm. The figure pins under the header while scroll steps it
+ * through three stages: one task splits into jobs for specialized workers,
+ * the workers run in parallel, and their results combine in one shared
+ * report. Under reduced motion it shows the finished figure, unpinned.
  */
 export function Swarm() {
   const track = useRef<HTMLDivElement>(null);
@@ -170,20 +170,19 @@ export function Swarm() {
         <header className="section-head">
           <Reveal as="p" className="label swarm-label">
             <span>02 / Swarm</span>
-            <span className="swarm-status">In development</span>
+            <span className="swarm-status">Included in Raptor-1</span>
           </Reveal>
           <Reveal as="h2" delay={60}>
             <span id="swarm-title">One agent is powerful. A swarm is unstoppable.</span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
-            Raptor Swarm brings specialized AI agents together to do complex work. The agents divide
-            a task, work in parallel, share what they find, and combine their results into one
-            coordinated output.
+            Raptor Swarm puts specialized workers on complex work. The workers divide a task and run
+            in parallel. They share what they find. Their results combine into one coordinated
+            report.
           </Reveal>
           <Reveal as="p" delay={180} className="swarm-note">
-            Swarm coordination is in development and not available yet. At launch,{" "}
-            <span className="swarm-name">Raptor-1</span> splits one task across parallel workers,
-            each with its own copy of the code.
+            <span className="swarm-name">Raptor-1</span> splits one task across parallel workers.
+            Each worker has its own copy of the code.
           </Reveal>
         </header>
 
@@ -194,15 +193,15 @@ export function Swarm() {
                 <div className="panel-bar">
                   <span className="panel-dots" aria-hidden="true" />
                   <span>raptor / swarm</span>
-                  <span className="panel-note">Planned</span>
+                  <span className="panel-note">Illustrative</span>
                 </div>
                 <div ref={canvas} className="swarm-canvas">
                   <svg ref={svg} aria-hidden="true">{layout && <SwarmDrawing layout={layout} />}</svg>
                 </div>
                 <figcaption className="sr-only">
-                  In this planned design, one task, {TASK}, splits into smaller jobs. Specialized
-                  agents for auth, APIs, dependencies, storage, pipelines and cloud work on the jobs
-                  in parallel. Their results come together in one shared report.
+                  One task, {TASK}, splits into smaller jobs. Specialized workers for auth, APIs,
+                  dependencies, storage, pipelines and cloud run the jobs in parallel. Their results
+                  combine into one shared report.
                 </figcaption>
               </figure>
             </Reveal>

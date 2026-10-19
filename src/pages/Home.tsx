@@ -17,31 +17,31 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is Raptor-1?",
-    "The autonomous cybersecurity agent. Raptor plans a task, splits the work across parallel workers that each get their own copy of the code, runs it on real systems and checks the result. It runs Talon-1 on your hardware, or any other model you point it at. Harness is the infrastructure that runs and coordinates its work.",
+    "Raptor-1 is the autonomous cybersecurity agent. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code and tests on real systems. Raptor-1 checks the result. It runs Talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates the work.",
   ],
   [
     "What is Talon-1?",
-    "The AI model that powers Raptor. Talon-1 is a 27B open-weight model, fine-tuned for offensive and defensive cybersecurity work. It runs on your own hardware, and it ships with its evaluations on December 25, 2026.",
+    "Talon-1 is the model that powers Raptor-1. It is a 27B open-weight model, fine-tuned for offensive and defensive cybersecurity. It runs on your machine. It ships with its evaluations on December 25, 2026.",
   ],
   [
     "Does the model refuse security questions?",
-    "No. We removed the model's refusal behavior from the weights, so it stops refusing security work. The goal is to keep its knowledge and reasoning. The evaluations will measure this.",
+    "No. We remove the model's refusal behavior from its weights, so it does not refuse security work. Its knowledge and reasoning stay intact. The evaluations measure this.",
   ],
   [
     "Does it need the cloud?",
-    "No. After install, Talon-1 runs offline on your hardware. Prompts, outputs and logs stay on the machine.",
+    "No. After install, Talon-1 runs offline. Prompts, outputs and logs stay on your machine.",
   ],
   [
     "What hardware does it need?",
-    "Quantized builds target a single workstation or laptop. The target is Apple Silicon with 32 GB or more, or a CUDA GPU with 24 GB or more. Exact requirements publish with the release.",
+    "Quantized builds run on one workstation or laptop. Use Apple Silicon with 32 GB or more, or a CUDA GPU with 24 GB or more. Exact requirements ship with the release.",
   ],
 ];
 
 const PRINCIPLES: [string, string][] = [
-  ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. No network after install, no telemetry to turn off."],
-  ["Answers what others won't.", "We removed the model's refusal behavior, then fine-tuned it to help with real security work."],
-  ["Open weights.", "The model, its evaluations, Raptor and Harness ship together, for you to run and inspect."],
-  ["Proven, then patched.", "A finding is reproduced before it is reported, and a second model reviews every patch."],
+  ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. After install, no network is needed. There is no telemetry to turn off."],
+  ["Answers what others won't.", "We remove the model's refusal behavior, then fine-tune it for real security work."],
+  ["Open weights.", "Talon-1, its evaluations, Raptor-1 and Harness ship together. You run them. You inspect them."],
+  ["Proven, then patched.", "Raptor-1 reproduces every finding before it reports it. A second model reviews every patch."],
 ];
 
 export function Home() {
@@ -104,8 +104,8 @@ export function Home() {
               <span id="products-title">An agent, and the model it runs on.</span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              Raptor is the agent that plans, acts and checks its own work. Talon-1 is the model it
-              runs on. They ship together.
+              Raptor-1 is the agent. It plans, acts and checks its own work. Talon-1 is the model
+              Raptor-1 runs on. The two ship together.
             </Reveal>
           </header>
 
@@ -114,12 +114,12 @@ export function Home() {
             index="01.1"
             kind="Agent / Runs on Harness"
             name="Raptor-1"
-            summary="The autonomous agent built around Talon-1."
+            summary="The autonomous agent that runs Talon-1 by default."
             specs={[
               ["Engines", "Hermes · Claude Code · Codex"],
-              ["Models", "Talon-1 local, APIs, private endpoints"],
-              ["Workers", "Own copy of the code"],
-              ["Merges", "One at a time, reviewed"],
+              ["Models", "Talon-1 (local), commercial APIs, private endpoints"],
+              ["Workers", "Each in its own copy of the code"],
+              ["Merges", "One at a time, always reviewed"],
             ]}
             to="/raptor"
             linkLabel="Meet Raptor-1"
@@ -139,12 +139,12 @@ export function Home() {
             }
           >
             <p>
-              Raptor plans a task, splits it across parallel workers, executes with scoped tools and
-              verifies the result before anything lands.
+              Raptor-1 plans a task and splits it across parallel workers. Workers act with scoped
+              tools. Raptor-1 verifies the result before anything lands.
             </p>
             <p>
-              It runs Talon-1 on your hardware by default, or any model you point it at. Model and
-              engine are chosen separately, per task.
+              By default, it runs Talon-1 on your machine. You can point it at any other model. You
+              choose the model and the engine separately for each task.
             </p>
           </ProductBlock>
 
@@ -161,7 +161,7 @@ export function Home() {
             index="01.2"
             kind="Model / Open weights"
             name="Talon-1"
-            summary="The open-weight model that powers Raptor."
+            summary="The open-weight model that powers Raptor-1."
             specs={[
               ["Parameters", "27B"],
               ["Context", "128k"],
@@ -193,13 +193,14 @@ export function Home() {
             }
           >
             <p>
-              Security work runs on code, credentials and findings that should not leave the
-              building. Talon-1 runs offline on a single workstation, so prompts, outputs and logs
-              stay on the machine.
+              Security work involves code, credentials and findings that must not leave the
+              building. Talon-1 runs offline on one workstation. Prompts, outputs and logs stay on
+              your machine.
             </p>
             <p>
-              Fine-tuned for offensive and defensive cybersecurity work across vulnerability
-              research, reverse engineering, secure coding, SOC analysis and authorized red teaming.
+              Talon-1 is fine-tuned for offensive and defensive cybersecurity. It covers
+              vulnerability research, reverse engineering, secure coding, SOC analysis and
+              authorized red teaming.
             </p>
           </ProductBlock>
         </div>
@@ -220,7 +221,7 @@ export function Home() {
               04 / Principles
             </Reveal>
             <Reveal as="h2" delay={60}>
-              <span id="principles-title">Built for security intelligence.</span>
+              <span id="principles-title">Built for real security work.</span>
             </Reveal>
           </header>
           <ul className="principle-grid">
@@ -236,7 +237,7 @@ export function Home() {
             <div className="split-copy">
               <Reveal as="h3">One prompt. Two answers.</Reveal>
               <Reveal as="p" delay={60}>
-                The same request to Talon-1 and to a typical hosted model, inside an authorized lab.
+                One request, sent to Talon-1 and to a typical hosted model in an authorized lab.
               </Reveal>
             </div>
             <Reveal className="split-visual" delay={120}>
@@ -261,7 +262,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="Talon-1 weights, evaluations, Raptor and Harness ship together on December 25, 2026."
+          text="Talon-1 weights, evaluations, Raptor-1 and Harness ship together on December 25, 2026."
         />
       </div>
     </div>

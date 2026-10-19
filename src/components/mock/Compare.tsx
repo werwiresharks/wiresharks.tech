@@ -12,7 +12,7 @@ export function Compare({
 }) {
   return (
     <div className="panel compare" data-ui aria-label="Talon-1 compared with other models">
-      <PanelBar title="raptor / compare" />
+      <PanelBar title="talon-1 / compare" />
       <div className="compare-prompt">
         <span className="tag">User</span>
         <p>{prompt}</p>

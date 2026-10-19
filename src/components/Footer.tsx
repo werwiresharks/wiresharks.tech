@@ -8,7 +8,7 @@ const PRODUCTS = [
   { to: "/raptor", label: "Raptor-1", note: "Agent" },
   { to: "/talon", label: "Talon-1", note: "Model" },
   { to: "/#platform", label: "Platform", note: "Architecture" },
-  { to: "/#faq", label: "FAQ", note: "Questions" },
+  { to: "/#faq", label: "FAQ", note: "Answers" },
 ];
 
 export function Footer() {

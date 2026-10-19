@@ -26,9 +26,9 @@ export function Raptor() {
       <title>Raptor-1 | Wiresharks</title>
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
       <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent.">
-        Raptor-1 is an autonomous agent that works with any model. It runs on Harness, which
-        keeps the strongest parts of Hermes Agent, adds full support for Claude Code and Codex,
-        and handles the planning, memory and skills that make them work as one system.
+        Raptor-1 is an autonomous agent that works with any model. It runs on Harness. Harness
+        keeps the strongest parts of Hermes Agent and adds full support for Claude Code and Codex.
+        Harness also handles the planning, memory and skills. These parts work as one system.
       </PageHead>
 
       <Feature
@@ -41,7 +41,7 @@ export function Raptor() {
             rows={[
               { key: "hermes", name: "Hermes native runtime", meta: "providers · gateway · sessions · MCP", active: true },
               { key: "claude", name: "Claude Code", meta: "skills · hooks · streaming events" },
-              { key: "codex", name: "OpenAI Codex", meta: "app-server · turns · diffs" },
+              { key: "codex", name: "Codex", meta: "app-server · turns · diffs" },
               { key: "model", name: "talon-1 (local)", meta: "27B · Q4_K_M · metal", active: true },
             ]}
           />
@@ -51,7 +51,7 @@ export function Raptor() {
           Each engine is a first-class adapter: authentication, models, start, resume, streaming,
           tool calls, interruption, cancellation and recovery.
         </p>
-        <p>Model selection and engine selection are separate. Pick each per task.</p>
+        <p>You choose the model and the engine separately for each task.</p>
       </Feature>
 
       <Feature
@@ -74,12 +74,13 @@ export function Raptor() {
         }
       >
         <p>
-          A task graph with stable ids, parents, budgets and checkpoints. Each worker runs in its
-          own copy of the code, with explicit limits on how many run at once and what they cost.
+          Raptor-1 keeps a task graph with stable IDs, parents, budgets and checkpoints. Each
+          worker runs in its own copy of the code. Explicit limits set how many workers run at once
+          and what they cost.
         </p>
         <p>
-          When a worker stalls or runs out of context, a fresh agent continues from a structured
-          handoff. A single merge queue lands changes one at a time, and nothing merges unreviewed.
+          When a worker stalls or runs out of context, a fresh worker continues from a structured
+          handoff. A single merge queue lands changes one at a time. Nothing merges unreviewed.
         </p>
       </Feature>
 
@@ -101,12 +102,12 @@ export function Raptor() {
         }
       >
         <p>
-          A versioned skill registry with triggers, dependencies, licenses and evaluation scores.
-          Skills load lazily, so the always-on context stays small.
+          The skill registry is versioned. Each skill has triggers, dependencies, a license and
+          evaluation scores. Skills load on demand, so the always-on context stays small.
         </p>
         <p>
-          Episodic history consolidates into durable, source-aware memory with provenance,
-          confidence and revision history.
+          Episodic history consolidates into durable, source-aware memory. Each memory has
+          provenance, confidence and revision history.
         </p>
       </Feature>
 
@@ -139,7 +140,7 @@ export function Raptor() {
           />
         }
       >
-        <p>The first thing Raptor ships end to end.</p>
+        <p>The first workflow Raptor-1 runs end to end.</p>
         <ol className="steps">
           {REVIEW_STEPS.map(([name, text]) => (
             <li key={name}>
@@ -186,7 +187,7 @@ export function Raptor() {
         </div>
       </section>
 
-      <Closing title="Raptor-1 runs Talon-1 by default." text="Both ship together. December 25, 2026." />
+      <Closing title="Raptor-1 runs Talon-1 by default." text="Both ship together on December 25, 2026." />
     </>
   );
 }
