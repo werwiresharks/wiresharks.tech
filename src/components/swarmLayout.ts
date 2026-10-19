@@ -1,44 +1,59 @@
 /**
- * Geometry and timing for the homepage swarm figure: one Raptor mark splits
- * into agents, each agent takes one part of a system, and their findings flow
- * into one shared report as scroll progress runs 0 → 1. Pure, so the figure
- * can be tested without a DOM. Coordinates are CSS pixels in the figure's box.
+ * Geometry and timing for the homepage swarm figure. One task splits into
+ * jobs for specialized agents, the agents work in parallel, and their results
+ * combine in one shared report, as scroll progress runs 0 → 1 through three
+ * stages. Pure, so the figure can be tested without a DOM. Coordinates are CSS
+ * pixels in the figure's box.
  */
 
 export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
-/** A cubic Bézier: start, two controls, end. */
-export type Curve = [Point, Point, Point, Point];
+/**
+ * A connector. A sweep is an S-curve that leaves and arrives horizontally. An
+ * elbow runs straight to `corner` and turns there on a rounded bend, so elbows
+ * that share a start or an end share one straight trunk.
+ */
+export type Route = { kind: "sweep"; from: Point; to: Point } | { kind: "elbow"; from: Point; corner: Point; to: Point };
 
-/** Parts of the system under review, one per agent, with each report row's illustrative fill. */
-const PARTS = [
-  { part: "auth", weight: 0.64 },
-  { part: "api", weight: 0.88 },
-  { part: "deps", weight: 0.52 },
-  { part: "storage", weight: 0.36 },
-  { part: "ci/cd", weight: 0.44 },
-  { part: "infra", weight: 0.7 },
+export const TASK = "Secure acme/api";
+
+/** One job per agent: its card label, its report row label, and the row's illustrative fill. */
+const ROLES = [
+  { name: "Auth agent", short: "Auth", weight: 0.64 },
+  { name: "API agent", short: "API", weight: 0.88 },
+  { name: "Dependency agent", short: "Dependencies", weight: 0.52 },
+  { name: "Storage agent", short: "Storage", weight: 0.36 },
+  { name: "Pipeline agent", short: "Pipeline", weight: 0.44 },
+  { name: "Cloud agent", short: "Cloud", weight: 0.7 },
 ];
-/** Narrow boxes show four parts. */
-const COMPACT = ["auth", "api", "deps", "infra"];
+/** Narrow boxes show four agents. */
+const COMPACT = ["Auth", "API", "Dependencies", "Cloud"];
 
 /** Boxes narrower than this stack the figure top to bottom. */
-export const ROW_MIN_WIDTH = 560;
+export const ROW_MIN_WIDTH = 640;
+
+/** Advance widths of the figure's text: 11px Geist Mono labels and the 13px Geist titles. */
+const MONO_ADVANCE = 6.6;
+const TITLE_ADVANCE = 7.6;
 
 export type SwarmAgent = {
-  part: string;
+  name: string;
+  short: string;
   weight: number;
-  /** Where the agent settles after the split. */
+  card: Rect;
+  /** Where the agent's mark settles in its card. */
   at: Point;
-  /** The path out of the starting mark; drawn behind the agent as it travels. */
-  trail: Curve;
-  /** The part of the system it examines. */
-  node: Rect;
-  link: [Point, Point];
-  /** The path its findings take from the part to the shared report. */
-  finding: Curve;
-  /** The report row its findings fill. */
+  /** Where the card's label starts, on its baseline. */
+  label: Point;
+  /** The card's progress track, left to right, which fills as the agent works. */
+  work: [Point, Point];
+  /** The path out of the task to the agent; the mark travels it. */
+  trail: Route;
+  /** The path the agent's results take from its card to the report. */
+  finding: Route;
+  /** The report row its results fill, and that row's bar track. */
   row: Rect;
+  bar: [Point, Point];
 };
 
 export type SwarmLayout = {
@@ -46,22 +61,24 @@ export type SwarmLayout = {
   flow: "row" | "column";
   width: number;
   height: number;
+  task: Rect;
+  /** Where the task's caption and title start, on their baselines. */
+  caption: Point;
+  title: Point;
+  /** Where the trails leave the task. */
   origin: Point;
-  /** Side of the starting mark and of each agent's mark. */
-  mark: number;
   agentMark: number;
-  /** Captions: the mark's moves to its hub as the mark splits. */
-  labels: Record<"mark" | "hub" | "system", Point & { anchor: "middle" | "start" }>;
-  system: Rect;
   report: Rect;
   agents: SwarmAgent[];
 };
 
-/** Report panel rhythm: header, one row per agent, bottom padding. */
+/** Agent card rhythm: the mark and label on one line, the progress track along the bottom. */
+const CARD = { h: 40, line: -3, mark: 19, text: 36, end: 14, track: 12, inset: 10 };
+/** Report panel rhythm: header, one row per agent, bottom padding, and the row label's inset. */
 const REPORT = { head: 44, row: 26, foot: 12 };
-const COMPACT_REPORT = { head: 38, row: 22, foot: 8 };
-/** Space above the first part for the system frame's label. */
-const SYSTEM_HEAD = 30;
+const COMPACT_REPORT = { head: 34, row: 20, foot: 8 };
+const ROW_TEXT = 28;
+const INSET = 14;
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const clamp01 = (v: number) => clamp(v, 0, 1);
@@ -69,120 +86,179 @@ const smooth = (v: number) => {
   const t = clamp01(v);
   return t * t * (3 - 2 * t);
 };
+const longest = (labels: string[]) => Math.max(...labels.map((label) => label.length));
 
-/** A connector that leaves `a` and arrives at `b` along the flow axis. */
-function connector(a: Point, b: Point, flow: SwarmLayout["flow"]): Curve {
-  if (flow === "row") {
-    const m = (a.x + b.x) / 2;
-    return [a, { x: m, y: a.y }, { x: m, y: b.y }, b];
+const BEND = 10;
+const round = (v: number) => Math.round(v * 100) / 100;
+
+function sweepControls({ from, to }: { from: Point; to: Point }) {
+  const m = (from.x + to.x) / 2;
+  return [{ x: m, y: from.y }, { x: m, y: to.y }];
+}
+
+/** An elbow's two legs: where each leaves the bend, their directions, and the bend's radius. */
+function legs({ from, corner, to }: Extract<Route, { kind: "elbow" }>) {
+  const first = Math.hypot(corner.x - from.x, corner.y - from.y);
+  const second = Math.hypot(to.x - corner.x, to.y - corner.y);
+  const r = Math.min(BEND, first, second);
+  const d1 = { x: (corner.x - from.x) / first, y: (corner.y - from.y) / first };
+  const d2 = { x: (to.x - corner.x) / second, y: (to.y - corner.y) / second };
+  const enter = { x: corner.x - d1.x * r, y: corner.y - d1.y * r };
+  const leave = { x: corner.x + d2.x * r, y: corner.y + d2.y * r };
+  return { first: first - r, second: second - r, r, d1, d2, enter, leave };
+}
+
+/** The point `t` of the way along a route: by the curve's parameter for a sweep, by length for an elbow. */
+function pointOn(route: Route, t: number): Point {
+  if (route.kind === "sweep") {
+    const [b, c] = sweepControls(route);
+    const { from: a, to: d } = route;
+    const u = 1 - t;
+    const k0 = u * u * u;
+    const k1 = 3 * u * u * t;
+    const k2 = 3 * u * t * t;
+    const k3 = t * t * t;
+    return { x: k0 * a.x + k1 * b.x + k2 * c.x + k3 * d.x, y: k0 * a.y + k1 * b.y + k2 * c.y + k3 * d.y };
   }
-  const m = (a.y + b.y) / 2;
-  return [a, { x: a.x, y: m }, { x: b.x, y: m }, b];
+  const { first, second, r, d1, d2, enter, leave } = legs(route);
+  const arc = (Math.PI / 2) * r;
+  let s = t * (first + arc + second);
+  if (s <= first) return { x: route.from.x + d1.x * s, y: route.from.y + d1.y * s };
+  s -= first;
+  if (s <= arc) {
+    const angle = s / r;
+    const centre = { x: enter.x + d2.x * r, y: enter.y + d2.y * r };
+    return {
+      x: centre.x - d2.x * r * Math.cos(angle) + d1.x * r * Math.sin(angle),
+      y: centre.y - d2.y * r * Math.cos(angle) + d1.y * r * Math.sin(angle),
+    };
+  }
+  s -= arc;
+  return { x: leave.x + d2.x * s, y: leave.y + d2.y * s };
 }
 
-function pointOn([a, b, c, d]: Curve, t: number): Point {
-  const u = 1 - t;
-  const k0 = u * u * u;
-  const k1 = 3 * u * u * t;
-  const k2 = 3 * u * t * t;
-  const k3 = t * t * t;
-  return { x: k0 * a.x + k1 * b.x + k2 * c.x + k3 * d.x, y: k0 * a.y + k1 * b.y + k2 * c.y + k3 * d.y };
+export function routePath(route: Route): string {
+  const at = ({ x, y }: Point) => `${round(x)} ${round(y)}`;
+  if (route.kind === "sweep") {
+    const [b, c] = sweepControls(route);
+    return `M${at(route.from)}C${at(b)} ${at(c)} ${at(route.to)}`;
+  }
+  const { r, d1, d2, enter, leave } = legs(route);
+  const clockwise = d1.x * d2.y - d1.y * d2.x > 0 ? 1 : 0;
+  return `M${at(route.from)}L${at(enter)}A${round(r)} ${round(r)} 0 0 ${clockwise} ${at(leave)}L${at(route.to)}`;
 }
 
-/** Left to right: the mark, the agents, the system's parts in a column, then the report. */
+/** The narrowest card that fits every label. */
+const cardWidth = (roles: typeof ROLES) => Math.ceil(CARD.text + longest(roles.map(({ name }) => name)) * MONO_ADVANCE + CARD.end);
+
+function card(x: number, w: number, mid: number) {
+  const line = mid + CARD.line;
+  return {
+    card: { x, y: mid - CARD.h / 2, w, h: CARD.h },
+    at: { x: x + CARD.mark, y: line },
+    label: { x: x + CARD.text, y: line + 4 },
+    work: [
+      { x: x + CARD.inset, y: mid + CARD.track },
+      { x: x + w - CARD.inset, y: mid + CARD.track },
+    ] as [Point, Point],
+  };
+}
+
+function reportRow(report: Rect, head: number, height: number, i: number, barX: number) {
+  const row = { x: report.x, y: report.y + head + i * height, w: report.w, h: height };
+  const y = row.y + row.h / 2;
+  return { row, bar: [{ x: barX, y }, { x: report.x + report.w - INSET, y }] as [Point, Point] };
+}
+
+/** Left to right: the task, a column of agents, then the report. */
 function rowLayout(width: number, height: number): SwarmLayout {
   const pad = 20;
-  const mark = 56;
-  const agentMark = 24;
-  const node = { w: 100, h: 32 };
-  const reportW = clamp(width * 0.28, 184, 280);
-  const reportX = width - pad - reportW;
-  const nodeX = reportX - clamp(width * 0.12, 56, 136) - node.w;
-  const system = { x: nodeX - 18, y: pad, w: node.w + 36, h: height - 2 * pad };
-  const origin = { x: pad + 4 + mark / 2, y: height / 2 };
-  const agentX = origin.x + (system.x - origin.x) * 0.56;
-  const top = system.y + SYSTEM_HEAD;
-  const step = (system.y + system.h - 6 - top) / PARTS.length;
-  const reportH = REPORT.head + PARTS.length * REPORT.row + REPORT.foot;
-  const report = { x: reportX, y: (height - reportH) / 2, w: reportW, h: reportH };
+  const n = ROLES.length;
+  const cardW = cardWidth(ROLES);
+  const task = { x: pad, y: height / 2 - 29, w: Math.ceil(TASK.length * TITLE_ADVANCE + 2 * INSET), h: 58 };
+  const reportW = clamp(width * 0.26, 196, 260);
+  const reportH = REPORT.head + n * REPORT.row + REPORT.foot;
+  const report = { x: width - pad - reportW, y: (height - reportH) / 2, w: reportW, h: reportH };
+  // The fan out of the task takes a little more of the free width than the fan into the report.
+  const free = report.x - (task.x + task.w) - cardW;
+  const cardX = task.x + task.w + free * 0.54;
+  const step = clamp((height - 2 * pad) / n, CARD.h + 8, 62);
+  const top = height / 2 - (step * n) / 2;
+  const origin = { x: task.x + task.w, y: height / 2 };
+  const barX = report.x + ROW_TEXT + longest(ROLES.map(({ short }) => short)) * MONO_ADVANCE + 12;
   return {
     flow: "row",
     width,
     height,
+    task,
+    caption: { x: task.x + INSET, y: task.y + 23 },
+    title: { x: task.x + INSET, y: task.y + 43 },
     origin,
-    mark,
-    agentMark,
-    labels: {
-      mark: { x: origin.x, y: origin.y + mark / 2 + 20, anchor: "middle" },
-      hub: { x: origin.x, y: origin.y + 22, anchor: "middle" },
-      system: { x: system.x + 12, y: system.y + 19, anchor: "start" },
-    },
-    system,
+    agentMark: 18,
     report,
-    agents: PARTS.map(({ part, weight }, i) => {
-      const y = top + step * (i + 0.5);
-      const at = { x: agentX, y };
-      const row = { x: report.x, y: report.y + REPORT.head + i * REPORT.row, w: report.w, h: REPORT.row };
+    agents: ROLES.map((role, i) => {
+      const mid = top + step * (i + 0.5);
+      const parts = card(cardX, cardW, mid);
+      const { row, bar } = reportRow(report, REPORT.head, REPORT.row, i, barX);
       return {
-        part,
-        weight,
-        at,
-        trail: connector(origin, at, "row"),
-        node: { x: nodeX, y: y - node.h / 2, ...node },
-        link: [{ x: agentX + agentMark / 2 + 8, y }, { x: nodeX, y }],
-        finding: connector({ x: nodeX + node.w, y }, { x: report.x, y: row.y + row.h / 2 }, "row"),
+        ...role,
+        ...parts,
+        trail: { kind: "sweep", from: origin, to: parts.at },
+        finding: { kind: "sweep", from: { x: cardX + cardW, y: mid }, to: { x: report.x, y: row.y + row.h / 2 } },
         row,
+        bar,
       };
     }),
   };
 }
 
-/** Top to bottom, for phones: the mark, a row of agents over a row of parts, then the report. */
+/**
+ * Top to bottom, for phones: the task, a list of agents, then the report. The
+ * jobs branch off a trunk at the left and the results merge into one at the right.
+ */
 function columnLayout(width: number, height: number): SwarmLayout {
   const pad = 12;
-  const parts = PARTS.filter(({ part }) => COMPACT.includes(part));
-  const n = parts.length;
-  const mark = clamp(height * 0.09, 36, 48);
-  const agentMark = 20;
-  const cell = (width - 2 * pad - 16) / n;
-  const node = { w: Math.min(76, cell - 8), h: 28 };
-  const systemH = SYSTEM_HEAD + node.h + 12;
+  const roles = ROLES.filter(({ short }) => COMPACT.includes(short));
+  const n = roles.length;
+  const w = Math.min(width - 2 * pad, 420);
+  const x = (width - w) / 2;
+  const trunk = 18;
   const reportH = COMPACT_REPORT.head + n * COMPACT_REPORT.row + COMPACT_REPORT.foot;
-  // Whatever height is left goes to the three connector bands, the findings' band widest.
-  const free = Math.max(0, height - (2 * pad + mark + agentMark + systemH + reportH));
-  const origin = { x: width / 2, y: pad + mark / 2 };
-  const agentY = pad + mark + free * 0.34 + agentMark / 2;
-  const system = { x: pad, y: agentY + agentMark / 2 + free * 0.24, w: width - 2 * pad, h: systemH };
-  const nodeY = system.y + SYSTEM_HEAD;
-  const report = { x: pad, y: height - pad - reportH, w: width - 2 * pad, h: reportH };
-  const inlet = { x: report.x + report.w / 2, y: report.y };
+  const taskH = 36;
+  // Spare height goes to the gaps between agents and the bands either side of them, up to a limit.
+  const free = Math.max(0, height - (2 * pad + taskH + n * CARD.h + reportH));
+  const gap = clamp(free * 0.1, 6, 14);
+  const band = clamp((free - (n - 1) * gap) / 2, 0, 52);
+  const stack = taskH + band + n * CARD.h + (n - 1) * gap + band + reportH;
+  const task = { x, y: Math.max(pad, (height - stack) / 2), w, h: taskH };
+  const top = task.y + taskH + band;
+  const report = { x, y: top + n * CARD.h + (n - 1) * gap + band, w, h: reportH };
+  const origin = { x: x + trunk, y: task.y + taskH };
+  const inlet = { x: x + w - trunk, y: report.y };
+  const cardX = x + 2 * trunk;
+  const cardW = w - 4 * trunk;
+  const barX = report.x + ROW_TEXT + longest(roles.map(({ short }) => short)) * MONO_ADVANCE + 12;
   return {
     flow: "column",
     width,
     height,
+    task,
+    caption: { x: x + 12, y: task.y + 23 },
+    title: { x: x + 56, y: task.y + 23 },
     origin,
-    mark,
-    agentMark,
-    // The system caption sits between the two middle links, which never run through it.
-    labels: {
-      mark: { x: origin.x + mark / 2 + 10, y: origin.y + 4, anchor: "start" },
-      hub: { x: origin.x + 12, y: origin.y + 4, anchor: "start" },
-      system: { x: width / 2, y: system.y + 19, anchor: "middle" },
-    },
-    system,
+    agentMark: 18,
     report,
-    agents: parts.map(({ part, weight }, i) => {
-      const x = pad + 8 + cell * (i + 0.5);
-      const at = { x, y: agentY };
+    agents: roles.map((role, i) => {
+      const mid = top + CARD.h / 2 + i * (CARD.h + gap);
+      const parts = card(cardX, cardW, mid);
+      const { row, bar } = reportRow(report, COMPACT_REPORT.head, COMPACT_REPORT.row, i, barX);
       return {
-        part,
-        weight,
-        at,
-        trail: connector(origin, at, "column"),
-        node: { x: x - node.w / 2, y: nodeY, ...node },
-        link: [{ x, y: agentY + agentMark / 2 + 6 }, { x, y: nodeY }],
-        finding: connector({ x, y: nodeY + node.h }, inlet, "column"),
-        row: { x: report.x, y: report.y + COMPACT_REPORT.head + i * COMPACT_REPORT.row, w: report.w, h: COMPACT_REPORT.row },
+        ...role,
+        ...parts,
+        trail: { kind: "elbow", from: origin, corner: { x: origin.x, y: parts.at.y }, to: parts.at },
+        finding: { kind: "elbow", from: { x: cardX + cardW, y: mid }, corner: { x: inlet.x, y: mid }, to: inlet },
+        row,
+        bar,
       };
     }),
   };
@@ -192,96 +268,107 @@ export function swarmLayout(width: number, height: number): SwarmLayout {
   return width >= ROW_MIN_WIDTH ? rowLayout(width, height) : columnLayout(width, height);
 }
 
-/** Each phase's share of scroll progress. Agents start their own step of a phase in turn. */
-const PHASES = {
-  split: [0.06, 0.36],
-  examine: [0.3, 0.6],
-  report: [0.56, 0.92],
-} as const;
-export type Phase = keyof typeof PHASES;
-/** Share of a phase one agent's step takes; the rest of it staggers the starts. */
+export const STAGES = ["split", "execute", "combine"] as const;
+export type Stage = (typeof STAGES)[number];
+/** Where each stage draws in scroll progress, in order; the gaps hold a finished stage on screen. */
+const SPANS: Record<Stage, [number, number]> = {
+  split: [0.04, 0.3],
+  execute: [0.36, 0.62],
+  combine: [0.68, 0.94],
+};
+/** Share of the split and combine stages one agent's step takes; the rest staggers the starts. */
 const STEP = 0.5;
 
-function phaseOf(phase: Phase, p: number) {
-  const [a, b] = PHASES[phase];
+function fillOf(stage: Stage, p: number) {
+  const [a, b] = SPANS[stage];
   return clamp01((p - a) / (b - a));
 }
 
-function stepOf(phase: Phase, i: number, n: number, p: number) {
-  const [a, b] = PHASES[phase];
-  const length = (b - a) * STEP;
-  const start = a + (b - a - length) * (n > 1 ? i / (n - 1) : 0);
-  return clamp01((p - start) / length);
+/** One agent's turn within a stage that takes the agents one after another. */
+function turnOf(fill: number, i: number, n: number) {
+  const start = (1 - STEP) * (n > 1 ? i / (n - 1) : 0);
+  return clamp01((fill - start) / STEP);
+}
+
+/** In the execute stage every agent starts at once and takes longer the more it finds. */
+function jobOf(fill: number, i: number, n: number, weight: number) {
+  const start = 0.06 * (n > 1 ? i / (n - 1) : 0);
+  return clamp01((fill - start) / (0.4 + 0.54 * weight));
 }
 
 export type AgentFrame = Point & {
-  /** 1 is the agent's settled size; it leaves the starting mark at that mark's size. */
+  /** The agent's mark, which grows as it leaves the task. */
   scale: number;
   opacity: number;
-  /** 0–1: how much of each path is drawn. */
+  /** 0–1: how much of the agent's trail is drawn, its card shown, and its job done. */
   trail: number;
-  link: number;
+  card: number;
+  work: number;
+  /** 0–1: how much of the path to the report is drawn. */
   finding: number;
-  /** The finding signal on its way to the report. */
+  /** The result on its way to the report. */
   signal: Point & { opacity: number };
   /** 0–1: the agent's report row filled in. */
   reported: number;
 };
 
+/** "active" is the stage in progress; "done" once its drawing has finished. */
+export type StageState = "next" | "active" | "done";
+
 export type SwarmFrame = {
-  /** The starting mark, which fades out as it splits. */
-  mark: { scale: number; opacity: number };
-  /** 0–1: the hub the agents trail back to, shown as the mark splits. */
+  /** 0–1: the point on the task the trails leave from. */
   hub: number;
   agents: AgentFrame[];
   /** 0–1: the shared report panel shown. */
   report: number;
-  /** Agents whose findings have reached the report. */
+  /** Agents whose results have reached the report. */
   landed: number;
-  /** 0–1 through each phase, for the step legend. */
-  phases: Record<Phase, number>;
+  /** Each stage's drawing, 0–1, and its state for the stage legend. */
+  stages: Record<Stage, { fill: number; state: StageState }>;
 };
 
 export function swarmFrame(layout: SwarmLayout, progress: number): SwarmFrame {
   const p = clamp01(progress);
   const n = layout.agents.length;
-  const phases = { split: phaseOf("split", p), examine: phaseOf("examine", p), report: phaseOf("report", p) };
-  const grow = layout.mark / layout.agentMark;
+  const fill = { split: fillOf("split", p), execute: fillOf("execute", p), combine: fillOf("combine", p) };
+  const current = STAGES.find((stage) => fill[stage] < 1);
+  const stages = Object.fromEntries(
+    STAGES.map((stage) => [stage, { fill: fill[stage], state: fill[stage] >= 1 ? "done" : stage === current ? "active" : "next" }]),
+  ) as SwarmFrame["stages"];
   const agents = layout.agents.map((agent, i): AgentFrame => {
-    const out = smooth(stepOf("split", i, n, p));
-    const travel = stepOf("report", i, n, p);
+    const out = smooth(turnOf(fill.split, i, n));
+    const travel = turnOf(fill.combine, i, n);
     const finding = smooth(travel);
     const at = pointOn(agent.trail, out);
     const signal = pointOn(agent.finding, finding);
     return {
       x: at.x,
       y: at.y,
-      scale: 1 + (grow - 1) * (1 - out),
+      scale: 0.5 + 0.5 * out,
       opacity: clamp01(out * 4),
       trail: out,
-      link: smooth(stepOf("examine", i, n, p)),
+      card: smooth((out - 0.72) / 0.28),
+      work: smooth(jobOf(fill.execute, i, n, agent.weight)),
       finding,
       signal: { ...signal, opacity: Math.min(1, travel * 8, (1 - travel) * 8) },
       reported: smooth((travel - 0.82) / 0.18),
     };
   });
-  const fade = smooth(phases.split * 1.4);
   return {
-    mark: { scale: 1 - 0.3 * smooth(phases.split), opacity: 1 - fade },
-    hub: fade,
+    hub: smooth(fill.split * 6),
     agents,
-    report: smooth((p - 0.48) / 0.1),
+    report: smooth(fill.combine / 0.12),
     landed: agents.filter((agent) => agent.reported >= 0.5).length,
-    phases,
+    stages,
   };
 }
 
 /**
- * Progress through the pinned stage: 0 when it pins under the header, 1 when
- * it lets go. A stage with no spare track to pin in (short viewports) plays
- * while its top crosses the viewport instead.
+ * Progress through the pinned figure: 0 when it pins under the header, 1 when
+ * it lets go. A pin with no spare track (short viewports) plays while its top
+ * crosses the viewport instead.
  */
-export function stageProgress(track: { top: number; height: number }, pin: { top: number; height: number }, viewport: number) {
+export function pinProgress(track: { top: number; height: number }, pin: { top: number; height: number }, viewport: number) {
   const travel = track.height - pin.height;
   if (travel > 1) return clamp01((pin.top - track.top) / travel);
   const start = viewport * 0.8;

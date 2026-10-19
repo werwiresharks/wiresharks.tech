@@ -2,24 +2,22 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { CLAWS } from "./ProductIcons";
 import { Reveal } from "./Reveal";
-import { stageProgress, swarmFrame, swarmLayout } from "./swarmLayout";
-import type { Phase, SwarmLayout } from "./swarmLayout";
+import { pinProgress, routePath, swarmFrame, swarmLayout, TASK } from "./swarmLayout";
+import type { Stage, SwarmLayout } from "./swarmLayout";
 
-const STEPS: [Phase, string, string][] = [
-  ["split", "Split", "One Raptor divides into specialized agents."],
-  ["examine", "Examine", "Each agent takes one part of the system."],
-  ["report", "Report", "Findings merge into one shared report."],
+const STEPS: [Stage, string, string][] = [
+  ["split", "Split", "One task becomes smaller jobs. Each job goes to a specialized agent."],
+  ["execute", "Execute", "The agents work at the same time and share useful findings."],
+  ["combine", "Combine", "The results come together in one report."],
 ];
 
-/** Where each report row's bar starts, right of its label. */
-const BAR = 92;
 const f = (v: number) => v.toFixed(2);
 
 /**
- * The planned Raptor swarm. The stage pins under the header while scroll
- * drives one Raptor mark through a split into agents, their connections to
- * the parts of a system, and their findings flowing into one shared report.
- * Under reduced motion it shows the finished figure, unpinned.
+ * The planned Raptor swarm. The figure pins under the header while scroll
+ * steps it through three stages: one task splits into jobs for specialized
+ * agents, the agents work in parallel, and their results combine in one
+ * shared report. Under reduced motion it shows the finished figure, unpinned.
  */
 export function Swarm() {
   const track = useRef<HTMLDivElement>(null);
@@ -52,7 +50,7 @@ export function Swarm() {
       trackHeight = trackNode.offsetHeight;
     };
     const read = () =>
-      stageProgress({ top: trackNode.getBoundingClientRect().top, height: trackHeight }, { top: pinTop, height: pinHeight }, window.innerHeight);
+      pinProgress({ top: trackNode.getBoundingClientRect().top, height: trackHeight }, { top: pinTop, height: pinHeight }, window.innerHeight);
     // Wheel ticks arrive in coarse steps; easing toward the target keeps the figure smooth.
     const tick = () => {
       frame = 0;
@@ -114,16 +112,15 @@ export function Swarm() {
     const legend = steps.current;
     if (!layout || !root || !legend) return;
     const all = <T extends Element>(selector: string) => Array.from(root.querySelectorAll<T>(selector));
-    const mark = root.querySelector<SVGGElement>(".swarm-mark");
     const hub = root.querySelector<SVGCircleElement>(".swarm-hub");
-    const caption = root.querySelector<SVGTextElement>(".swarm-mark-caption");
     const report = root.querySelector<SVGGElement>(".swarm-report");
     const count = root.querySelector<SVGTextElement>(".swarm-count");
     const agents = all<SVGGElement>(".swarm-agent");
     const trails = all<SVGPathElement>(".swarm-trail");
-    const links = all<SVGLineElement>(".swarm-link");
     const findings = all<SVGPathElement>(".swarm-finding");
-    const nodes = all<SVGGElement>(".swarm-node");
+    const cards = all<SVGGElement>(".swarm-card");
+    const done = all<SVGRectElement>(".swarm-card-done");
+    const work = all<SVGRectElement>(".swarm-work-fill");
     const signals = all<SVGCircleElement>(".swarm-signal");
     const rows = all<SVGGElement>(".swarm-row");
     const fills = all<SVGRectElement>(".swarm-row-fill");
@@ -135,36 +132,33 @@ export function Swarm() {
       if (progress === last) return;
       last = progress;
       const frame = swarmFrame(layout, progress);
-      const { x, y } = layout.origin;
-      mark?.setAttribute("transform", `translate(${f(x)} ${f(y)}) scale(${f(frame.mark.scale)})`);
-      mark?.setAttribute("opacity", f(frame.mark.opacity));
       hub?.setAttribute("opacity", f(frame.hub));
-      const { mark: from, hub: to } = layout.labels;
-      caption?.setAttribute("transform", `translate(${f((to.x - from.x) * frame.hub)} ${f((to.y - from.y) * frame.hub)})`);
       report?.setAttribute("opacity", f(frame.report));
       frame.agents.forEach((agent, i) => {
-        const shape = layout.agents[i];
+        const { work: [w0], bar: [b0] } = layout.agents[i];
         agents[i].setAttribute("transform", `translate(${f(agent.x)} ${f(agent.y)}) scale(${f(agent.scale)})`);
         agents[i].setAttribute("opacity", f(agent.opacity));
         trails[i].style.strokeDashoffset = f(1 - agent.trail);
-        links[i].style.strokeDashoffset = f(1 - agent.link);
         findings[i].style.strokeDashoffset = f(1 - agent.finding);
-        nodes[i].style.setProperty("--on", f(agent.link));
-        signals[i].setAttribute("cx", f(agent.signal.x));
-        signals[i].setAttribute("cy", f(agent.signal.y));
+        cards[i].setAttribute("opacity", f(agent.card));
+        done[i].setAttribute("opacity", f(agent.work));
+        work[i].setAttribute("transform", `translate(${f(w0.x)} ${f(w0.y)}) scale(${f(agent.work)} 1)`);
+        signals[i].setAttribute("transform", `translate(${f(agent.signal.x)} ${f(agent.signal.y)})`);
         signals[i].setAttribute("opacity", f(agent.signal.opacity));
         rows[i].style.setProperty("--on", f(agent.reported));
-        fills[i].setAttribute("width", f((shape.row.w - BAR - 14) * shape.weight * agent.reported));
+        fills[i].setAttribute("transform", `translate(${f(b0.x)} ${f(b0.y)}) scale(${f(agent.reported)} 1)`);
       });
       if (count && frame.landed !== landed) {
         landed = frame.landed;
         count.textContent = `${landed}/${n}`;
       }
-      STEPS.forEach(([phase], i) => {
-        const value = frame.phases[phase];
-        items[i].style.setProperty("--fill", f(value));
-        if (value > 0) items[i].dataset.state = value >= 1 ? "done" : "active";
-        else delete items[i].dataset.state;
+      STEPS.forEach(([stage], i) => {
+        const { fill, state } = frame.stages[stage];
+        items[i].style.setProperty("--fill", f(fill));
+        if (items[i].dataset.state === state) return;
+        items[i].dataset.state = state;
+        if (state === "active") items[i].setAttribute("aria-current", "step");
+        else items[i].removeAttribute("aria-current");
       });
     };
     paint.current(progress.current.current);
@@ -179,14 +173,17 @@ export function Swarm() {
             <span className="swarm-status">In development</span>
           </Reveal>
           <Reveal as="h2" delay={60}>
-            <span id="swarm-title">One agent. An entire swarm.</span>
+            <span id="swarm-title">One agent is powerful. A swarm is unstoppable.</span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
-            Raptor is being designed to coordinate multiple specialized security agents, allowing
-            complex systems to be examined from different perspectives.
+            Raptor Swarm brings specialized AI agents together to do complex work. The agents divide
+            a task, work in parallel, share what they find, and combine their results into one
+            coordinated output.
           </Reveal>
-          <Reveal as="p" delay={180} className="swarm-tagline">
-            Distributed analysis. Coordinated intelligence.
+          <Reveal as="p" delay={180} className="swarm-note">
+            Swarm coordination is in development and not available yet. At launch,{" "}
+            <span className="swarm-name">Raptor-1</span> splits one task across parallel workers,
+            each with its own copy of the code.
           </Reveal>
         </header>
 
@@ -203,29 +200,21 @@ export function Swarm() {
                   <svg ref={svg} aria-hidden="true">{layout && <SwarmDrawing layout={layout} />}</svg>
                 </div>
                 <figcaption className="sr-only">
-                  One Raptor finds the weakness. A swarm examines the system. In this planned design,
-                  one Raptor agent splits into specialized agents, each examines one part of a
-                  system, such as auth, api, dependencies and infrastructure, and their findings
-                  flow into one shared report.
+                  In this planned design, one task, {TASK}, splits into smaller jobs. Specialized
+                  agents for auth, APIs, dependencies, storage, pipelines and cloud work on the jobs
+                  in parallel. Their results come together in one shared report.
                 </figcaption>
               </figure>
             </Reveal>
-            <div className="swarm-aside">
-              <ol ref={steps} className="swarm-steps" aria-label="How the swarm works">
-                {STEPS.map(([phase, name, text], i) => (
-                  <li key={phase}>
-                    <span className="label">{String(i + 1).padStart(2, "0")}</span>
-                    <b>{name}</b>
-                    <span>{text}</span>
-                  </li>
-                ))}
-              </ol>
-              <p className="swarm-note">
-                Swarm coordination is in development and not yet available. At launch, Raptor
-                splits one task across parallel workers in isolated worktrees. Specialized agents
-                that coordinate across a whole system come next.
-              </p>
-            </div>
+            <ol ref={steps} className="swarm-steps" aria-label="How the swarm works">
+              {STEPS.map(([stage, name, text], i) => (
+                <li key={stage} data-state="next">
+                  <span className="label">{String(i + 1).padStart(2, "0")}</span>
+                  <b>{name}</b>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </div>
@@ -235,7 +224,7 @@ export function Swarm() {
 
 /** The figure's static structure; the paint loop moves and reveals its parts. */
 function SwarmDrawing({ layout }: { layout: SwarmLayout }) {
-  const { mark, agentMark, labels, system, report, agents } = layout;
+  const { task, caption, title, origin, agentMark, report, agents } = layout;
   const head = agents[0].row.y - report.y;
   return (
     <>
@@ -245,64 +234,64 @@ function SwarmDrawing({ layout }: { layout: SwarmLayout }) {
           <path d={CLAWS[2]} className="swarm-claw" />
         </symbol>
       </defs>
-      <rect className="swarm-system" x={system.x} y={system.y} width={system.w} height={system.h} rx="10" />
-      <text className="swarm-caption" x={labels.system.x} y={labels.system.y} textAnchor={labels.system.anchor}>
-        system
-      </text>
-      {agents.map(({ part, trail: [a, b, c, d], link, finding: [e, g, h, k] }) => (
-        <g key={part}>
-          <path className="swarm-trail" pathLength={1} d={`M${a.x} ${a.y}C${b.x} ${b.y} ${c.x} ${c.y} ${d.x} ${d.y}`} />
-          <line className="swarm-link" pathLength={1} x1={link[0].x} y1={link[0].y} x2={link[1].x} y2={link[1].y} />
-          <path className="swarm-finding" pathLength={1} d={`M${e.x} ${e.y}C${g.x} ${g.y} ${h.x} ${h.y} ${k.x} ${k.y}`} />
+      {agents.map(({ name, trail, finding }) => (
+        <g key={name}>
+          <path className="swarm-trail" pathLength={1} d={routePath(trail)} />
+          <path className="swarm-finding" pathLength={1} d={routePath(finding)} />
         </g>
       ))}
-      {agents.map(({ part, node }) => (
-        <g key={part} className="swarm-node">
-          <rect x={node.x} y={node.y} width={node.w} height={node.h} rx="6" />
-          <rect className="swarm-node-on" x={node.x} y={node.y} width={node.w} height={node.h} rx="6" />
-          <text x={node.x + node.w / 2} y={node.y + node.h / 2 + 4} textAnchor="middle">
-            {part}
+      <g className="swarm-task">
+        <rect className="swarm-frame" x={task.x} y={task.y} width={task.w} height={task.h} rx="8" />
+        <text className="swarm-caption" x={caption.x} y={caption.y}>
+          Task
+        </text>
+        <text className="swarm-title" x={title.x} y={title.y}>
+          {TASK}
+        </text>
+      </g>
+      {agents.map(({ name, card, label, work: [w0, w1] }) => (
+        <g key={name} className="swarm-card" opacity="0">
+          <rect className="swarm-frame" x={card.x} y={card.y} width={card.w} height={card.h} rx="6" />
+          <rect className="swarm-card-done" x={card.x} y={card.y} width={card.w} height={card.h} rx="6" opacity="0" />
+          <text x={label.x} y={label.y}>
+            {name}
           </text>
+          <line className="swarm-track-line" x1={w0.x} x2={w1.x} y1={w0.y} y2={w1.y} />
+          <rect className="swarm-work-fill" x="0" y="-1" width={w1.x - w0.x} height="2" transform={`translate(${w0.x} ${w0.y}) scale(0 1)`} />
         </g>
       ))}
       <g className="swarm-report" opacity="0">
-        <rect className="swarm-report-frame" x={report.x} y={report.y} width={report.w} height={report.h} rx="8" />
-        <text className="swarm-report-title" x={report.x + 14} y={report.y + head / 2 + 1}>
+        <rect className="swarm-frame" x={report.x} y={report.y} width={report.w} height={report.h} rx="8" />
+        <text className="swarm-title" x={report.x + 14} y={report.y + head / 2 + 1}>
           Shared report
         </text>
         <text className="swarm-caption swarm-count" x={report.x + report.w - 14} y={report.y + head / 2 + 1} textAnchor="end">
           0/{agents.length}
         </text>
-        <line className="swarm-rule" x1={report.x} x2={report.x + report.w} y1={report.y + head - 6} y2={report.y + head - 6} />
-        {agents.map(({ part, row }) => {
+        <line className="swarm-track-line" x1={report.x} x2={report.x + report.w} y1={report.y + head - 6} y2={report.y + head - 6} />
+        {agents.map(({ name, short, weight, row, bar: [b0, b1] }) => {
           const y = row.y + row.h / 2;
           return (
-            <g key={part} className="swarm-row" style={{ "--on": 0 } as CSSProperties}>
+            <g key={name} className="swarm-row" style={{ "--on": 0 } as CSSProperties}>
               <rect className="swarm-row-marker" x={row.x + 14} y={y - 3} width="6" height="6" />
               <text x={row.x + 28} y={y + 4}>
-                {part}
+                {short}
               </text>
-              <line className="swarm-row-track" x1={row.x + BAR} x2={row.x + row.w - 14} y1={y} y2={y} />
-              <rect className="swarm-row-fill" x={row.x + BAR} y={y - 1.5} height="3" width="0" />
+              <line className="swarm-track-line" x1={b0.x} x2={b1.x} y1={y} y2={y} />
+              <rect className="swarm-row-fill" x="0" y="-1.5" width={(b1.x - b0.x) * weight} height="3" transform={`translate(${b0.x} ${b0.y}) scale(0 1)`} />
             </g>
           );
         })}
       </g>
-      {agents.map(({ part }) => (
-        <circle key={part} className="swarm-signal" r="3" opacity="0" />
+      {agents.map(({ name }) => (
+        <circle key={name} className="swarm-signal" r="3" opacity="0" />
       ))}
-      {agents.map(({ part }) => (
-        <g key={part} className="swarm-agent" opacity="0">
+      {agents.map(({ name }) => (
+        <g key={name} className="swarm-agent" opacity="0">
           <use href="#swarm-mark" x={-agentMark / 2} y={-agentMark / 2} width={agentMark} height={agentMark} />
         </g>
       ))}
-      <circle className="swarm-hub" cx={layout.origin.x} cy={layout.origin.y} r="3.5" opacity="0" />
-      <g className="swarm-mark">
-        <use href="#swarm-mark" x={-mark / 2} y={-mark / 2} width={mark} height={mark} />
-      </g>
-      <text className="swarm-caption swarm-mark-caption" x={labels.mark.x} y={labels.mark.y} textAnchor={labels.mark.anchor}>
-        raptor
-      </text>
+      <circle className="swarm-hub" cx={origin.x} cy={origin.y} r="3.5" opacity="0" />
     </>
   );
 }
