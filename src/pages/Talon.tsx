@@ -8,9 +8,9 @@ import { Registry } from "../components/mock/Registry";
 
 const PIPELINE = [
   ["Foundation", "A strong open-weight base. Qwen3.8-27B is the lead candidate, with provenance and license verified."],
-  ["Abliterate", "Remove the refusal direction from the weights. Knowledge and reasoning are untouched."],
+  ["Remove refusals", "Remove the model's refusal behavior from the weights. Knowledge and reasoning are untouched."],
   ["Specialize", "Cybersecurity post-training with QLoRA and rsLoRA on a vetted corpus. General coding and reasoning preserved."],
-  ["Evaluate", "Benchmarked against the base, the abliterated variant, leading open-weight models and frontier models."],
+  ["Evaluate", "Benchmarked against the base, the version with refusals removed, and leading open-weight and frontier models."],
   ["Quantize", "Hardware-specific builds for llama.cpp, vLLM and Apple Silicon. Offline after install."],
 ];
 
@@ -26,7 +26,7 @@ const DOMAINS = [
 const SPEC = [
   ["Foundation", "Qwen3.8-27B (candidate)"],
   ["Parameters", "27B"],
-  ["Method", "Abliteration, then cybersecurity SFT"],
+  ["Method", "Refusals removed, then security fine-tune"],
   ["Adapters", "QLoRA, rsLoRA"],
   ["Context", "128k"],
   ["Inference", "llama.cpp, vLLM, Apple Silicon"],
@@ -41,14 +41,14 @@ export function Talon() {
     <>
       <title>Talon-1 | Wiresharks</title>
       <PageHead label="Model / Talon-1" title="The world's most dangerous model.">
-        Our premier cyber-capable frontier model. Pareto-efficient performance, fine-tuned for
-        additional capability in offensive and defensive cybersecurity. Open weights, frontier-level
-        capability, running locally. The intelligence inside Raptor.
+        The AI model that powers Raptor. Talon-1 is open-weight, fine-tuned for offensive and
+        defensive cybersecurity work, and runs on your own hardware after install. It is the
+        intelligence inside Raptor.
       </PageHead>
 
       <Feature
         index="01"
-        eyebrow="Abliteration"
+        eyebrow="Refusals removed"
         title="Nothing held back."
         panel={
           <Compare
@@ -64,10 +64,10 @@ export function Talon() {
         }
       >
         <p>
-          Abliteration identifies the refusal direction in the model's activations and removes
-          it from the weights. The model keeps everything it knows. It stops refusing.
+          We find the model's refusal behavior in its weights and remove it. The model keeps
+          everything it knows. It stops refusing.
         </p>
-        <p>Reduced refusal is not more capability. That is what the fine-tuning is for.</p>
+        <p>Removing refusals is not more capability. That is what the fine-tuning is for.</p>
       </Feature>
 
       <Feature
@@ -166,11 +166,11 @@ export function Talon() {
           <Console
             title="talon-1 / eval"
             lines={[
-              "$ raptor eval talon-1 --suite cyber-bench --compare base,abliterated",
+              "$ raptor eval talon-1 --suite cyber-bench --compare base,no-refusals",
               "running 1,200 tasks · vuln-id, re, secure-coding, soc",
               "",
               "talon-1        ███████████████████  topline",
-              "abliterated    ████████████▌        base + no refusals",
+              "no-refusals    ████████████▌        base + no refusals",
               "base model     ███████████▏         foundation",
               "",
               "results publish with the weights · reproducible harness",
@@ -179,8 +179,8 @@ export function Talon() {
         }
       >
         <p>
-          Talon-1 ships with reproducible benchmarks against its base, its abliterated variant,
-          leading open-weight models and frontier models. The benchmark harness is public.
+          Talon-1 ships with reproducible benchmarks against its base, the version with refusals
+          removed, and leading open-weight and frontier models. The benchmark harness is public.
         </p>
       </Feature>
 
@@ -188,10 +188,10 @@ export function Talon() {
         <div className="wrap spec-layout">
         <div>
           <p className="label">06 / Specification</p>
-          <h2 id="spec-title">Frontier-class is the target, not the claim.</h2>
+          <h2 id="spec-title">We are developing Talon-1 to deliver advanced cybersecurity capabilities.</h2>
           <p className="muted">
-            Talon-1 ships with reproducible benchmarks against its base, its abliterated variant,
-            leading open-weight models and frontier models. Results publish with the weights.
+            Talon-1 ships with reproducible benchmarks against its base, the version with refusals
+            removed, and leading open-weight and frontier models. Results publish with the weights.
           </p>
           <p className="muted">
             <b>Talon-2.</b> In research.
@@ -208,7 +208,7 @@ export function Talon() {
         </div>
       </section>
 
-      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations, Raptor and Harness." />
+      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations, Raptor and the harness." />
     </>
   );
 }

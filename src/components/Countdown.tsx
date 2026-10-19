@@ -24,12 +24,12 @@ export function Countdown({ className = "" }: { className?: string }) {
     <div className={`countdown ${className}`}>
       <p className="countdown-label">
         <i aria-hidden="true" />
-        Talon-1 / <time dateTime="2026-12-25">December 25, 2026</time>
+        Release / <time dateTime="2026-12-25">Dec 25, 2026</time>
       </p>
       {left === 0 ? (
         <p className="countdown-live">Available now.</p>
       ) : (
-        <ol role="timer" aria-label="Time until Talon-1">
+        <ol role="timer" aria-label="Time until release">
           {UNITS.map(([label, short, size], i) => {
             const value = i === 0 ? Math.floor(left / size) : Math.floor((left % UNITS[i - 1][2]) / size);
             return (

@@ -6,7 +6,7 @@ export const REVIEW_STEPS: [string, string][] = [
   ["Map", "Repository context and likely risk."],
   ["Find", "Parallel workers, source evidence."],
   ["Prove", "Every finding evaluated. A guess is not a vulnerability."],
-  ["Patch", "Minimal changes in an isolated worktree."],
+  ["Patch", "Minimal changes in its own copy of the code."],
   ["Verify", "Tests run. A second model reviews."],
   ["Report", "Evidence, patch, rollback path."],
 ];
@@ -14,7 +14,7 @@ export const REVIEW_STEPS: [string, string][] = [
 /** What ships on release day. Nothing here is published before then. */
 export const RELEASE_ARTIFACTS: [string, string][] = [
   ["Weights", "Talon-1, quantized for llama.cpp, vLLM and Apple Silicon."],
-  ["Evaluations", "Against the base, the abliterated variant, open-weight and frontier models."],
+  ["Evaluations", "Against the base model, the version with refusals removed, and other open-weight and frontier models."],
   ["Benchmark harness", "Public and reproducible, so the results can be checked."],
-  ["Raptor", "The autonomous agent that runs Talon-1 first, built on Harness."],
+  ["Raptor-1", "The autonomous agent that runs Talon-1 by default, on its harness."],
 ];

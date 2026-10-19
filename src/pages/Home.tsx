@@ -16,16 +16,16 @@ import { HomeJourney } from "../talos/react/HomeJourney";
 
 const FAQ: [string, string][] = [
   [
+    "What is Raptor-1?",
+    "The autonomous cybersecurity agent, and the main product. Raptor plans a task, splits the work across parallel workers that each get their own copy of the code, runs it on real systems and checks the result. It runs Talon-1 on your hardware, or any other model you point it at. The harness is the infrastructure that runs and coordinates its work.",
+  ],
+  [
     "What is Talon-1?",
-    "Our premier cyber-capable frontier model. Talon-1 pairs Pareto-efficient performance with fine-tuning for additional offensive and defensive cybersecurity capability. The 27B open-weight model runs locally and powers Raptor. Weights and evaluations ship December 25, 2026.",
+    "The AI model that powers Raptor. Talon-1 is a 27B open-weight model, fine-tuned for offensive and defensive cybersecurity work. It runs on your own hardware, and it ships with its evaluations on December 25, 2026.",
   ],
   [
-    "What is Raptor?",
-    "The autonomous cybersecurity agent. It plans, splits work across parallel workers in isolated worktrees, executes on real systems and verifies the result. It runs Talon-1 locally, or any other model you point it at. Harness is the execution and orchestration infrastructure it runs on.",
-  ],
-  [
-    "What does abliterated mean?",
-    "The refusal direction is identified in the model's activations and removed from the weights. The model keeps its knowledge and reasoning. It stops refusing.",
+    "Does the model refuse security questions?",
+    "No. We removed the model's refusal behavior from the weights. It keeps its knowledge and reasoning, and it stops refusing security work.",
   ],
   [
     "Does it need the cloud?",
@@ -33,14 +33,14 @@ const FAQ: [string, string][] = [
   ],
   [
     "What hardware does it need?",
-    "Quantized builds target a single workstation or laptop: Apple Silicon with 32 GB or more, or a CUDA GPU with 24 GB or more. Exact requirements publish with the release.",
+    "Quantized builds target a single workstation or laptop. The target is Apple Silicon with 32 GB or more, or a CUDA GPU with 24 GB or more. Exact requirements publish with the release.",
   ],
 ];
 
 const PRINCIPLES: [string, string][] = [
   ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. No network after install, no telemetry to turn off."],
-  ["Answers what others won't.", "Abliterated, so it stops refusing, then fine-tuned so it actually helps with real security work."],
-  ["Open weights.", "The model, its evaluations, Raptor and Harness ship together, for you to run and inspect."],
+  ["Answers what others won't.", "We removed the model's refusal behavior, then fine-tuned it to help with real security work."],
+  ["Open weights.", "The model, its evaluations, Raptor and the harness ship together, for you to run and inspect."],
   ["Proven, then patched.", "A finding is reproduced before it is reported, and a second model reviews every patch."],
 ];
 
@@ -63,22 +63,22 @@ export function Home() {
             <span id="hero-title">The world's most <span className="dangerous">dangerous</span> AI.</span>
           </Reveal>
           <Reveal delay={120} className="hero-glass">
-            <p>A local, open-weight cybersecurity model and the autonomous agent built around it.</p>
+            <p>An autonomous cybersecurity agent, and the local, open-weight model it runs on.</p>
             <p className="hero-key label">
               <span>
-                <b>Talon-1</b> Model
+                <b>Raptor-1</b> Agent
               </span>
               <span>
-                <b>Raptor</b> Agent
+                <b>Talon-1</b> Model
               </span>
             </p>
           </Reveal>
           <Reveal delay={180} className="hero-ctas">
-            <Cta to="/talon" icon={<TalonIcon />}>
-              Explore Talon-1
+            <Cta to="/raptor" icon={<RaptorIcon />}>
+              Meet Raptor-1
             </Cta>
-            <Cta to="/raptor" variant="secondary" icon={<RaptorIcon />}>
-              Meet Raptor
+            <Cta to="/talon" variant="secondary" icon={<TalonIcon />}>
+              Explore Talon-1
             </Cta>
           </Reveal>
           {/* Phones stack the orb here, in flow, with the countdown beneath it. */}
@@ -101,20 +101,67 @@ export function Home() {
               01 / Products
             </Reveal>
             <Reveal as="h2" delay={60}>
-              <span id="products-title">A model, and the agent that puts it to work.</span>
+              <span id="products-title">An agent, and the model it runs on.</span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              Talon-1 is the intelligence. Raptor is the agent around it that plans, acts and
-              checks its own work. They ship together, and Raptor runs Talon-1 first.
+              Raptor is the agent that plans, acts and checks its own work. Talon-1 is the model it
+              runs on. They ship together.
             </Reveal>
           </header>
 
           <ProductBlock
-            id="talon"
+            id="talos"
             index="01.1"
+            kind="Agent / Runs on the harness"
+            name="Raptor-1"
+            summary="The autonomous agent built around Talon-1."
+            specs={[
+              ["Engines", "Hermes · Claude Code · Codex"],
+              ["Models", "Talon-1 local, APIs, private endpoints"],
+              ["Workers", "Own copy of the code"],
+              ["Merges", "One at a time, reviewed"],
+            ]}
+            to="/raptor"
+            linkLabel="Meet Raptor-1"
+            visual={
+              <TaskGraph
+                journey
+                root={{ name: "Security review · acme/api", model: "talon-1" }}
+                workers={[
+                  { name: "Map attack surface", model: "talon-1", engine: "hermes", state: "done" },
+                  { name: "Auth and session handling", model: "talon-1", engine: "hermes", state: "done" },
+                  { name: "Deserialization paths", model: "talon-1", engine: "claude-code", state: "running" },
+                  { name: "Dependency audit", model: "talon-1", engine: "codex", state: "running" },
+                  { name: "Verify finding #3", model: "claude-opus", engine: "hermes", state: "review" },
+                  { name: "Draft report", model: "talon-1", engine: "hermes", state: "queued" },
+                ]}
+              />
+            }
+          >
+            <p>
+              Raptor plans a task, splits it across parallel workers, executes with scoped tools and
+              verifies the result before anything lands.
+            </p>
+            <p>
+              It runs Talon-1 on your hardware by default, or any model you point it at. Model and
+              engine are chosen separately, per task.
+            </p>
+          </ProductBlock>
+
+          <div className="product-link" aria-hidden="true">
+            <span className="label">Raptor-1</span>
+            <i />
+            <span className="label">runs on</span>
+            <i />
+            <span className="label">Talon-1</span>
+          </div>
+
+          <ProductBlock
+            id="talon"
+            index="01.2"
             kind="Model / Open weights"
             name="Talon-1"
-            summary="Our premier cyber-capable frontier model."
+            summary="The open-weight model that powers Raptor."
             specs={[
               ["Parameters", "27B"],
               ["Context", "128k"],
@@ -123,6 +170,7 @@ export function Home() {
             ]}
             to="/talon"
             linkLabel="Explore Talon-1"
+            flip
             visual={
               <div className="home-console">
                 <span className="home-local-landing" data-home-stop="talon" aria-hidden="true" />
@@ -150,57 +198,8 @@ export function Home() {
               stay on the machine.
             </p>
             <p>
-              Frontier-level capability with Pareto-efficient performance. Fine-tuned for additional
-              offensive and defensive cybersecurity capability across vulnerability research,
-              reverse engineering, secure coding, SOC analysis and authorized red teaming.
-            </p>
-          </ProductBlock>
-
-          <div className="product-link" aria-hidden="true">
-            <span className="label">Talon-1</span>
-            <i />
-            <span className="label">powers</span>
-            <i />
-            <span className="label">Raptor</span>
-          </div>
-
-          <ProductBlock
-            id="talos"
-            index="01.2"
-            kind="Agent / Runs on Harness"
-            name="Raptor"
-            summary="The autonomous agent built around Talon-1."
-            specs={[
-              ["Engines", "Hermes · Claude Code · Codex"],
-              ["Models", "Talon-1 local, APIs, private endpoints"],
-              ["Workers", "Isolated git worktrees"],
-              ["Merges", "Serialized, nothing unreviewed"],
-            ]}
-            to="/raptor"
-            linkLabel="Meet Raptor"
-            flip
-            visual={
-              <TaskGraph
-                journey
-                root={{ name: "Security review · acme/api", model: "talon-1" }}
-                workers={[
-                  { name: "Map attack surface", model: "talon-1", engine: "hermes", state: "done" },
-                  { name: "Auth and session handling", model: "talon-1", engine: "hermes", state: "done" },
-                  { name: "Deserialization paths", model: "talon-1", engine: "claude-code", state: "running" },
-                  { name: "Dependency audit", model: "talon-1", engine: "codex", state: "running" },
-                  { name: "Verify finding #3", model: "claude-opus", engine: "hermes", state: "review" },
-                  { name: "Draft report", model: "talon-1", engine: "hermes", state: "queued" },
-                ]}
-              />
-            }
-          >
-            <p>
-              Raptor plans a task, splits it across parallel workers, executes with scoped tools and
-              verifies the result before anything lands.
-            </p>
-            <p>
-              It runs Talon-1 locally by default, or any model you point it at. Model and engine
-              are chosen separately, per task.
+              Fine-tuned for offensive and defensive cybersecurity work across vulnerability
+              research, reverse engineering, secure coding, SOC analysis and authorized red teaming.
             </p>
           </ProductBlock>
         </div>
@@ -262,7 +261,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="Talon-1 weights, evaluations, Raptor and Harness ship together on December 25, 2026."
+          text="Talon-1 weights, evaluations, Raptor and the harness ship together on December 25, 2026."
         />
       </div>
     </div>
