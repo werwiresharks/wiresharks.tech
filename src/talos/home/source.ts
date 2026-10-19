@@ -123,7 +123,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
         const section = root.querySelector(crossInto);
         const gap = section ? readFrame(section).y - section.getBoundingClientRect().height / 2 + (key === "platform" ? -40 : 24) : frame.y - 180;
         const crossing = gap - hold - height * 0.1;
-        const start = Math.max(crossing - height * 0.18, previousDeparture);
+        // The orb leaves the rail for the gap line, which can sit far below it, so that move gets its own scroll span.
+        const start = Math.max(crossing - height * 0.18, previousDeparture + height * 0.12);
         const finish = Math.max(crossing + height * 0.18, start + height * 0.12);
         approach.push(
           { at: start, frame: { ...rail, x: previousRail, y: gap } },
