@@ -186,7 +186,7 @@ export function Raptor() {
         </div>
       </section>
 
-      <Closing title="Raptor runs Talon-1 first." text="Both ship together. December 25, 2026." />
+      <Closing title="Raptor-1 runs Talon-1 by default." text="Both ship together. December 25, 2026." />
     </>
   );
 }

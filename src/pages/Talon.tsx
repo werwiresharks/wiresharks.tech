@@ -8,8 +8,8 @@ import { Registry } from "../components/mock/Registry";
 
 const PIPELINE = [
   ["Foundation", "A strong open-weight base. Qwen3.8-27B is the lead candidate, with provenance and license verified."],
-  ["Remove refusals", "Remove the model's refusal behavior from the weights. Knowledge and reasoning are untouched."],
-  ["Specialize", "Cybersecurity post-training with QLoRA and rsLoRA on a vetted corpus. General coding and reasoning preserved."],
+  ["Remove refusals", "Remove the model's refusal behavior from the weights. The goal is to keep its knowledge and reasoning. The evaluations will measure this."],
+  ["Specialize", "Cybersecurity post-training with QLoRA and rsLoRA on a vetted corpus. The goal is to keep general coding and reasoning."],
   ["Evaluate", "Benchmarked against the base, the version with refusals removed, and leading open-weight and frontier models."],
   ["Quantize", "Hardware-specific builds for llama.cpp, vLLM and Apple Silicon. Offline after install."],
 ];
@@ -64,8 +64,8 @@ export function Talon() {
         }
       >
         <p>
-          We find the model's refusal behavior in its weights and remove it. The model keeps
-          everything it knows. It stops refusing.
+          We find the model's refusal behavior in its weights and remove it. It stops refusing.
+          The goal is to keep everything else it knows. The evaluations will measure this.
         </p>
         <p>Removing refusals is not more capability. That is what the fine-tuning is for.</p>
       </Feature>
@@ -165,22 +165,23 @@ export function Talon() {
         panel={
           <Console
             title="talon-1 / eval"
+            note="Illustrative · results publish Dec 25, 2026"
             lines={[
               "$ raptor eval talon-1 --suite cyber-bench --compare base,no-refusals",
               "running 1,200 tasks · vuln-id, re, secure-coding, soc",
               "",
-              "talon-1        ███████████████████  topline",
-              "no-refusals    ████████████▌        base + no refusals",
-              "base model     ███████████▏         foundation",
+              "talon-1        ░░░░░░░░░░░░░░░░░░░  pending",
+              "no-refusals    ░░░░░░░░░░░░░░░░░░░  pending",
+              "base model     ░░░░░░░░░░░░░░░░░░░  pending",
               "",
-              "results publish with the weights · reproducible harness",
+              "illustrative · results publish Dec 25, 2026 · reproducible suite",
             ]}
           />
         }
       >
         <p>
           Talon-1 ships with reproducible benchmarks against its base, the version with refusals
-          removed, and leading open-weight and frontier models. The benchmark harness is public.
+          removed, and leading open-weight and frontier models. The benchmark suite publishes with the weights.
         </p>
       </Feature>
 

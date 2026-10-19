@@ -88,7 +88,7 @@ export function Platform() {
             <Reveal as="h3">Evidence, not claims.</Reveal>
             <Reveal as="p" delay={60}>
               No benchmark numbers are published yet. Results ship with the weights, alongside
-              the benchmark harness that produced them.
+              the benchmark suite that produced them.
             </Reveal>
           </div>
           <dl className="evidence-list">

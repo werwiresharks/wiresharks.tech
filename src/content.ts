@@ -15,6 +15,6 @@ export const REVIEW_STEPS: [string, string][] = [
 export const RELEASE_ARTIFACTS: [string, string][] = [
   ["Weights", "Talon-1, quantized for llama.cpp, vLLM and Apple Silicon."],
   ["Evaluations", "Against the base model, the version with refusals removed, and other open-weight and frontier models."],
-  ["Benchmark harness", "Public and reproducible, so the results can be checked."],
+  ["Benchmark suite", "Public and reproducible, so the results can be checked."],
   ["Raptor-1", "The autonomous agent that runs Talon-1 by default, built on Harness."],
 ];

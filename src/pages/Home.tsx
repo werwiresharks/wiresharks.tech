@@ -17,7 +17,7 @@ import { HomeJourney } from "../talos/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is Raptor-1?",
-    "The autonomous cybersecurity agent, and the main product. Raptor plans a task, splits the work across parallel workers that each get their own copy of the code, runs it on real systems and checks the result. It runs Talon-1 on your hardware, or any other model you point it at. Harness is the infrastructure that runs and coordinates its work.",
+    "The autonomous cybersecurity agent. Raptor plans a task, splits the work across parallel workers that each get their own copy of the code, runs it on real systems and checks the result. It runs Talon-1 on your hardware, or any other model you point it at. Harness is the infrastructure that runs and coordinates its work.",
   ],
   [
     "What is Talon-1?",
@@ -25,7 +25,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Does the model refuse security questions?",
-    "No. We removed the model's refusal behavior from the weights. It keeps its knowledge and reasoning, and it stops refusing security work.",
+    "No. We removed the model's refusal behavior from the weights, so it stops refusing security work. The goal is to keep its knowledge and reasoning. The evaluations will measure this.",
   ],
   [
     "Does it need the cloud?",
