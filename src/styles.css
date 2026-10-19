@@ -375,15 +375,42 @@ button {
   height: var(--bar-height);
   margin-top: var(--bar-inset);
   padding: 0 clamp(14px, 2vw, 22px);
-  border-color: rgba(18, 18, 18, 0.08);
+  border-color: var(--glass-border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.94);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
   box-shadow: 0 12px 32px -12px rgba(18, 18, 18, 0.18);
+}
+/* Over a dark section the bar takes the dark tokens (the .tone-dark class comes from Header.tsx). */
+.masthead-bar.tone-dark {
+  color: var(--fg);
+}
+.masthead.scrolled .masthead-bar.tone-dark {
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+}
+/* Reading progress: a hairline of red along the bar's bottom edge. */
+.masthead-bar::after {
+  content: "";
+  position: absolute;
+  left: var(--radius-lg);
+  right: var(--radius-lg);
+  bottom: -1px;
+  height: 1px;
+  background: var(--red);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.masthead.scrolled .masthead-bar::after {
+  opacity: 1;
+}
+.masthead.menu-open .masthead-bar::after {
+  opacity: 0;
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .masthead.scrolled .masthead-bar,
   .masthead.menu-open .masthead-bar {
-    background: rgba(255, 255, 255, 0.76);
+    background: color-mix(in srgb, var(--bg) 76%, transparent);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     backdrop-filter: blur(18px) saturate(160%);
   }
@@ -432,9 +459,15 @@ button {
     color var(--fast) var(--ease-out),
     background-color var(--fast) var(--ease-out);
 }
-.nav > a:hover {
-  color: var(--fg);
-  background: rgba(18, 18, 18, 0.05);
+@media (hover: hover) {
+  .nav > a:hover {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 6%, transparent);
+  }
+  .nav > .nav-cta:hover {
+    border-color: color-mix(in srgb, var(--fg) 40%, transparent);
+    background: color-mix(in srgb, var(--fg) 4%, transparent);
+  }
 }
 .nav > a.active {
   color: var(--fg);
@@ -464,10 +497,6 @@ button {
 }
 .nav > .nav-cta svg {
   color: var(--red);
-}
-.nav > .nav-cta:hover {
-  border-color: rgba(18, 18, 18, 0.4);
-  background: rgba(18, 18, 18, 0.03);
 }
 .menu-toggle {
   display: none;
@@ -1927,9 +1956,9 @@ button {
     align-items: stretch;
     gap: 0;
     padding: 8px;
-    border: 1px solid rgba(18, 18, 18, 0.08);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    background: #fff;
+    background: var(--bg);
     box-shadow: 0 24px 48px -16px rgba(18, 18, 18, 0.24);
     font-size: 1.0625rem;
     animation: menu-in var(--base) var(--ease);

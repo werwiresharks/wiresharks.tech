@@ -8,6 +8,7 @@ import { Wordmark } from "./Wordmark";
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [dark, setDark] = useState(false);
   const header = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLElement>(null);
@@ -16,11 +17,29 @@ export function Header() {
   useEffect(() => setOpen(false), [location]);
 
   useEffect(() => {
-    const update = () => setScrolled(window.scrollY > 24);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const root = document.documentElement;
+      const max = root.scrollHeight - window.innerHeight;
+      header.current?.style.setProperty("--p", String(max > 0 ? Math.min(1, window.scrollY / max) : 0));
+      setScrolled(window.scrollY > 24);
+      // The first page layer under the bar's centre line decides its glass tone.
+      const below = document.elementsFromPoint(window.innerWidth / 2, 40).find((node) => !header.current?.contains(node));
+      setDark(Boolean(below?.closest(".tone-dark")));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
     update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
-  }, []);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [location]);
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)");
@@ -63,7 +82,7 @@ export function Header() {
 
   return (
     <header ref={header} className={`masthead${scrolled ? " scrolled" : ""}${open ? " menu-open" : ""}`}>
-      <div className="masthead-bar">
+      <div className={`masthead-bar${dark ? " tone-dark" : ""}`}>
         <Link className="brand-link" to="/" aria-label="Wiresharks home">
           <LogoMark />
           <Wordmark />
