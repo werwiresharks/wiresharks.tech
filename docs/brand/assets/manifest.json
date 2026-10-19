@@ -1,6 +1,6 @@
 {
-  "observed": "2026-10-18",
-  "artwork_license": "Unestablished; no open artwork license asserted",
+  "snapshot": "2026-10-19",
+  "artwork_license": "Wiresharks company artwork; no open license",
   "font_license": "SIL OFL 1.1; retain assets/fonts/Geist-OFL.txt",
   "font_inventory": "FONTS.md",
   "fontsource_packages": "@fontsource/geist and @fontsource/geist-mono 5.3.0 (website imports)",
@@ -8,105 +8,105 @@
     {
       "path": "assets/fonts/Geist-OFL.txt",
       "origin": "https://github.com/vercel/geist-font/blob/main/OFL.txt",
-      "status": "Original font software or upstream license; static Latin subset served by live site; exact upstream release mapping unverified",
+      "status": "Font software or its upstream license; static Latin subset the live site serves",
       "bytes": 4383,
       "sha256": "c683bfbcc7e087f5d37a54ef628f10387c451a83ddc459b151403a164ac46c90"
     },
     {
       "path": "assets/fonts/geist-latin-400-normal-B40WzpMT.woff2",
       "origin": "https://wiresharks.tech/assets/geist-latin-400-normal-B40WzpMT.woff2",
-      "status": "Original font software or upstream license; static Latin subset served by live site; exact upstream release mapping unverified",
+      "status": "Font software or its upstream license; static Latin subset the live site serves",
       "bytes": 12956,
       "sha256": "ead637fd0b6b887d829b3ce3f25fdc242b1de0cfb69c0d97987933675d1315ba"
     },
     {
       "path": "assets/fonts/geist-latin-500-normal-CTWBw9NS.woff2",
       "origin": "https://wiresharks.tech/assets/geist-latin-500-normal-CTWBw9NS.woff2",
-      "status": "Original font software or upstream license; static Latin subset served by live site; exact upstream release mapping unverified",
+      "status": "Font software or its upstream license; static Latin subset the live site serves",
       "bytes": 13296,
       "sha256": "6145bf6706dbc1b6686f04f871489cf724951f00b752745896ccdcac07639a53"
     },
     {
       "path": "assets/fonts/geist-latin-600-normal-CSETrqM2.woff2",
       "origin": "https://wiresharks.tech/assets/geist-latin-600-normal-CSETrqM2.woff2",
-      "status": "Original font software or upstream license; static Latin subset served by live site; exact upstream release mapping unverified",
+      "status": "Font software or its upstream license; static Latin subset the live site serves",
       "bytes": 13372,
       "sha256": "edde7cc4e2719898f981a6d970a756030fff75a8ed36dd6a457a60181b889ebf"
     },
     {
       "path": "assets/fonts/geist-mono-latin-400-normal-DTRLJnHl.woff2",
       "origin": "https://wiresharks.tech/assets/geist-mono-latin-400-normal-DTRLJnHl.woff2",
-      "status": "Original font software or upstream license; static Latin subset served by live site; exact upstream release mapping unverified",
+      "status": "Font software or its upstream license; static Latin subset the live site serves",
       "bytes": 9864,
       "sha256": "3f98383b122fe015a48536cd4a1cda855a201718923ffe74931a01597107b9b5"
     },
     {
       "path": "assets/fonts/geist-mono-latin-500-normal-YINYabwD.woff2",
       "origin": "https://wiresharks.tech/assets/geist-mono-latin-500-normal-YINYabwD.woff2",
-      "status": "Original font software or upstream license; static Latin subset served by live site; exact upstream release mapping unverified",
+      "status": "Font software or its upstream license; static Latin subset the live site serves",
       "bytes": 10116,
       "sha256": "72971bd4908d3984fa1b1426bb363730e4957e16a0f58bfbca76993095715488"
     },
     {
       "path": "assets/logo/apple-touch-icon.png",
       "origin": "https://wiresharks.tech/apple-touch-icon.png",
-      "status": "Original website file, unmodified; artwork license unestablished",
+      "status": "Original website file, unmodified",
       "bytes": 3333,
       "sha256": "8c9d870de5ed3011f530f76cde8da2caa50c384b29761675b427f7c4487f7bb4"
     },
     {
       "path": "assets/logo/favicon.ico",
       "origin": "https://wiresharks.tech/favicon.ico",
-      "status": "Original website file, unmodified; artwork license unestablished",
+      "status": "Original website file, unmodified",
       "bytes": 1129,
       "sha256": "94fb46de8147973dee7a345df60274174738eb98e1dbb31afc6a28686c7e592c"
     },
     {
       "path": "assets/logo/favicon.svg",
       "origin": "https://wiresharks.tech/favicon.svg",
-      "status": "Original website file, unmodified; artwork license unestablished",
+      "status": "Original website file, unmodified",
       "bytes": 427,
       "sha256": "4a2fcc27761143775bdbd2864cf54c520c7f0da1632e570afe4afe74511695c8"
     },
     {
       "path": "assets/logo/inline-observed-0.svg-fragment.txt",
       "origin": "https://wiresharks.tech/ (inline SVG DOM extraction)",
-      "status": "Evidence fragment; CSS dependent; not a production master",
+      "status": "Header mark as rendered inline; CSS dependent; not a standalone master",
       "bytes": 390,
       "sha256": "f3543ecff8146d693b441fded97eb0ddb6f5ccc50923fe8441ff78488bf682e6"
     },
     {
       "path": "assets/logo/inline-observed-1.svg-fragment.txt",
       "origin": "https://wiresharks.tech/ (inline SVG DOM extraction)",
-      "status": "Evidence fragment; CSS dependent; not a production master",
+      "status": "Header mark as rendered inline; CSS dependent; not a standalone master",
       "bytes": 268,
       "sha256": "90e6a448b0608bb40645dc3ec30d954f0fdd180ed39c51f893233d1bdd6db474"
     },
     {
       "path": "assets/logo/inline-observed-2.svg-fragment.txt",
       "origin": "https://wiresharks.tech/ (inline SVG DOM extraction)",
-      "status": "Evidence fragment; CSS dependent; not a production master",
+      "status": "Header mark as rendered inline; CSS dependent; not a standalone master",
       "bytes": 189,
       "sha256": "e779d50b8f7a1eca9479acee2311224d926520755dc7bcfe1f575e5ca5058d9b"
     },
     {
       "path": "assets/logo/inline-observed-3.svg-fragment.txt",
       "origin": "https://wiresharks.tech/ (inline SVG DOM extraction)",
-      "status": "Evidence fragment; CSS dependent; not a production master",
+      "status": "Header mark as rendered inline; CSS dependent; not a standalone master",
       "bytes": 251,
       "sha256": "5391aaec648a721aa5e361a9d4b933dcd92b2c1c5f29ca34cbd545ef9d0f2d38"
     },
     {
       "path": "assets/logo/raptor.svg",
       "origin": "https://wiresharks.tech/raptor.svg",
-      "status": "Original website file, unmodified; artwork license unestablished",
+      "status": "Original website file, unmodified",
       "bytes": 247,
-      "sha256": "d836db5561ab81172a409e51bc9d6f184020f912fbec34f67d549c1cc2121531"
+      "sha256": "e131b4f351ed69c826e6485d642153b7c01a1a9953ab8d01b30675e15dd9012f"
     },
     {
       "path": "assets/logo/wiresharks-logo.png",
       "origin": "https://wiresharks.tech/wiresharks-logo.png",
-      "status": "Original website file, unmodified; artwork license unestablished",
+      "status": "Original website file, unmodified",
       "bytes": 9964,
       "sha256": "a4fd99bf6a0af85989cbfd18fe9ded2836c3cf84fa11815ae784ca04cf11f229"
     }

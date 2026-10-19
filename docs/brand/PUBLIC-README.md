@@ -1,13 +1,13 @@
-# Wiresharks visual kit
+# Wiresharks brand kit
 
-Open `brand-guide.html` for the illustrated guide or `quick-reference.html` for a printable one-page reference. Both are self-contained, with fonts and the displayed original mark embedded. Links to templates and token files resolve within this package. `BRAND-GUIDE.md` is the longer text reference.
+Open `brand-guide.html` for the illustrated guide or `quick-reference.html` for the one-page reference. Both are self-contained, with the fonts and the square mark embedded. Links to the templates and token files resolve inside this package. `BRAND-GUIDE.md` is the full text reference.
 
-This is a proposed companion to the identity observed on October 18, 2026. The templates and usage recommendations are not approved masters. No product performance, availability, model-license, or legal-clearance claim is established by this package.
+The kit documents the live wiresharks.tech design, snapshot October 19, 2026. The names, product sentences, palette, type and motion are ratified. Use them as they are.
 
-Every PNG-plus-text header is a proposed composition, not an approved lockup. Templates are editable HTML; their headline/social caption are new proposed copy, not observed site wording. Public visible cybersecurity positioning differs from JSON-LD; owner choice is unresolved. Use a browser's print dialog with backgrounds enabled and headers disabled. The slide is 16 × 9in, the social card is 12 × 6.3in, and the document is A4. Add descriptive alt text to a social image export. Check wrapping, pagination, contrast, and all edited claims before publication.
+The templates are editable HTML with the ratified copy. Print with backgrounds on and browser headers off. The slide is 16 × 9in, the social card 12 × 6.3in and the document A4. Add descriptive alt text to a social image export. Check wrapping, pagination and contrast after every edit.
 
-Original artwork is preserved in `assets/logo/`; `assets/manifest.json` records file hashes and provenance. No open license or legal ownership was established for that artwork. Public access is not a license grant. Inline fragments are evidence, not production assets. `assets/fonts/Geist-OFL.txt` covers the bundled font software only and must travel with it.
+`assets/logo/` holds the original web artwork; `assets/manifest.json` records each file's hash and origin. The artwork belongs to Wiresharks and has no open license. `assets/fonts/Geist-OFL.txt` covers the bundled font software only and travels with it.
 
-The guide contains measured solid-color pairings, not a WCAG conformance certificate. Print uses sRGB, without a CMYK profile or press proof. Future product statements need current primary evidence from https://wiresharks.tech/.
+The contrast figures are measured solid-colour pairs, not a WCAG conformance certificate. Print uses sRGB, with no CMYK profile or press proof.
 
-Read [FONTS.md](FONTS.md) for all identified website families, bounded coverage and system glyph fallback, official desktop downloads and installation. The bundled WOFF2 files are web subsets.
+Read [FONTS.md](FONTS.md) for the website families, desktop downloads and installation. The bundled WOFF2 files are web subsets.

@@ -32,5 +32,5 @@ export function cssBlock(css, selector) {
 export function tokensCss() {
   const block = (sel, o) => `${sel} {\n${Object.entries(o).map(([k, v]) => `  ${k}: ${v};`).join("\n")}\n}\n`;
   const { root, "tone-soft": soft, "tone-dark": dark } = tokens.css;
-  return `/* Generated from tokens.json by tools/build.mjs. Do not edit.\n   Observed public-site tokens (October 18, 2026), not a new design system. */\n${block(":root", root)}${block(".tone-soft", soft)}${block(".tone-dark", dark)}`;
+  return `/* Generated from tokens.json by tools/build.mjs. Do not edit.\n   Live wiresharks.tech tokens from src/styles.css, snapshot October 19, 2026. */\n${block(":root", root)}${block(".tone-soft", soft)}${block(".tone-dark", dark)}`;
 }

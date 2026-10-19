@@ -1,34 +1,48 @@
 # Reusable copy
 
-These complete examples are proposed collateral copy. The one-liner paraphrases JSON-LD, which differs from the visible autonomous cybersecurity positioning. Owner positioning choice remains open. The headline “Autonomous systems. Specialized intelligence.” and social caption below are new proposed copy, not observed site wording. They add no technical, legal, or availability guarantees. Recheck the [live site](https://wiresharks.tech/) before publishing new product statements.
+Ratified copy for collateral. Use the names and sentences verbatim. Public pieces use the bold, present-tense register. Engineering pieces use the plain register with the same names.
 
-## Company one-liner
+## Tagline
 
-Wiresharks is developing autonomous AI systems and specialized intelligence.
+The world's most dangerous AI.
+
+## Company line
+
+Wiresharks builds autonomous cybersecurity AI: Raptor, the agent, and Talon-1, the open-weight model that powers it.
+
+## Product sentences
+
+- Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.
+- Talon-1 is the open-weight security model that powers Raptor.
+- Harness is the infrastructure that runs and coordinates Raptor's work.
+- The Raptor Particle Engine visualizes agent authorization state. It never makes decisions.
 
 ## Social caption
 
-Explore Wiresharks' work on autonomous systems and specialized intelligence at wiresharks.tech.
+The world's most dangerous AI. Raptor, the agent. Talon-1, the model. Both ship December 25, 2026. wiresharks.tech
 
 ## Document introduction
 
-This document summarizes public information from Wiresharks. The company website is the source for current product descriptions and announcements. Consult wiresharks.tech before reusing a technical or release claim.
+Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. Talon-1 is the open-weight security model that powers Raptor. Raptor plans a task and splits it across parallel workers. Each worker tests on real systems. Raptor checks the result before anything lands.
 
 ## Slide sequence
 
-1. Use the supplied overview slide with its company descriptor.
-2. Add one current, sourced fact per additional slide.
-3. Include each fact's source and the date checked.
+1. Open with the tagline and the product sentences.
+2. Give one fact per slide.
+3. Show the source and date on each fact.
 4. Close with wiresharks.tech.
 
-## Naming reference
+## Naming
 
-The observed public names are Wiresharks, Raptor-1 for the agent, and Talon-1 for the model. Use the full versioned name on first mention. Recheck release status, specifications, and dates before adding product blurbs. This kit makes no promise that a product is available.
+Wiresharks, Raptor, Talon-1, Harness and the Raptor Particle Engine. Write Raptor, never Raptor-1. Talon-1 keeps its version. Talon-1 powers Raptor; Raptor runs on Harness.
 
-## Observed alternative and publication skeletons
+## Publishing skeletons
 
-Observed visible descriptor: “An autonomous cybersecurity agent, and the local, open-weight model it runs on.” Attribute it to the live site; this quotation does not verify capability or release. Owner must choose before adopting a descriptor.
+Message order: what it is, how it works, the evidence, the date, the source or contact.
 
-Proposed message order: what it is → mechanism → current evidence → status/date → source/contact. Audience inferred from public copy: security practitioners and local-model users; no research establishes market segments.
+- Announcement: one fact, one sentence on how it works, the date, a link.
+- Product blurb: the product name, its product sentence, one supporting fact.
+- Social post: one fact and a link, with meaningful image alt text.
+- Email signature: your name · Wiresharks · wiresharks.tech. The public address is hello@wiresharks.tech.
 
-Announcement: one sourced fact; one explanatory sentence; verified status/date; source link. Product blurb: full versioned public name; attributed current description; qualifications and source date. Social: one fact plus context and source, with meaningful image alt text. Email signature: your name · Wiresharks · wiresharks.tech. Use a contact address only after checking it on the current site.
+Do not invent benchmark scores, customers or partners. Label illustrations as illustrative.

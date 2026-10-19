@@ -8,7 +8,7 @@ import tempfile
 BRAND = Path(__file__).resolve().parents[1]
 # CHROME is an explicit executable path. T3's installed browser avoids snap confinement.
 candidates = [os.environ.get("CHROME")]
-candidates += [str(p) for p in (Path.home() / ".t3/tools/chrome-headless-shell").glob("linux64/*/chrome-headless-shell")]
+candidates += [str(p) for p in (Path.home() / ".t3/tools/chrome-headless-shell").glob("*/*/chrome-headless-shell")]
 candidates += [shutil.which("chromium"), shutil.which("google-chrome")]
 chrome = next((p for p in candidates if p and Path(p).is_file()), None)
 if not chrome:
@@ -30,5 +30,5 @@ for name, expected in exports.items():
     if shutil.which("pdftotext"):
         text = subprocess.check_output(["pdftotext", str(output), "-"], text=True)
         assert "Wiresharks" in text, f"{name}: missing text"
-        assert "Proposed template with neutral example copy" not in text, f"{name}: print-only content leaked"
+        assert "Template note." not in text, f"{name}: print-only content leaked"
     print(f"PASS {output.name}: {expected} page(s)")
