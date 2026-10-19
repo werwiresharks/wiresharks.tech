@@ -1904,8 +1904,8 @@ button {
 .home-console .console pre { padding-top: 112px; }
 .home-local-landing {
   position: absolute;
-  top: 52px;
-  right: 24px;
+  top: 64px;
+  right: 16px;
   width: 72px;
   height: 72px;
 }
