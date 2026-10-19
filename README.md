@@ -45,3 +45,7 @@ The only public address is hello@wiresharks.tech.
 Vercel builds `main` for production. `vercel.json` redirects the former
 `/products/*` and `/research/*` routes to `/` and serves `index.html` for
 client routes.
+
+## Brand kit
+
+See [the brand kit](docs/brand/README.md) for human guidance, printable HTML, original assets, tokens, and reusable templates. Use the live identity and flag source conflicts. The kit and visual package use public sources only; differing public descriptors remain flagged.
