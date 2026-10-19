@@ -1904,8 +1904,9 @@ button {
 .home-console .console pre { padding-top: 112px; }
 .home-local-landing {
   position: absolute;
+  /* The orb's centre is 55px from both the bar's bottom edge (45px down) and the panel's inner right edge (1px border), so its visible gaps match whatever its radius. shortcut: assumes default text size (bar height follows rem text), upgrade to measuring the bar if text zoom matters. */
   top: 64px;
-  right: 16px;
+  right: 20px;
   width: 72px;
   height: 72px;
 }
@@ -1996,7 +1997,8 @@ button {
   .home-landing, .home-section-landing { width: 40px; height: 40px; top: -10px; }
   .home-section-landing { top: calc(var(--section-y) - 10px); }
   .home-console .console pre { padding-top: 82px; }
-  .home-local-landing { width: 44px; height: 44px; right: 12px; }
+  /* Phone: centre 39px from the 42px bar's bottom edge and from the inner right edge. */
+  .home-local-landing { width: 44px; height: 44px; top: 59px; right: 18px; }
   .home-graph-dock { height: 76px; }
   .home-graph-dock i { width: 44px; height: 44px; }
   .home-graph .graph-workers li { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; }
