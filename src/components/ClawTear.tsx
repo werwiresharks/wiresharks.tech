@@ -53,6 +53,25 @@ export function ClawTear() {
     let mapped = false;
     let lastY = window.scrollY;
     let still = motion.matches;
+    /** The static orb shows until the WebGL journey runs (reduced motion, no WebGL, still loading). */
+    const page = node.closest<HTMLElement>(".home-page");
+    let orb = page?.dataset.journey !== "ready";
+
+    const uncut = () => {
+      hero.style.removeProperty("--claw-skin");
+      hero.style.removeProperty("--claw-slot-skin");
+    };
+    // The static orb is cut by the tear it sits over, so its dots never cover an open mark. Under
+    // reduced motion the tear is sealed until scrolled past, and the orb stays whole until then.
+    const cutOrb = (holes: string, progress: number) => {
+      if (still && node.dataset.torn !== "true") return uncut();
+      hero.style.setProperty("--claw-skin", `path(evenodd, "${outer}${holes}")`);
+      if (slot) {
+        const cut = clawShape(layout, { ...zone, x: zone.x - slot.left, y: zone.y - slot.top }, progress);
+        const rect = `M${-slot.left} ${-slot.top}H${w - slot.left}V${h - slot.top}H${-slot.left}Z`;
+        hero.style.setProperty("--claw-slot-skin", `path(evenodd, "${rect}${cut.holes}")`);
+      }
+    };
 
     const draw = (progress: number) => {
       if (progress === last) return;
@@ -65,13 +84,11 @@ export function ClawTear() {
       strike.current?.setAttribute("d", shape.strike);
       node.style.setProperty("--claw", shape.open.toFixed(3));
       clawFeed.cuts = shape.cuts.map((cut) => ({ ...cut, ay: cut.ay + top, by: cut.by + top }));
-      // The static orb (reduced motion, no WebGL) is cut by the same skin, so its dots never sit over an open mark.
-      hero.style.setProperty("--claw-skin", `path(evenodd, "${outer}${shape.holes}")`);
-      if (slot) {
-        const { holes } = clawShape(layout, { ...zone, x: zone.x - slot.left, y: zone.y - slot.top }, progress);
-        const rect = `M${-slot.left} ${-slot.top}H${w - slot.left}V${h - slot.top}H${-slot.left}Z`;
-        hero.style.setProperty("--claw-slot-skin", `path(evenodd, "${rect}${holes}")`);
-      }
+      if (orb) cutOrb(shape.holes, progress);
+    };
+    const redraw = () => {
+      last = -1;
+      draw(current);
     };
 
     // Wheel ticks arrive in coarse steps; easing toward the target keeps the cut smooth.
@@ -118,7 +135,11 @@ export function ClawTear() {
       const from = lastY;
       lastY = y;
       if (motion.matches) {
-        node.dataset.torn = String(y > lock + window.innerHeight * STILL_AT);
+        const torn = String(y > lock + window.innerHeight * STILL_AT);
+        if (node.dataset.torn !== torn) {
+          node.dataset.torn = torn;
+          redraw();
+        }
         return;
       }
       const swiping = performance.now() - inputAt < INPUT_MS;
@@ -228,12 +249,18 @@ export function ClawTear() {
         hold();
       }
       mapped = true;
-      last = -1;
-      draw(current);
+      redraw();
     };
 
     const resize = new ResizeObserver(measure);
     resize.observe(hero);
+    // The static orb's skin is fallback-only work, so it is drawn only while that orb shows.
+    const journey = new MutationObserver(() => {
+      orb = page?.dataset.journey !== "ready";
+      if (orb) redraw();
+      else uncut();
+    });
+    if (page) journey.observe(page, { attributes: true, attributeFilter: ["data-journey"] });
     measure();
     void document.fonts?.ready.then(measure);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -251,6 +278,7 @@ export function ClawTear() {
       cancelAnimationFrame(frame);
       clawFeed.cuts = [];
       resize.disconnect();
+      journey.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
       window.removeEventListener("focusin", navigating);
