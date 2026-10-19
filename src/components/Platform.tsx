@@ -14,7 +14,7 @@ const TIERS = [
     index: "02",
     layer: "Agent",
     name: "Raptor",
-    role: "Agent orchestration on the harness",
+    role: "Agent orchestration on Harness",
     text: "Plans the task, delegates to parallel workers and routes each step to a model and an engine. Memory and skills persist between runs.",
     facts: ["Hermes · Claude Code · Codex", "Bounded parallel workers, reviewers", "Durable memory, versioned skills"],
   },

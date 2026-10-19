@@ -26,9 +26,9 @@ export function Raptor() {
       <title>Raptor-1 | Wiresharks</title>
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
       <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent.">
-        Raptor-1 is a model-independent autonomous agent. It runs on a harness that keeps the
-        strongest parts of Hermes Agent, adds first-class engines for Claude Code and Codex, and
-        owns the orchestration, memory and skills that make them work as one system.
+        Raptor-1 is an autonomous agent that works with any model. It runs on Harness, which
+        keeps the strongest parts of Hermes Agent, adds full support for Claude Code and Codex,
+        and handles the planning, memory and skills that make them work as one system.
       </PageHead>
 
       <Feature

@@ -208,7 +208,7 @@ export function Talon() {
         </div>
       </section>
 
-      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations, Raptor and the harness." />
+      <Closing title="Open weights. December 25." text="Talon-1 ships with its evaluations, Raptor and Harness." />
     </>
   );
 }

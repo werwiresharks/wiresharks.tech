@@ -17,7 +17,7 @@ import { HomeJourney } from "../talos/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is Raptor-1?",
-    "The autonomous cybersecurity agent, and the main product. Raptor plans a task, splits the work across parallel workers that each get their own copy of the code, runs it on real systems and checks the result. It runs Talon-1 on your hardware, or any other model you point it at. The harness is the infrastructure that runs and coordinates its work.",
+    "The autonomous cybersecurity agent, and the main product. Raptor plans a task, splits the work across parallel workers that each get their own copy of the code, runs it on real systems and checks the result. It runs Talon-1 on your hardware, or any other model you point it at. Harness is the infrastructure that runs and coordinates its work.",
   ],
   [
     "What is Talon-1?",
@@ -40,7 +40,7 @@ const FAQ: [string, string][] = [
 const PRINCIPLES: [string, string][] = [
   ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. No network after install, no telemetry to turn off."],
   ["Answers what others won't.", "We removed the model's refusal behavior, then fine-tuned it to help with real security work."],
-  ["Open weights.", "The model, its evaluations, Raptor and the harness ship together, for you to run and inspect."],
+  ["Open weights.", "The model, its evaluations, Raptor and Harness ship together, for you to run and inspect."],
   ["Proven, then patched.", "A finding is reproduced before it is reported, and a second model reviews every patch."],
 ];
 
@@ -63,7 +63,7 @@ export function Home() {
             <span id="hero-title">The world's most <span className="dangerous">dangerous</span> AI.</span>
           </Reveal>
           <Reveal delay={120} className="hero-glass">
-            <p>An autonomous cybersecurity agent, and the local, open-weight model it runs on.</p>
+            <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model it runs on.</p>
             <p className="hero-key label">
               <span>
                 <b>Raptor-1</b> Agent
@@ -112,7 +112,7 @@ export function Home() {
           <ProductBlock
             id="talos"
             index="01.1"
-            kind="Agent / Runs on the harness"
+            kind="Agent / Runs on Harness"
             name="Raptor-1"
             summary="The autonomous agent built around Talon-1."
             specs={[
@@ -261,7 +261,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="Talon-1 weights, evaluations, Raptor and the harness ship together on December 25, 2026."
+          text="Talon-1 weights, evaluations, Raptor and Harness ship together on December 25, 2026."
         />
       </div>
     </div>

@@ -9,7 +9,7 @@ const LABEL: Record<TaskState, string> = {
   review: "in review",
 };
 
-/** A coordinator with its workers, as the harness control plane reports them. */
+/** A coordinator with its workers, as the Harness control plane reports them. */
 export function TaskGraph({
   root,
   workers,
