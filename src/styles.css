@@ -5,45 +5,69 @@
    ========================================================================== */
 
 :root {
-  /* Brand */
-  --red: #e32626;
+  /* Brand — one red, used as the single accent everywhere */
+  --red: #e5251b; /* signal red: the only accent colour */
+  --red-strong: #c01812; /* pressed / dense fills */
   --red-text: #c41f1f; /* red that passes AA as text on light grounds */
+  --red-tint: rgba(229, 37, 27, 0.1); /* washes, glows, hover beds */
   --accent: var(--red); /* used by the logo mark */
-  --charcoal: #121212;
-  --charcoal-2: #1a1a1a;
+  --charcoal: #111214;
+  --charcoal-2: #1a1b1e;
   --white: #ffffff;
-  --soft: #f7f7f5;
+  --soft: #f5f5f2;
 
   /* Tone (light by default; .tone-soft and .tone-dark re-point these) */
   --bg: var(--white);
-  --fg: #121212;
+  --fg: #111214;
   --fg-2: #3a3a3a;
   --muted: #6b6b6b;
+  --muted-2: #8a8a88; /* dimmer label text, kept >= 4.5:1 on light grounds */
   --line: rgba(128, 128, 128, 0.2);
-  --line-strong: rgba(18, 18, 18, 0.16);
+  --line-strong: rgba(17, 18, 20, 0.16);
   --panel-bg: #ffffff;
   --panel-bar: #fafaf9;
-  --panel-shadow: 0 1px 0 rgba(18, 18, 18, 0.03), 0 28px 56px -32px rgba(18, 18, 18, 0.22);
+  --panel-shadow: 0 1px 0 rgba(17, 18, 20, 0.03), 0 28px 56px -32px rgba(17, 18, 20, 0.22);
   --ok: #1f7a45;
-  --run: #2f6bb0;
-  --review: #9c7a3c;
+  --run: #c01812; /* "running" reads as live red, not blue */
+  --review: #9a6b1f; /* held-for-review stays a neutral amber, never brand red */
   --link-accent: var(--red);
+
+  /* Section depth + material (overridden per tone) */
+  --section-depth: none;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-blur: 18px;
+  --glass-border: rgba(17, 18, 20, 0.08);
 
   /* Kept for the particle engine's static fallback */
   --ink: var(--fg);
-  --bronze-deep: #9c7a3c;
+  --bronze-deep: var(--red); /* retired bronze → the single accent */
 
   /* Type */
   --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --fs-display: clamp(2.875rem, 4.6vw + 1.25rem, 6rem);
-  --fs-h1: clamp(2.625rem, 5.4vw, 5rem);
+  --fs-mega: clamp(4rem, 13vw, 12rem); /* monumental: closing countdown, footer mark */
+  --fs-display: clamp(3rem, 6vw + 0.75rem, 7.5rem);
+  --fs-h1: clamp(2.75rem, 5.6vw, 5.5rem);
   --fs-h2: clamp(2rem, 3.8vw, 3.5rem);
+  --fs-h3: clamp(1.5rem, 2.1vw, 1.875rem);
   --fs-product: clamp(3.5rem, 8.4vw, 7.75rem);
+  --fs-stat: clamp(2.25rem, 3.6vw, 3.5rem); /* large tabular numerals */
   --fs-lead: clamp(1.0625rem, 1.25vw, 1.25rem);
   --fs-body: 1rem;
+  --fs-ui: 0.9375rem;
+  --fs-mono: 0.8125rem;
   --fs-small: 0.875rem;
+  --fs-micro: 0.75rem; /* 12px: the text floor */
   --fs-label: 0.75rem;
+
+  /* Weight + tracking — large type runs lighter, UI runs tighter and heavier */
+  --w-display: 400;
+  --w-h: 500;
+  --w-ui: 500;
+  --tr-display: -0.055em;
+  --tr-tight: -0.04em;
+  --tr-ui: -0.02em;
+  --tr-label: 0.08em;
 
   /* Space */
   --pad: clamp(20px, 4.4vw, 72px);
@@ -52,13 +76,20 @@
   --head-gap: clamp(56px, 7vw, 96px);
   --header-height: 76px;
 
-  /* Shape and motion */
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --ease: cubic-bezier(0.22, 0.7, 0.18, 1);
-  --fast: 180ms;
-  --base: 320ms;
+  /* Shape — the brand motif is square, so corners stay crisp */
+  --radius-sm: 3px;
+  --radius: 6px;
+  --radius-lg: 8px;
+
+  /* Motion — one easing family, three durations */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 160ms;
+  --dur-2: 320ms;
+  --dur-3: 700ms;
+  --ease: var(--ease-out); /* legacy alias */
+  --fast: var(--dur-1); /* legacy alias */
+  --base: var(--dur-2); /* legacy alias */
 
   font-family: var(--sans);
   font-size: 16px;
@@ -75,21 +106,31 @@
 .tone-soft {
   --bg: var(--soft);
   --muted: #666664; /* 5:1 on --soft */
+  --muted-2: #7c7c79;
+  --glass-bg: rgba(245, 245, 242, 0.72);
 }
 .tone-dark {
   --bg: var(--charcoal);
-  --fg: #f2f2f0;
+  --fg: #f3f3f1;
   --fg-2: #d4d4d2;
   --muted: #9b9b98;
+  --muted-2: #86867f;
   --line: rgba(255, 255, 255, 0.11);
   --line-strong: rgba(255, 255, 255, 0.22);
-  --panel-bg: #181818;
-  --panel-bar: #1d1d1d;
-  --panel-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 40px 80px -40px rgba(0, 0, 0, 0.8);
+  --panel-bg: linear-gradient(180deg, #1c1d20, #141517);
+  --panel-bar: #1d1e21;
+  --panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 40px 80px -40px #000,
+    0 0 120px -50px rgba(229, 37, 27, 0.22);
   --ok: #5fbf7f;
-  --run: #75aeea;
+  --run: #ff6a60; /* live red on dark */
   --review: #d2b07a;
   --red-text: #ff5a52;
+  --red-tint: rgba(229, 37, 27, 0.16);
+  /* Depth: a faint top light and a low red ember, so the void is not flat */
+  --section-depth: radial-gradient(90% 60% at 85% -5%, #1e1f23, transparent 70%),
+    radial-gradient(60% 55% at 8% 105%, rgba(229, 37, 27, 0.07), transparent 70%);
+  --glass-bg: rgba(20, 21, 23, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.1);
   color-scheme: dark;
 }
 .tone-soft,
@@ -97,6 +138,27 @@
 .tone-light {
   background: var(--bg);
   color: var(--fg);
+}
+/* Static depth wash on dark sections (reduced-motion safe, pointer-inert). */
+.tone-dark.section,
+.tone-dark.hero,
+.tone-dark.footer {
+  position: relative;
+  isolation: isolate;
+}
+.tone-dark.section::before,
+.tone-dark.footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--section-depth);
+}
+/* Visible seam when two light tones meet. */
+.tone-soft + .tone-light,
+.tone-light + .tone-soft {
+  border-top: 1px solid var(--line);
 }
 
 /* ---- Reset ---- */
@@ -129,8 +191,16 @@ pre {
 h1,
 h2,
 h3 {
-  font-weight: 500;
+  font-weight: var(--w-h);
   text-wrap: balance;
+}
+/* Display-scale headings run lighter and tighter than UI headings. */
+.hero h1,
+.closing h2,
+.page-head h1,
+.product h3,
+.not-found h1 {
+  font-weight: var(--w-display);
 }
 p {
   text-wrap: pretty;
@@ -156,7 +226,7 @@ button {
 :focus-visible {
   outline: 2px solid var(--red);
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: inherit;
 }
 ::selection {
   background: var(--red);
@@ -359,8 +429,8 @@ button {
   border-radius: var(--radius-sm);
   color: var(--fg-2);
   transition:
-    color var(--fast) ease,
-    background-color var(--fast) ease;
+    color var(--fast) var(--ease-out),
+    background-color var(--fast) var(--ease-out);
 }
 .nav > a:hover {
   color: var(--fg);
@@ -389,8 +459,8 @@ button {
   border: 1px solid var(--line-strong);
   color: var(--fg);
   transition:
-    border-color var(--fast) ease,
-    background-color var(--fast) ease;
+    border-color var(--fast) var(--ease-out),
+    background-color var(--fast) var(--ease-out);
 }
 .nav > .nav-cta svg {
   color: var(--red);
@@ -425,9 +495,9 @@ button {
   -webkit-tap-highlight-color: transparent;
   transition:
     transform var(--fast) var(--ease),
-    background-color var(--fast) ease,
-    border-color var(--fast) ease,
-    box-shadow var(--fast) ease;
+    background-color var(--fast) var(--ease-out),
+    border-color var(--fast) var(--ease-out),
+    box-shadow var(--fast) var(--ease-out);
 }
 .cta-arrow {
   color: var(--red);
@@ -449,22 +519,42 @@ button {
   width: 14px;
   height: 14px;
 }
-.cta:hover {
-  transform: translateY(-1px);
-}
-.cta:hover .cta-arrow {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .cta:hover {
+    transform: translateY(-1px);
+  }
+  .cta:hover .cta-arrow {
+    transform: translateX(3px);
+  }
+  .cta-primary:hover {
+    background: #262626;
+  }
+  /* A red filament draws along the base of the primary button on hover. */
+  .cta-primary:hover::after {
+    transform: scaleX(1);
+  }
 }
 .cta:active {
-  transform: none;
+  transform: scale(0.98);
 }
 .cta-primary {
+  position: relative;
+  overflow: hidden;
   background: var(--charcoal);
   color: #fff;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 8px 20px -10px rgba(18, 18, 18, 0.5);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 8px 20px -10px rgba(17, 18, 20, 0.5);
 }
-.cta-primary:hover {
-  background: #262626;
+.cta-primary::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
 }
 .cta-secondary {
   background: rgba(255, 255, 255, 0.45);
@@ -497,16 +587,25 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.9375rem;
+  font-size: var(--fs-ui);
   font-weight: 500;
   color: var(--fg);
+}
+.text-link .text-link-label {
+  background: linear-gradient(var(--red), var(--red)) 0 100% / 0 1.5px no-repeat;
+  transition: background-size var(--dur-2) var(--ease-out);
 }
 .text-link span {
   color: var(--red);
   transition: transform var(--fast) var(--ease);
 }
-.text-link:hover span {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .text-link:hover .text-link-label {
+    background-size: 100% 1.5px;
+  }
+  .text-link:hover span {
+    transform: translateX(3px);
+  }
 }
 
 /* ==========================================================================
@@ -633,18 +732,18 @@ button {
 }
 .hero h1 {
   margin-top: 24px;
-  max-width: 11.5ch;
+  max-width: 12ch;
   font-size: var(--fs-display);
-  font-weight: 500;
-  line-height: 0.98;
-  letter-spacing: -0.055em;
+  font-weight: var(--w-display);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
 }
 .hero-glass {
   width: fit-content;
   max-width: min(34rem, 100%);
   margin-top: 40px;
   padding: 18px 22px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.26));
   box-shadow:
@@ -691,13 +790,34 @@ button {
    Panels (illustrative product UI)
    ========================================================================== */
 .panel {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel-bg);
   box-shadow: var(--panel-shadow);
-  font-size: 0.8125rem;
+  font-size: var(--fs-mono);
   color: var(--fg);
+}
+/* A faint red "targeting" glow tracks the pointer across instrument panels. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(260px at var(--mx, 50%) var(--my, 0%), var(--red-tint), transparent 70%);
+    transition: opacity var(--dur-2) var(--ease-out);
+  }
+  .panel:hover::after {
+    opacity: 1;
+  }
+  .panel > * {
+    position: relative;
+    z-index: 1;
+  }
 }
 .panel-bar {
   display: flex;
@@ -852,9 +972,10 @@ button {
   border-bottom: 0;
 }
 .graph-workers i {
+  position: relative;
   width: 7px;
   height: 7px;
-  border-radius: 50%;
+  border-radius: 1px; /* square LED, matching the brand motif */
   background: var(--line-strong);
 }
 .graph-workers .state-done i {
@@ -862,17 +983,46 @@ button {
 }
 .graph-workers .state-running i {
   background: var(--run);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--run) 20%, transparent);
+}
+/* A pulse ring radiates from a running worker. */
+.graph-workers .state-running i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--run);
+  animation: led-pulse 1.8s var(--ease-out) infinite;
+}
+@keyframes led-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
 }
 .graph-workers .state-review i {
   background: var(--review);
 }
-.graph-state {
+.graph-workers .graph-state {
   min-width: 68px;
   text-align: right;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.6875rem !important;
+  font-size: var(--fs-micro);
+  color: var(--muted);
+}
+.graph-workers .state-done .graph-state {
+  color: var(--ok);
+}
+.graph-workers .state-running .graph-state {
+  color: var(--run);
+}
+.graph-workers .state-review .graph-state {
+  color: var(--review);
 }
 .registry li {
   display: grid;
@@ -1169,8 +1319,8 @@ button {
 }
 .principle-grid h3 {
   margin-top: 28px;
-  font-size: 1.25rem;
-  letter-spacing: -0.025em;
+  font-size: var(--fs-h3);
+  letter-spacing: -0.03em;
   line-height: 1.2;
 }
 .principle-grid p {
@@ -1313,6 +1463,31 @@ button {
   line-height: 1.65;
   color: var(--muted);
 }
+/* Smooth open/close where the browser supports animating to auto height. */
+@media (prefers-reduced-motion: no-preference) {
+  .faq details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size var(--dur-3) var(--ease-out), content-visibility var(--dur-3) allow-discrete;
+  }
+  .faq details[open]::details-content {
+    block-size: auto;
+  }
+}
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+}
+.faq details[open] > summary {
+  color: var(--fg);
+}
+.faq details[open] {
+  box-shadow: inset 2px 0 0 var(--red);
+}
+.faq details[open] > summary {
+  padding-left: 16px;
+}
 
 /* ==========================================================================
    Closing
@@ -1406,8 +1581,8 @@ button {
 .pipeline h3,
 .layers h3 {
   margin-top: 24px;
-  font-size: 1.25rem;
-  letter-spacing: -0.025em;
+  font-size: var(--fs-h3);
+  letter-spacing: -0.03em;
 }
 .pipeline p,
 .layers p {
@@ -1520,7 +1695,7 @@ button {
   gap: 6px;
   font-size: var(--fs-small);
   color: var(--fg-2);
-  transition: color var(--fast) ease;
+  transition: color var(--fast) var(--ease-out);
 }
 .footer-col a:hover {
   color: var(--fg);
@@ -1868,12 +2043,12 @@ button {
 /* A halo in the section colour clears particles from around the countdown's small type. */
 .home-page[data-journey="ready"] .home-closing .closing-launch { text-shadow: 0 0 4px var(--bg), 0 0 10px var(--bg), 0 0 18px var(--bg); }
 .dangerous {
-  color: #9c3430;
-  background: linear-gradient(175deg, transparent 35%, rgba(184, 76, 53, 0.14) 35%, rgba(184, 76, 53, 0.14) 88%, transparent 88%);
+  color: var(--red-text);
+  background: linear-gradient(175deg, transparent 35%, var(--red-tint) 35%, var(--red-tint) 88%, transparent 88%);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   text-decoration: underline;
-  text-decoration-color: #b68a65;
+  text-decoration-color: var(--red);
   text-decoration-thickness: 0.045em;
   text-underline-offset: 0.1em;
   text-decoration-skip-ink: none;

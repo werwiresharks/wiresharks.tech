@@ -189,8 +189,8 @@ export class RaptorRenderer implements RaptorView {
       uniforms: {
         uTime: { value: 0 },
         uInk: { value: new THREE.Color(...COLORS.graphite) },
-        uBronze: { value: new THREE.Color(...COLORS.bronzeDeep) },
-        uCool: { value: new THREE.Color(...COLORS.cool) },
+        uBronze: { value: new THREE.Color(...COLORS.redDeep) },
+        uCool: { value: new THREE.Color(...COLORS.red) },
       },
     });
     const lines = new THREE.LineSegments(this.threadGeometry, this.threadMaterial);
@@ -214,8 +214,8 @@ export class RaptorRenderer implements RaptorView {
         uHalf: { value: 2.4 },
         uRadius: { value: 1.24 },
         uPx: { value: 0.004 },
-        uColor: { value: new THREE.Color(...(dashed ? COLORS.slate : COLORS.bronzeDeep)) },
-        uHotColor: { value: new THREE.Color(0.55, 0.38, 0.13) },
+        uColor: { value: new THREE.Color(...(dashed ? COLORS.slate : COLORS.redDeep)) },
+        uHotColor: { value: new THREE.Color(...COLORS.redGlow) },
         uOpacity: { value: dashed ? 0 : 0.85 },
         uHoldAngle: { value: 0 },
         uHold: { value: 0 },
