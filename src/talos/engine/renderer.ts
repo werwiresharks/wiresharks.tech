@@ -8,6 +8,7 @@ import { COLORS } from "./palette.ts";
 import { ParticleField } from "./particles.ts";
 import { FrameGovernor, detectQuality } from "./quality.ts";
 import {
+  MAX_CUTS,
   particleFragment,
   particleVertex,
   ringFragment,
@@ -15,6 +16,7 @@ import {
   threadFragment,
   threadVertex,
 } from "./shaders.ts";
+import type { Cut } from "./shaders.ts";
 
 /**
  * WebGL view for the Talos Particle Engine. Renders whatever the facade
@@ -28,6 +30,8 @@ export type Framing = { x: number; y: number; radius: number };
 export type RendererOptions = {
   host: HTMLElement;
   home?: { sample: () => HomeFrame; readonly active?: boolean };
+  /** Marks cut through the page that the particles part around, in document pixels. Read each frame of the home journey. */
+  cuts?: () => readonly Cut[];
   frame: (width: number, height: number) => Framing;
   particleScale?: number;
   interactive?: boolean;
@@ -86,6 +90,11 @@ export class TalosRenderer implements TalosView {
   private tiltY = 0;
   private time = 0;
   private homeMotion = new HomeMotion();
+  private cutChords = Array.from({ length: MAX_CUTS }, () => new THREE.Vector4());
+  private cutMarks = Array.from({ length: MAX_CUTS }, () => new THREE.Vector4());
+  /** Per cut: the shove left by its strike, and whether it was drawn last frame. */
+  private kicks = new Float32Array(MAX_CUTS);
+  private drawn = new Array<boolean>(MAX_CUTS).fill(false);
   private last = 0;
   private frameHandle = 0;
   private visible = true;
@@ -139,6 +148,9 @@ export class TalosRenderer implements TalosView {
         uCenterZ: { value: -CAMERA_Z },
         uPointer: { value: new THREE.Vector3(99, 99, 0) },
         uPointerStrength: { value: 0 },
+        uViewport: { value: new THREE.Vector2(1, 1) },
+        uCutChord: { value: this.cutChords },
+        uCutMark: { value: this.cutMarks },
       },
     });
     const points = new THREE.Points(this.geometry, this.particleMaterial);
@@ -291,6 +303,7 @@ export class TalosRenderer implements TalosView {
     this.camera.aspect = this.width / this.height;
     this.camera.updateProjectionMatrix();
     this.particleMaterial.uniforms.uPixelRatio.value = this.pixelRatio;
+    this.particleMaterial.uniforms.uViewport.value.set(this.width, this.height);
     const first = this.needsFraming;
     this.refreshFraming();
     if (first) this.snapFraming();
@@ -458,6 +471,7 @@ export class TalosRenderer implements TalosView {
       u.uPointerStrength.value = this.pointerStrength;
       u.uScale.value = Math.max(0.01, pose.mother.radius * this.worldHeight() / this.height);
       u.uBaseSize.value = 2.2;
+      this.partForCuts(pose.scroll, dt);
       this.ring.visible = this.checkpoint.visible = false;
       this.threadGeometry.setDrawRange(0, 0);
       this.paused = pose.opacity < 0.005 || this.options.home.active === false;
@@ -528,6 +542,25 @@ export class TalosRenderer implements TalosView {
     this.checkpoint.visible = this.checkpointOpacity > 0.005;
 
     this.updateThreads(dt, still);
+  }
+
+  /** Hands the page's cuts to the particle shader in viewport pixels, with a shove the moment each one strikes. */
+  private partForCuts(scroll: number, dt: number) {
+    const cuts = this.options.cuts?.() ?? [];
+    const decay = Math.exp(-dt * 5);
+    for (let k = 0; k < MAX_CUTS; k++) {
+      const cut = cuts[k];
+      const drawn = cut !== undefined && cut.reach > 0;
+      if (drawn && !this.drawn[k]) this.kicks[k] = 1;
+      this.drawn[k] = drawn;
+      this.kicks[k] *= decay;
+      if (!cut) {
+        this.cutMarks[k].set(0, 0, 0, 0);
+        continue;
+      }
+      this.cutChords[k].set(cut.ax, cut.ay - scroll, cut.bx, cut.by - scroll);
+      this.cutMarks[k].set(cut.bow, cut.half, cut.reach, this.kicks[k]);
+    }
   }
 
   private updateThreads(dt: number, still: boolean) {

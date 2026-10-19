@@ -580,12 +580,16 @@ button {
   background: var(--bg);
   overflow: hidden;
 }
-/* Static hero fallback and its scrim. */
+/* Static hero fallback and its scrim, cut by the claw skin so its orb never shows through an open mark. */
 .hero-backdrop {
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  clip-path: var(--claw-skin, none);
+}
+.hero-orb-slot .tpe-static {
+  clip-path: var(--claw-slot-skin, none);
 }
 .hero-backdrop * {
   pointer-events: none;

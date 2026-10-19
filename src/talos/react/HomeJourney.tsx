@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { TalosRenderer } from "../engine/renderer.ts";
 import { createHomeSource } from "../home/source.ts";
 import { heroFrame } from "../home/journey.ts";
+import { clawFeed } from "../../components/claw.ts";
 
 export function HomeJourney() {
   const host = useRef<HTMLDivElement>(null);
@@ -43,6 +44,7 @@ export function HomeJourney() {
           host: node,
           frame: heroFrame,
           home: source,
+          cuts: () => clawFeed.cuts,
           interactive: true,
           particleScale: window.innerWidth < 768 ? 0.55 : 1,
           onFailure: fallback,

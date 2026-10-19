@@ -3,7 +3,12 @@
  * scroll progress runs 0 → 1. Pure, so the shape can be tested without a DOM.
  */
 
+import type { Cut } from "../talos/engine/shaders.ts";
+
 export type Box = { x: number; y: number; w: number; h: number };
+
+/** The marks as last drawn, in document pixels. One tear per page; the particle orb parts around them. */
+export const clawFeed: { cuts: readonly Cut[] } = { cuts: [] };
 
 /** One claw mark, in coordinates normalized to the tear zone. */
 type Slash = {
@@ -71,6 +76,8 @@ export type ClawShape = {
   strike: string;
   /** 0 while the marks are hairlines, 1 when fully open. */
   open: number;
+  /** Every mark as a chord for the particle orb to part around, in zone pixels; one not yet struck has reach 0. */
+  cuts: Cut[];
 };
 
 export function clawShape(layout: ClawLayout, zone: Box, progress: number): ClawShape {
@@ -79,10 +86,9 @@ export function clawShape(layout: ClawLayout, zone: Box, progress: number): Claw
   let holes = "";
   let strike = "";
   let trailing = "";
-  if (p <= 0) return { holes, trailing, strike, open };
+  const cuts: Cut[] = [];
   layout.slashes.forEach((slash, i) => {
     const reach = easeOut(clamp((p - slash.delay) / (STRIKE - 0.04)));
-    if (reach <= 0) return;
     const ax = zone.x + slash.from[0] * zone.w;
     const ay = zone.y + slash.from[1] * zone.h;
     const bx = zone.x + slash.to[0] * zone.w;
@@ -92,6 +98,8 @@ export function clawShape(layout: ClawLayout, zone: Box, progress: number): Claw
     const ny = (bx - ax) / len;
     const full = layout.width * zone.w * slash.scale;
     const width = HAIRLINE + (full - HAIRLINE) * open;
+    cuts.push({ ax, ay, bx, by, bow: slash.bow * len, half: width / 2, reach });
+    if (reach <= 0) return;
     const left: string[] = [];
     const right: string[] = [];
     const line: string[] = [];
@@ -118,5 +126,5 @@ export function clawShape(layout: ClawLayout, zone: Box, progress: number): Claw
     if (i === layout.slashes.length - 1) trailing = outline;
     strike += `M${line.join("L")}`;
   });
-  return { holes, trailing, strike, open };
+  return { holes, trailing, strike, open, cuts };
 }

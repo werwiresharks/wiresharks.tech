@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CLAW_LAYOUTS, clawShape } from "./claw";
+import { CLAW_LAYOUTS, clawFeed, clawShape } from "./claw";
 import { RaptorMark } from "./ProductIcons";
 import type { Box } from "./claw";
 
@@ -33,6 +33,12 @@ export function ClawTear() {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let layout: (typeof CLAW_LAYOUTS)[keyof typeof CLAW_LAYOUTS] = CLAW_LAYOUTS.edge;
     let zone: Box = { x: 0, y: 0, w: 0, h: 0 };
+    let w = 0;
+    let h = 0;
+    /** The hero's document top, which turns zone pixels into page pixels for the orb. */
+    let top = 0;
+    /** Where the phone's in-flow orb slot sits in the hero, so its static orb can be cut in its own coordinates. */
+    let slot: { left: number; top: number } | null = null;
     let outer = "";
     /** Document scroll position the page holds at while the tear is incomplete. */
     let lock = 0;
@@ -58,6 +64,14 @@ export function ClawTear() {
       shade.current?.setAttribute("d", shape.holes);
       strike.current?.setAttribute("d", shape.strike);
       node.style.setProperty("--claw", shape.open.toFixed(3));
+      clawFeed.cuts = shape.cuts.map((cut) => ({ ...cut, ay: cut.ay + top, by: cut.by + top }));
+      // The static orb (reduced motion, no WebGL) is cut by the same skin, so its dots never sit over an open mark.
+      hero.style.setProperty("--claw-skin", `path(evenodd, "${outer}${shape.holes}")`);
+      if (slot) {
+        const { holes } = clawShape(layout, { ...zone, x: zone.x - slot.left, y: zone.y - slot.top }, progress);
+        const rect = `M${-slot.left} ${-slot.top}H${w - slot.left}V${h - slot.top}H${-slot.left}Z`;
+        hero.style.setProperty("--claw-slot-skin", `path(evenodd, "${rect}${holes}")`);
+      }
     };
 
     // Wheel ticks arrive in coarse steps; easing toward the target keeps the cut smooth.
@@ -156,10 +170,10 @@ export function ClawTear() {
 
     const measure = () => {
       const rect = hero.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
+      w = rect.width;
+      h = rect.height;
       const vh = window.innerHeight;
-      const top = rect.top + window.scrollY;
+      top = rect.top + window.scrollY;
       layout = CLAW_LAYOUTS.edge;
       // Layout offsets, not client rects: the copy's entrance transform must not move the zone.
       const relative = (selector: string) => {
@@ -171,12 +185,13 @@ export function ClawTear() {
           x += at.offsetLeft;
           y += at.offsetTop;
         }
-        return { top: y, bottom: y + el.offsetHeight, right: x + el.offsetWidth };
+        return { left: x, top: y, bottom: y + el.offsetHeight, right: x + el.offsetWidth };
       };
       // Desktop marks start right of the headline and glass, however narrow the window.
       const copyRight = Math.max(relative("#hero-title")?.right ?? 0, relative(".hero-glass")?.right ?? 0);
       const left = Math.max(w * 0.52, copyRight + 40);
       zone = { x: left, y: h * 0.14, w: w * 0.96 - left, h: h * 0.86 };
+      slot = window.innerWidth < 768 ? relative(".hero-orb-slot") : null;
       if (window.innerWidth < 768) {
         // Phones cut the band between the buttons and the countdown, so no copy is torn.
         const above = relative(".hero-ctas");
@@ -234,6 +249,7 @@ export function ClawTear() {
     motion.addEventListener("change", measure);
     return () => {
       cancelAnimationFrame(frame);
+      clawFeed.cuts = [];
       resize.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
@@ -253,7 +269,7 @@ export function ClawTear() {
       <div className="claw-under tone-dark">
         <div ref={under} className="claw-under-inner">
           <p className="label">
-            <i /> Raptor / Autonomous agent / Talon-1 inside
+            <i /> Raptor-1 / Autonomous agent / Runs on Talon-1
           </p>
           <p className="claw-under-name">
             <RaptorMark className="claw-under-mark" />
