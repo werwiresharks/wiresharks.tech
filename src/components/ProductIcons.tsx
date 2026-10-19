@@ -31,3 +31,14 @@ export function RaptorMark({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/** The Raptor mark at display size: each claw strokes in, then fills, on load. */
+export function RaptorMarkDrawn({ className = "" }: { className?: string }) {
+  return (
+    <svg className={`mark-draw ${className}`} viewBox="-1 -1 34 34" aria-hidden="true">
+      {CLAWS.map((d, i) => (
+        <path key={d} d={d} pathLength={1} className={i === 2 ? "claw-accent" : undefined} />
+      ))}
+    </svg>
+  );
+}

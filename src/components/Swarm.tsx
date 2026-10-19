@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { CLAWS } from "./ProductIcons";
-import { Reveal } from "./Reveal";
+import { Reveal, Words } from "./Reveal";
 import { pinProgress, routePath, swarmFrame, swarmLayout, TASK } from "./swarmLayout";
 import type { Stage, SwarmLayout } from "./swarmLayout";
 
@@ -172,8 +172,8 @@ export function Swarm() {
             <span><span className="index">02</span> / Swarm</span>
             <span className="swarm-status">Included in Raptor-1</span>
           </Reveal>
-          <Reveal as="h2" delay={60}>
-            <span id="swarm-title">One agent is powerful. A swarm is unstoppable.</span>
+          <Reveal as="h2" delay={60} words>
+            <span id="swarm-title"><Words>One agent is powerful. A swarm is unstoppable.</Words></span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
             Raptor Swarm puts specialized workers on complex work. The workers divide a task and run

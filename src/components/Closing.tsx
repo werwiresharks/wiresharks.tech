@@ -1,4 +1,4 @@
-import { Reveal } from "./Reveal";
+import { Reveal, Words } from "./Reveal";
 import { Countdown } from "./Countdown";
 import { Cta } from "./Cta";
 
@@ -10,8 +10,8 @@ export function Closing({ title, text }: { title: string; text: string }) {
           <Reveal as="p" className="label">
             Release
           </Reveal>
-          <Reveal as="h2" delay={60}>
-            <span id="closing-title">{title}</span>
+          <Reveal as="h2" delay={60} words>
+            <span id="closing-title"><Words>{title}</Words></span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
             {text}

@@ -1,5 +1,6 @@
 import { PageHead } from "../components/PageHead";
-import { Reveal } from "../components/Reveal";
+import { RaptorMarkDrawn } from "../components/ProductIcons";
+import { Reveal, Words } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
 import { Console } from "../components/mock/Console";
@@ -25,7 +26,7 @@ export function Raptor() {
     <>
       <title>Raptor-1 | Wiresharks</title>
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
-      <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent.">
+      <PageHead label="Agent / Raptor-1" title="The autonomous cybersecurity agent." mark={<RaptorMarkDrawn />}>
         Raptor-1 is an autonomous agent that works with any model. It runs on Harness. Harness
         keeps the strongest parts of Hermes Agent and adds full support for Claude Code and Codex.
         Harness also handles the planning, memory and skills. These parts work as one system.
@@ -157,8 +158,8 @@ export function Raptor() {
             <Reveal as="p" className="label">
               <span className="index">05</span> / Architecture
             </Reveal>
-            <Reveal as="h2" delay={60}>
-              <span id="arch-title">Eight layers. One system.</span>
+            <Reveal as="h2" delay={60} words>
+              <span id="arch-title"><Words>Eight layers. One system.</Words></span>
             </Reveal>
           </header>
           <ol className="layers">
@@ -176,12 +177,20 @@ export function Raptor() {
       <section className="section section-compact" aria-labelledby="lineage-title">
         <div className="wrap lineage-layout">
           <div>
-            <p className="label"><span className="index">06</span> / Lineage</p>
-            <h2 id="lineage-title">Informed by the field.</h2>
+            <Reveal as="p" className="label">
+              <span className="index">06</span> / Lineage
+            </Reveal>
+            <Reveal as="h2" delay={60} words>
+              <span id="lineage-title">
+                <Words>Informed by the field.</Words>
+              </span>
+            </Reveal>
           </div>
           <ul className="lineage">
-            {LINEAGE.map((name) => (
-              <li key={name}>{name}</li>
+            {LINEAGE.map((name, i) => (
+              <Reveal as="li" key={name} delay={120 + i * 30}>
+                {name}
+              </Reveal>
             ))}
           </ul>
         </div>

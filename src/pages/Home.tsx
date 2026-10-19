@@ -1,8 +1,9 @@
+import type { CSSProperties } from "react";
 import { ClawTear } from "../components/ClawTear";
 import { Countdown } from "../components/Countdown";
 import { Cta } from "../components/Cta";
 import { TalonIcon, RaptorIcon } from "../components/ProductIcons";
-import { Reveal } from "../components/Reveal";
+import { Reveal, Words } from "../components/Reveal";
 import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
 import { Platform } from "../components/Platform";
@@ -59,8 +60,14 @@ export function Home() {
           <Reveal as="p" className="label hero-eyebrow">
             Wiresharks / Autonomous cybersecurity
           </Reveal>
-          <Reveal as="h1" delay={60}>
-            <span id="hero-title">The world's most <span className="dangerous">dangerous</span> AI.</span>
+          <Reveal as="h1" delay={60} words>
+            <span id="hero-title">
+              <Words>The world's most</Words>{" "}
+              <span className="dangerous word" style={{ "--i": 3 } as CSSProperties}>
+                dangerous
+              </span>{" "}
+              <Words from={4}>AI.</Words>
+            </span>
           </Reveal>
           <Reveal delay={120} className="hero-glass">
             <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model it runs on.</p>
@@ -100,8 +107,8 @@ export function Home() {
             <Reveal as="p" className="label">
               <span className="index">01</span> / Products
             </Reveal>
-            <Reveal as="h2" delay={60}>
-              <span id="products-title">An agent, and the model it runs on.</span>
+            <Reveal as="h2" delay={60} words>
+              <span id="products-title"><Words>An agent, and the model it runs on.</Words></span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
               Raptor-1 is the agent. It plans, acts and checks its own work. Talon-1 is the model
@@ -223,8 +230,8 @@ export function Home() {
             <Reveal as="p" className="label">
               <span className="index">04</span> / Principles
             </Reveal>
-            <Reveal as="h2" delay={60}>
-              <span id="principles-title">Built for real security work.</span>
+            <Reveal as="h2" delay={60} words>
+              <span id="principles-title"><Words>Built for real security work.</Words></span>
             </Reveal>
           </header>
           <ul className="principle-grid">

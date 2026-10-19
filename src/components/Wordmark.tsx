@@ -1,8 +1,8 @@
-export function Wordmark({ large = false }: { large?: boolean }) {
+/** WIRESHARKS, set in two weights. The red node lives on the LogoMark beside it. */
+export function Wordmark() {
   return (
-    <span className={large ? "wordmark wordmark-large" : "wordmark"}>
+    <span className="wordmark">
       WIRE<span>SHARKS</span>
-      <i aria-hidden="true" />
     </span>
   );
 }

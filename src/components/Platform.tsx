@@ -1,5 +1,5 @@
 import { RELEASE_ARTIFACTS, REVIEW_STEPS } from "../content";
-import { Reveal } from "./Reveal";
+import { Reveal, Words } from "./Reveal";
 
 const TIERS = [
   {
@@ -37,8 +37,8 @@ export function Platform() {
           <Reveal as="p" className="label">
             <span className="index">03</span> / Platform
           </Reveal>
-          <Reveal as="h2" delay={60}>
-            <span id="platform-title">From model to autonomous execution.</span>
+          <Reveal as="h2" delay={60} words>
+            <span id="platform-title"><Words>From model to autonomous execution.</Words></span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
             Three tiers, each with one job. The model reasons. The agent plans and acts. The

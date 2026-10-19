@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Reveal } from "./Reveal";
+import { Reveal, Words } from "./Reveal";
 
 /**
  * An editorial two-column section: an indexed title and copy on one side,
@@ -36,8 +36,8 @@ export function Feature({
               {eyebrow}
             </Reveal>
           )}
-          <Reveal as="h2" delay={60}>
-            {title}
+          <Reveal as="h2" delay={60} words>
+            <Words>{title}</Words>
           </Reveal>
           <Reveal className="split-text" delay={120}>
             {children}

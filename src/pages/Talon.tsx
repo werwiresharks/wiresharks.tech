@@ -1,5 +1,6 @@
 import { PageHead } from "../components/PageHead";
-import { Reveal } from "../components/Reveal";
+import { StaticOrb } from "../raptor/react/RaptorStage";
+import { Reveal, Words } from "../components/Reveal";
 import { Stats } from "../components/Stats";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
@@ -47,7 +48,15 @@ export function Talon() {
   return (
     <>
       <title>Talon-1 | Wiresharks</title>
-      <PageHead label="Model / Talon-1" title="The world's most dangerous model.">
+      <PageHead
+        label="Model / Talon-1"
+        title="The world's most dangerous model."
+        mark={
+          <div className="talon-frame">
+            <StaticOrb />
+          </div>
+        }
+      >
         Talon-1 is the AI model that powers Raptor-1. It is open-weight and fine-tuned for
         offensive and defensive cybersecurity. After install, it runs on your machine.
       </PageHead>
@@ -146,8 +155,8 @@ export function Talon() {
             <Reveal as="p" className="label">
               <span className="index">04</span> / Pipeline
             </Reveal>
-            <Reveal as="h2" delay={60}>
-              <span id="pipeline-title">Not trained from scratch. Sharpened.</span>
+            <Reveal as="h2" delay={60} words>
+              <span id="pipeline-title"><Words>Not trained from scratch. Sharpened.</Words></span>
             </Reveal>
           </header>
           <ol className="pipeline">
@@ -198,8 +207,8 @@ export function Talon() {
             <Reveal as="p" className="label">
               <span className="index">06</span> / Specification
             </Reveal>
-            <Reveal as="h2" delay={60}>
-              <span id="spec-title">Talon-1 at a glance.</span>
+            <Reveal as="h2" delay={60} words>
+              <span id="spec-title"><Words>Talon-1 at a glance.</Words></span>
             </Reveal>
           </div>
           <Reveal delay={120}>

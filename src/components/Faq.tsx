@@ -1,4 +1,4 @@
-import { Reveal } from "./Reveal";
+import { Reveal, Words } from "./Reveal";
 
 export function Faq({ items }: { items: [string, string][] }) {
   return (
@@ -8,8 +8,8 @@ export function Faq({ items }: { items: [string, string][] }) {
           <Reveal as="p" className="label">
             <span className="index">05</span> / Questions
           </Reveal>
-          <Reveal as="h2" delay={60}>
-            <span id="faq-title">Questions, answered.</span>
+          <Reveal as="h2" delay={60} words>
+            <span id="faq-title"><Words>Questions, answered.</Words></span>
           </Reveal>
         </header>
         <div className="faq-list">
@@ -17,7 +17,10 @@ export function Faq({ items }: { items: [string, string][] }) {
             <Reveal key={q} delay={i * 40}>
               <details>
                 <summary>
-                  {q}
+                  <span className="faq-index" aria-hidden="true">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="faq-q">{q}</span>
                   <span className="faq-icon" aria-hidden="true" />
                 </summary>
                 <p>{a}</p>
