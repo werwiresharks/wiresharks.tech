@@ -7,13 +7,13 @@ const TIERS = [
     layer: "Model",
     name: "Talon-1",
     role: "Model intelligence",
-    text: "Reasons over code, binaries, logs and findings. Runs on your hardware; prompts and outputs stay there.",
+    text: "Reasons over code, binaries, logs and findings. Runs on your machine. Prompts and outputs stay there.",
     facts: ["27B · open weights", "128k context", "No network after install"],
   },
   {
     index: "02",
     layer: "Agent",
-    name: "Raptor",
+    name: "Raptor-1",
     role: "Agent orchestration on Harness",
     text: "Plans the task, delegates to parallel workers and routes each step to a model and an engine. Memory and skills persist between runs.",
     facts: ["Hermes · Claude Code · Codex", "Bounded parallel workers, reviewers", "Durable memory, versioned skills"],
@@ -41,8 +41,8 @@ export function Platform() {
             <span id="platform-title">From model to autonomous execution.</span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
-            Three layers, each with one job. The model reasons. The agent plans and acts. The
-            environment sets the boundary every action stays inside.
+            Three tiers, each with one job. The model reasons. The agent plans and acts. The
+            environment sets the boundary for every action.
           </Reveal>
         </header>
 
@@ -70,7 +70,7 @@ export function Platform() {
             Authorized repository security review
           </Reveal>
           <Reveal as="p" delay={60} className="loop-lede">
-            The first workflow Raptor runs end to end.
+            The first workflow Raptor-1 runs end to end.
           </Reveal>
           <ol className="loop-steps">
             {REVIEW_STEPS.map(([name, text], i) => (
@@ -87,8 +87,8 @@ export function Platform() {
           <div className="evidence-head">
             <Reveal as="h3">Evidence, not claims.</Reveal>
             <Reveal as="p" delay={60}>
-              No benchmark numbers are published yet. Results ship with the weights, alongside
-              the benchmark suite that produced them.
+              Every result ships with the weights, alongside the benchmark suite that produced
+              it.
             </Reveal>
           </div>
           <dl className="evidence-list">

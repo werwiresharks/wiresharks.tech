@@ -1,6 +1,6 @@
 /**
  * Geometry and timing for the homepage swarm figure. One task splits into
- * jobs for specialized agents, the agents work in parallel, and their results
+ * jobs for specialized workers, the workers run in parallel, and their results
  * combine in one shared report, as scroll progress runs 0 → 1 through three
  * stages. Pure, so the figure can be tested without a DOM. Coordinates are CSS
  * pixels in the figure's box.
@@ -19,12 +19,12 @@ export const TASK = "Secure acme/api";
 
 /** One job per agent: its card label, its report row label, and the row's illustrative fill. */
 const ROLES = [
-  { name: "Auth agent", short: "Auth", weight: 0.64 },
-  { name: "API agent", short: "API", weight: 0.88 },
-  { name: "Dependency agent", short: "Dependencies", weight: 0.52 },
-  { name: "Storage agent", short: "Storage", weight: 0.36 },
-  { name: "Pipeline agent", short: "Pipeline", weight: 0.44 },
-  { name: "Cloud agent", short: "Cloud", weight: 0.7 },
+  { name: "Auth worker", short: "Auth", weight: 0.64 },
+  { name: "API worker", short: "API", weight: 0.88 },
+  { name: "Dependency worker", short: "Dependencies", weight: 0.52 },
+  { name: "Storage worker", short: "Storage", weight: 0.36 },
+  { name: "Pipeline worker", short: "Pipeline", weight: 0.44 },
+  { name: "Cloud worker", short: "Cloud", weight: 0.7 },
 ];
 /** Narrow boxes show four agents. */
 const COMPACT = ["Auth", "API", "Dependencies", "Cloud"];
