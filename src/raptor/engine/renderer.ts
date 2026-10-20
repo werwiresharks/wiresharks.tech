@@ -4,7 +4,8 @@ import { HomeMotion } from "../home/journey.ts";
 import type { RaptorView } from "./engine.ts";
 import type { Effect, Layout, ThreadTarget } from "./layout.ts";
 import type { RaptorModel } from "./model.ts";
-import { COLORS } from "./palette.ts";
+import { COLORS, SURFACES } from "./palette.ts";
+import type { Surface } from "./palette.ts";
 import { ParticleField } from "./particles.ts";
 import { FrameGovernor, detectQuality } from "./quality.ts";
 import {
@@ -36,6 +37,8 @@ export type RendererOptions = {
   particleScale?: number;
   interactive?: boolean;
   reducedMotion?: boolean;
+  /** The ground behind the canvas. Defaults to light, the site's white page. */
+  surface?: Surface;
   onFailure?: () => void;
 };
 
@@ -149,6 +152,7 @@ export class RaptorRenderer implements RaptorView {
         uPointer: { value: new THREE.Vector3(99, 99, 0) },
         uPointerStrength: { value: 0 },
         uViewport: { value: new THREE.Vector2(1, 1) },
+        uFog: { value: new THREE.Color(...SURFACES.light.fog) },
         uCutChord: { value: this.cutChords },
         uCutMark: { value: this.cutMarks },
       },
@@ -198,6 +202,7 @@ export class RaptorRenderer implements RaptorView {
     lines.renderOrder = -1;
     this.system.add(lines);
 
+    if (options.surface && options.surface !== "light") this.setSurface(options.surface);
     this.bindEvents();
     this.resize();
     this.start();
@@ -345,6 +350,19 @@ export class RaptorRenderer implements RaptorView {
 
   setPaused(paused: boolean) {
     this.paused = paused;
+    this.needsRender = true;
+    this.start();
+  }
+
+  /** Recolour for the ground behind the canvas. Structure eases to the new tones. */
+  setSurface(surface: Surface) {
+    const style = SURFACES[surface];
+    this.field.setTones(style.tones);
+    this.particleMaterial.uniforms.uFog.value.setRGB(...style.fog);
+    this.threadMaterial.uniforms.uInk.value.setRGB(...style.thread);
+    this.threadMaterial.uniforms.uBronze.value.setRGB(...style.boundary);
+    this.ring.material.uniforms.uColor.value.setRGB(...style.boundary);
+    this.checkpoint.material.uniforms.uColor.value.setRGB(...style.checkpoint);
     this.needsRender = true;
     this.start();
   }

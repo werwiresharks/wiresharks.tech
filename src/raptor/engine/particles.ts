@@ -2,6 +2,7 @@ import type { HomeFrame } from "../home/journey.ts";
 import type { ClusterTarget, Vec3 } from "./layout.ts";
 import { ACCENT_RATIO, ON_DARK, STREAM, TONES } from "./palette.ts";
 import type { ToneStyle } from "./palette.ts";
+import type { Tone } from "./layout.ts";
 
 /**
  * Particle simulation, independent of WebGL. Each particle belongs to one
@@ -48,6 +49,7 @@ type Cluster = {
   targetCenter: Vec3;
   radius: number;
   targetRadius: number;
+  tone: Tone;
   style: ToneStyle;
   base: Vec3;
   accent: Vec3;
@@ -104,6 +106,7 @@ export class ParticleField {
   private homeTilt = new Float32Array(4 * 53);
   // Scratch for one particle: mother, flow source, flow destination and blended result, 8 values each.
   private body = new Float32Array(32);
+  private tones: Record<Tone, ToneStyle> = TONES;
 
   constructor(capacity: number) {
     this.capacity = capacity;
@@ -162,8 +165,9 @@ export class ParticleField {
   }
 
   private createCluster(target: ClusterTarget): Cluster {
-    const style = TONES[target.tone];
+    const style = this.tones[target.tone];
     return {
+      tone: target.tone,
       key: target.key,
       kind: target.kind,
       inLayout: true,
@@ -195,6 +199,12 @@ export class ParticleField {
     };
   }
 
+  /** Swap the tone table, e.g. for a dark surface. Clusters ease to the new colours. */
+  setTones(tones: Record<Tone, ToneStyle>) {
+    this.tones = tones;
+    for (const c of this.clusters) if (c) c.style = tones[c.tone];
+  }
+
   /** Apply new layout targets and reassign particles to match shares. */
   setTargets(targets: ClusterTarget[]) {
     const seen = new Set<string>();
@@ -216,7 +226,8 @@ export class ParticleField {
         this.keyToSlot.set(target.key, slot);
       }
       const c = this.clusters[slot]!;
-      const style = TONES[target.tone];
+      const style = this.tones[target.tone];
+      c.tone = target.tone;
       c.inLayout = true;
       c.kind = target.kind;
       c.share = target.share;

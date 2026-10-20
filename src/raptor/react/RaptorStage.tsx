@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RaptorEngine } from "../engine/engine.ts";
 import type { RaptorEventSource } from "../adapters/source.ts";
 import type { Framing, RaptorRenderer } from "../engine/renderer.ts";
+import type { Surface } from "../engine/palette.ts";
 import { useEngineSource } from "./hooks.ts";
 
 /**
@@ -16,6 +17,7 @@ export function RaptorStage({
   interactive = false,
   paused = false,
   particleScale = 1,
+  surface = "light",
   className = "",
   source,
 }: {
@@ -26,6 +28,8 @@ export function RaptorStage({
   interactive?: boolean;
   paused?: boolean;
   particleScale?: number;
+  /** The ground behind the stage; dark swaps graphite for the on-dark greys. */
+  surface?: Surface;
   className?: string;
   /** A live event source to drive the engine. Omit to drive it elsewhere. */
   source?: RaptorEventSource;
@@ -35,6 +39,8 @@ export function RaptorStage({
   const renderer = useRef<RaptorRenderer | null>(null);
   const frameRef = useRef(frame);
   frameRef.current = frame;
+  const surfaceRef = useRef(surface);
+  surfaceRef.current = surface;
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -55,6 +61,7 @@ export function RaptorStage({
           interactive,
           particleScale,
           reducedMotion: motion.matches,
+          surface: surfaceRef.current,
           onFailure: () => setFailed(true),
         });
         renderer.current = instance;
@@ -82,6 +89,10 @@ export function RaptorStage({
   useEffect(() => {
     renderer.current?.refreshFraming();
   }, [frameKey, ready]);
+
+  useEffect(() => {
+    renderer.current?.setSurface(surface);
+  }, [surface, ready]);
 
   return (
     <div
