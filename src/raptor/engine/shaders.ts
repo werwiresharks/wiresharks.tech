@@ -13,6 +13,7 @@ uniform float uCenterZ;
 uniform vec3 uPointer;
 uniform float uPointerStrength;
 uniform vec2 uViewport;
+uniform vec3 uFog;
 uniform vec4 uCutChord[${MAX_CUTS}]; // ax, ay, bx, by: viewport pixels, y down
 uniform vec4 uCutMark[${MAX_CUTS}]; // bow px, half width px, reach 0..1, strike kick
 attribute vec3 aColor;
@@ -100,7 +101,7 @@ void main() {
   float depth = clamp((mv.z - uCenterZ) / max(uScale, 0.001), -1.2, 1.2);
   float near = smoothstep(-1.1, 1.0, depth);
   vAlpha = aParams.x * mix(0.16, 1.0, near);
-  vColor = mix(aColor * 0.4 + 0.6 * vec3(0.8, 0.83, 0.86), aColor, near);
+  vColor = mix(aColor * 0.4 + 0.6 * uFog, aColor, near);
   float size = uBaseSize * aParams.y * mix(0.6, 1.25, near);
   gl_PointSize = size * uPixelRatio * (8.0 / -mv.z);
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RaptorEngine } from "../engine/engine.ts";
 import type { Framing, RaptorRenderer } from "../engine/renderer.ts";
+import type { Surface } from "../engine/palette.ts";
 
 /**
  * Mounts the WebGL renderer for an engine. The renderer and Three.js load
@@ -14,6 +15,7 @@ export function RaptorStage({
   interactive = false,
   paused = false,
   particleScale = 1,
+  surface = "light",
   className = "",
 }: {
   engine: RaptorEngine;
@@ -23,12 +25,16 @@ export function RaptorStage({
   interactive?: boolean;
   paused?: boolean;
   particleScale?: number;
+  /** The ground behind the stage; dark swaps graphite for the on-dark greys. */
+  surface?: Surface;
   className?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const renderer = useRef<RaptorRenderer | null>(null);
   const frameRef = useRef(frame);
   frameRef.current = frame;
+  const surfaceRef = useRef(surface);
+  surfaceRef.current = surface;
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -49,6 +55,7 @@ export function RaptorStage({
           interactive,
           particleScale,
           reducedMotion: motion.matches,
+          surface: surfaceRef.current,
           onFailure: () => setFailed(true),
         });
         renderer.current = instance;
@@ -76,6 +83,10 @@ export function RaptorStage({
   useEffect(() => {
     renderer.current?.refreshFraming();
   }, [frameKey, ready]);
+
+  useEffect(() => {
+    renderer.current?.setSurface(surface);
+  }, [surface, ready]);
 
   return (
     <div
