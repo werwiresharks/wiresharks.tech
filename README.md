@@ -49,6 +49,25 @@ npm run preview
 - `src/raptor/react/EngineNarration.tsx` a visually hidden live region that
   voices the engine for assistive tech (the canvas itself is decorative);
   `src/raptor/engine/narration.ts` is its pure, capped event-log accumulator.
+- `src/raptor/adapters/sse.ts` a `RaptorEventSource` over the browser
+  `EventSource`, the client half of the session stream server.
+
+## Session stream server
+
+`server/` is a dependency-free Node service that streams one Raptor session's
+validated events to the browser over Server-Sent Events. It reuses the engine
+reducer (`server/log.ts`), so it can only emit events the client accepts, and a
+reconnecting client resumes from its `Last-Event-ID` with no gaps. A scripted
+demonstration session (`server/scenario.ts`) feeds it. The server reports
+events; it makes no authorization decisions.
+
+```sh
+npm run server            # serve on http://localhost:8787 (PORT, CORS_ORIGIN)
+npm run typecheck:server  # type-check server/ with Node types
+```
+
+Connect from the app with `createEventSourceSource("http://localhost:8787/events")`
+and feed it to an engine via `useEngineSource` or `RaptorStage`'s `source` prop.
 - `src/raptor/demo/director.ts` simulated events for the website demonstration.
 
 The engine visualizes authorization decisions; it never makes them.
