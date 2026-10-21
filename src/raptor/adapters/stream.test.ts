@@ -69,6 +69,41 @@ test("parseMessage decodes JSON strings and swallows decode errors", () => {
   assert.equal(event?.type, "session.reset");
 });
 
+test("parseEvent never throws on hostile or random input", () => {
+  const seed = [
+    undefined,
+    Symbol("x"),
+    () => {},
+    123n,
+    new Map(),
+    { type: 123, seq: {} },
+    { type: "agent.spawned", seq: Infinity, agentId: {}, parentId: [], label: null },
+    { __proto__: { type: "session.reset", seq: 0 } },
+    { type: "authorization.resolved", seq: 1, actionId: "", decision: "", authority: 0 },
+  ];
+  for (const value of seed) {
+    assert.doesNotThrow(() => parseEvent(value));
+    assert.doesNotThrow(() => parseMessage(value));
+  }
+  // Random structural noise: shuffle real field names onto random types.
+  const types = ["session.reset", "agent.spawned", "nope", "action.proposed"];
+  const fields = ["agentId", "parentId", "label", "actionId", "decision", "seq", "at", "state"];
+  const values: unknown[] = ["x", "", 0, -1, 1.5, null, true, {}, [], NaN];
+  const pick = <T>(xs: T[], i: number) => xs[i % xs.length];
+  for (let i = 0; i < 500; i++) {
+    const obj: Record<string, unknown> = { type: pick(types, i), seq: pick(values, i * 7) };
+    for (let f = 0; f < (i % 5); f++) {
+      obj[pick(fields, i + f)] = pick(values, i * 13 + f);
+    }
+    const event = parseEvent(obj);
+    // Anything that parses must be a usable event: an integer seq >= 0.
+    if (event) {
+      assert.ok(Number.isInteger(event.seq) && event.seq >= 0);
+      assert.ok(typeof event.type === "string");
+    }
+  }
+});
+
 // --- stream.ts -------------------------------------------------------------
 
 type Attempt = {
