@@ -31,3 +31,11 @@ After a change to `src/styles.css`, update `docs/brand/tokens/tokens.json` to ma
 ## Shipping
 
 When your work is done and the checks pass, rebase onto `origin/main` and push to `main`. Never force-push.
+
+## CI
+
+`.github/workflows/ci.yml` (push to `main`, pull requests; `contents: read`; free plan) runs `npm ci`, typecheck, `typecheck:server`, test, build, then `node docs/brand/tools/build.mjs` and `check.mjs`, which also verifies the public ZIP (the runner needs `zip` and `unzip`). Action pins are full SHAs of node24 releases (`checkout` v7.0.1, `setup-node` v7.0.0). It has not run on GitHub yet.
+
+## Handoff Notes
+
+- 2026-10-21: recovered the stale split-CI workflow onto current main (`5f4c29d`, with the `typecheck:server` step), adding the brand build, check and ZIP check the old branch lacked. Local branch `agent/WS1-current-main-20261021`, not pushed; awaiting independent Codex review. First hosted run will confirm `zip`/`unzip` on the runner.
