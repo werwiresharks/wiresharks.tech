@@ -71,7 +71,12 @@ test("parseMessage decodes JSON strings and swallows decode errors", () => {
 
 // --- stream.ts -------------------------------------------------------------
 
-type Attempt = { handlers: StreamHandlers; connection: StreamConnection; closed: boolean };
+type Attempt = {
+  handlers: StreamHandlers;
+  connection: StreamConnection;
+  closed: boolean;
+  sent: unknown[];
+};
 
 function fakeTransport() {
   const attempts: Attempt[] = [];
@@ -80,7 +85,11 @@ function fakeTransport() {
       const attempt: Attempt = {
         handlers,
         closed: false,
-        connection: { close: () => void (attempt.closed = true) },
+        sent: [],
+        connection: {
+          send: (data) => attempt.sent.push(data),
+          close: () => void (attempt.closed = true),
+        },
       };
       attempts.push(attempt);
       return attempt.connection;
@@ -260,6 +269,41 @@ test("close() refuses further reconnects", () => {
   attempts[0].handlers.onClose();
   advance(100_000);
   assert.equal(attempts.length, 1);
+});
+
+test("resync request carries the last delivered seq on open and reopen", () => {
+  const { transport, attempts } = fakeTransport();
+  const { scheduler, advance } = fakeScheduler();
+  const source = createStreamSource(transport, {
+    scheduler,
+    backoffMs: 100,
+    resyncRequest: (since) => ({ type: "resync", since }),
+  });
+  source.subscribe(() => {});
+
+  // First open: nothing delivered yet, so resume from -1.
+  attempts[0].handlers.onOpen();
+  assert.deepEqual(attempts[0].sent, [{ type: "resync", since: -1 }]);
+
+  // Deliver up to seq 4, then drop and reconnect.
+  attempts[0].handlers.onMessage(spawn(2, "a1"));
+  attempts[0].handlers.onMessage({ type: "agent.state", seq: 4, agentId: "a1", state: "running" });
+  attempts[0].handlers.onClose();
+  advance(100);
+
+  // Reconnect resumes right after the last seq it saw.
+  attempts[1].handlers.onOpen();
+  assert.deepEqual(attempts[1].sent, [{ type: "resync", since: 4 }]);
+  source.close();
+});
+
+test("no resync request is sent when none is configured", () => {
+  const { transport, attempts } = fakeTransport();
+  const source = createStreamSource(transport);
+  source.subscribe(() => {});
+  attempts[0].handlers.onOpen();
+  assert.deepEqual(attempts[0].sent, []);
+  source.close();
 });
 
 // --- end to end ------------------------------------------------------------

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { RaptorEngine } from "../engine/engine.ts";
+import type { RaptorEventSource } from "../adapters/source.ts";
 import type { Framing, RaptorRenderer } from "../engine/renderer.ts";
+import { useEngineSource } from "./hooks.ts";
 
 /**
  * Mounts the WebGL renderer for an engine. The renderer and Three.js load
@@ -15,6 +17,7 @@ export function RaptorStage({
   paused = false,
   particleScale = 1,
   className = "",
+  source,
 }: {
   engine: RaptorEngine;
   frame: (width: number, height: number) => Framing;
@@ -24,7 +27,10 @@ export function RaptorStage({
   paused?: boolean;
   particleScale?: number;
   className?: string;
+  /** A live event source to drive the engine. Omit to drive it elsewhere. */
+  source?: RaptorEventSource;
 }) {
+  useEngineSource(engine, source);
   const host = useRef<HTMLDivElement>(null);
   const renderer = useRef<RaptorRenderer | null>(null);
   const frameRef = useRef(frame);

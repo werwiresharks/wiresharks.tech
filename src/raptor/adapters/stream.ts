@@ -14,6 +14,8 @@ import { parseEvent } from "./wire.ts";
 
 /** One live connection. `close` must be idempotent and stop all callbacks. */
 export interface StreamConnection {
+  /** Send one message upstream (for resync requests). A no-op if unsupported. */
+  send(data: unknown): void;
   close(): void;
 }
 
@@ -48,6 +50,13 @@ export type StreamOptions = {
   maxRetries?: number;
   /** Called after a reconnect opens, so the host can request a resync. */
   onReopen?: () => void;
+  /**
+   * Build the upstream request sent on every open to resume the stream. Given
+   * the last sequence number delivered (-1 before any), it returns the message
+   * to send; the runtime replays only events after it, so a reconnect loses
+   * nothing. Omit for receive-only transports.
+   */
+  resyncRequest?: (sinceSeq: number) => unknown;
   /** Called for each message that fails validation. */
   onInvalid?: (data: unknown) => void;
 };
@@ -55,7 +64,7 @@ export type StreamOptions = {
 type ResolvedOptions = Required<
   Pick<StreamOptions, "scheduler" | "backoffMs" | "maxBackoffMs" | "maxRetries">
 > &
-  Pick<StreamOptions, "onReopen" | "onInvalid">;
+  Pick<StreamOptions, "onReopen" | "onInvalid" | "resyncRequest">;
 
 class StreamSource implements RaptorEventSource {
   private readonly listeners = new Set<(event: RaptorEvent) => void>();
@@ -85,15 +94,21 @@ class StreamSource implements RaptorEventSource {
   private open() {
     if (this.connection || this.closed) return;
     const everOpened = this.opened;
-    this.connection = this.transport.connect({
+    let conn: StreamConnection | null = null;
+    conn = this.transport.connect({
       onMessage: (data) => this.handleMessage(data),
       onOpen: () => {
         this.retries = 0;
         this.opened = true;
         if (everOpened) this.options.onReopen?.();
+        // Resume from the last delivered seq, so a reconnect loses nothing.
+        if (this.options.resyncRequest) {
+          (conn ?? this.connection)?.send(this.options.resyncRequest(this.lastSeq));
+        }
       },
       onClose: () => this.handleClose(),
     });
+    this.connection = conn;
   }
 
   private handleMessage(data: unknown) {
@@ -152,6 +167,7 @@ export function createStreamSource(
     maxRetries: options.maxRetries ?? Number.POSITIVE_INFINITY,
     onReopen: options.onReopen,
     onInvalid: options.onInvalid,
+    resyncRequest: options.resyncRequest,
   });
 }
 
@@ -174,6 +190,10 @@ export function webSocketTransport(
       socket.addEventListener("close", onClose);
       socket.addEventListener("error", onClose);
       return {
+        send(data) {
+          if (socket.readyState !== WebSocket.OPEN) return;
+          socket.send(typeof data === "string" ? data : JSON.stringify(data));
+        },
         close() {
           socket.removeEventListener("message", onMessage);
           socket.removeEventListener("open", onOpen);

@@ -41,8 +41,11 @@ npm run preview
   - `source.ts` the `RaptorEventSource` interface and `connect`/`createMessageSource` helpers.
   - `wire.ts` validates one untrusted message into a `RaptorEvent`, or `null`; it never throws.
   - `stream.ts` a reconnecting source over any message transport (with a browser
-    `WebSocket` helper): boundary validation, stale/duplicate-sequence dedup, and
-    capped exponential backoff.
+    `WebSocket` helper): boundary validation, stale/duplicate-sequence dedup,
+    capped exponential backoff, and an optional resync request that resumes from
+    the last delivered seq so a reconnect loses no events.
+- `src/raptor/react/hooks.ts` `useEngineSource` feeds a live source into an
+  engine; `RaptorStage` takes an optional `source` prop to drive itself.
 - `src/raptor/demo/director.ts` simulated events for the website demonstration.
 
 The engine visualizes authorization decisions; it never makes them.
