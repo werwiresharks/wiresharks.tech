@@ -37,7 +37,12 @@ npm run preview
   - `engine.ts` facade that works with or without the renderer.
 - `src/raptor/home/` the home-page particle journey (journey.ts, source.ts).
 - `src/raptor/react/` the React bindings (RaptorStage, HomeJourney, hooks).
-- `src/raptor/adapters/source.ts` the seam a real Raptor runtime would use to supply events.
+- `src/raptor/adapters/` the seam a real Raptor runtime uses to supply events:
+  - `source.ts` the `RaptorEventSource` interface and `connect`/`createMessageSource` helpers.
+  - `wire.ts` validates one untrusted message into a `RaptorEvent`, or `null`; it never throws.
+  - `stream.ts` a reconnecting source over any message transport (with a browser
+    `WebSocket` helper): boundary validation, stale/duplicate-sequence dedup, and
+    capped exponential backoff.
 - `src/raptor/demo/director.ts` simulated events for the website demonstration.
 
 The engine visualizes authorization decisions; it never makes them.
