@@ -46,6 +46,9 @@ npm run preview
     the last delivered seq so a reconnect loses no events.
 - `src/raptor/react/hooks.ts` `useEngineSource` feeds a live source into an
   engine; `RaptorStage` takes an optional `source` prop to drive itself.
+- `src/raptor/react/EngineNarration.tsx` a visually hidden live region that
+  voices the engine for assistive tech (the canvas itself is decorative);
+  `src/raptor/engine/narration.ts` is its pure, capped event-log accumulator.
 - `src/raptor/demo/director.ts` simulated events for the website demonstration.
 
 The engine visualizes authorization decisions; it never makes them.
