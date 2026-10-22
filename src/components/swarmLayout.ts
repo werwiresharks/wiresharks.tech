@@ -32,8 +32,8 @@ const COMPACT = ["Auth", "API", "Dependencies", "Cloud"];
 /** Boxes narrower than this stack the figure top to bottom. */
 export const ROW_MIN_WIDTH = 640;
 
-/** Advance widths of the figure's text: 11px Geist Mono labels and the 13px Geist titles. */
-const MONO_ADVANCE = 6.6;
+/** Advance widths of the figure's text: 12px Geist Mono labels (with their 0.02em tracking) and the 13px Geist titles. */
+const MONO_ADVANCE = 7.24;
 const TITLE_ADVANCE = 7.6;
 
 export type SwarmAgent = {

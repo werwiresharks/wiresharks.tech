@@ -39,3 +39,4 @@ When your work is done and the checks pass, rebase onto `origin/main` and push t
 ## Handoff Notes
 
 - 2026-10-21: recovered the stale split-CI workflow onto current main (`5f4c29d`, with the `typecheck:server` step), adding the brand build, check and ZIP check the old branch lacked. Local branch `agent/WS1-current-main-20261021`, not pushed; awaiting independent Codex review. First hosted run will confirm `zip`/`unzip` on the runner.
+- 2026-10-21: swarm figure label padding. `MONO_ADVANCE` in `src/components/swarmLayout.ts` assumed 11px text but the figure's labels are 12px with 0.02em tracking (7.24px per character), so the Dependency worker label touched its card edge and the Dependencies report label touched its bar. Constant corrected; cards and bars now size from it. Branch `agent/website-dependency-padding-20261021` off `origin/main` `d6d2c17`, not pushed; awaiting independent Codex review.
