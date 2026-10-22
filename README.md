@@ -94,6 +94,30 @@ docker run -p 8787:8787 -v "$PWD/.data:/app/.data" wiresharks-server
 
 The engine visualizes authorization decisions; it never makes them.
 
+## Raptor review
+
+`agent/` is Raptor's first end-to-end workflow: the authorized repository
+security review the product describes (Scope → Map → Find → Report). It is
+read-only — it maps a repository you name, flags well-known defect classes with
+their CWE, and writes an evidence report. It never patches, deploys, exploits,
+or reaches outside the path you authorize.
+
+```sh
+npm run review -- <path> [--scope "<glob,...>"] [--exclude "<glob,...>"] [--out report.md]
+```
+
+`agent/scope.ts` is the authorization boundary: a review only ever reads files
+under the named root, never escaping through `..`, an absolute path, or a
+symlink. `agent/reviewer.ts` is the detection seam — a built-in, offline pattern
+reviewer that needs no model, and a `Reviewer` interface an operator can back
+with any aligned model ("works with any model"). The orchestrator
+(`agent/review.ts`) narrates its progress in the engine's own event vocabulary,
+so a review can be watched live in the console. It exits non-zero when a high or
+critical finding is present, so it can gate CI.
+
+What this is not: it does not run a refusal-stripped model, generate exploits,
+or act on systems you have not authorized. Those are out of scope by design.
+
 ## Contact
 
 The only public address is hello@wiresharks.tech.
