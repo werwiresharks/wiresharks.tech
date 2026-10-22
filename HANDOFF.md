@@ -74,11 +74,13 @@ Reviewer and context Prover the CLI uses — over `REVIEW_TARGET` (default the
 small bundled sample repo `server/demo/review-target/`), captures the engine
 events it narrates, and loops that recording on the SSE stream via the existing
 `playScenario`. So `/console` shows a genuine Scope→Map→Find→Prove→Report
-session (real findings, real verdicts), not `scenario.ts`. If the review cannot
-run, the server falls back to the scripted `REVIEW_SESSION` so the stream is
-never empty. The sample repo trips five rules and the Prove step rules them
-2 verified / 2 dismissed / 1 open. The Dockerfile now also `COPY`s `agent/`,
-since the service runs the review pipeline.
+session (real findings, real verdicts), not `scenario.ts`. By default it is the
+offline pattern review; set `RAPTOR_CONSOLE_MODEL=1` with an `ANTHROPIC_API_KEY`
+to record a **model-driven** review (model reviewer + planner) instead — on
+failure it falls back to the offline review, then to the scripted
+`REVIEW_SESSION`, so the stream is never empty. The sample repo trips five rules
+and the Prove step rules them 2 verified / 2 dismissed / 1 open. The Dockerfile
+now also `COPY`s `agent/`, since the service runs the review pipeline.
 
 ### Raptor review workflow — `agent/`  ← newest, read this carefully
 The one piece of "Raptor" that is real: the **authorized repository security
@@ -108,8 +110,10 @@ patch, deploy, exploit, or reach outside the authorized path.
   leaves them `open` — honest: the model reasoned, a human still checks.
 - `plan.ts` — **the planning loop** (the first step toward a real agent, now
   built). A read-only agent loop for Find: a `Planner` chooses one action at a
-  time — `list` / `read` / `review` / `finish` — instead of reviewing every
-  file. Strictly bounded: every tool acts only on the Scope's already-mapped
+  time — `list` / `search` / `read` / `review` / `finish` — instead of reviewing
+  every file. (`search` greps the in-scope set; an invalid regex is matched
+  literally; bounded to 50 hits.) Strictly bounded: every tool acts only on the
+  Scope's already-mapped
   file set, so a planner **cannot read or review a path outside scope** however
   it is asked (proven in `plan.test.ts`), there is no tool that changes anything,
   and a step budget caps the loop. `modelPlanner` (reusing the model `Transport`)
@@ -126,8 +130,14 @@ patch, deploy, exploit, or reach outside the authorized path.
   the same in-scope file the finding cites, reaches nothing outside the Scope,
   and leaves a lead `open` whenever it cannot justify a firm verdict (it
   dismisses placeholder/test-code matches, verifies clear defects on shipped
-  paths). A model-backed or test-reproducing prover is just another
-  implementation of this interface.
+  paths).
+- `modelProver.ts` — **the model-backed Prover**. `modelProver()` asks the model
+  to rule on a lead in the context of its file (reusing the model `Transport`);
+  same discipline as the model reviewer — read-only, unsure → `open`, never
+  throws, no exploit code. `firstDecisiveProver([contextProver(), modelProver()])`
+  takes the deterministic verdict when one exists and only pays for the model on
+  the leads context left `open` (e.g. model-found findings, which have no rule).
+  The CLI uses this layered prover automatically under `--model`.
 - `report.ts` / `main.ts` — Markdown report + CLI. The report now carries a
   Status column, a verification summary line, and a `## Verification` section of
   per-finding reasoning. The CLI runs Prove by default (`--no-prove` to skip)
@@ -140,9 +150,10 @@ model-driven loop that chooses what to read and review — genuine tool use over
 read-only tool set, bounded and scope-locked. But the tools are only
 list/read/review; there is still no memory across runs, no tool that acts on the
 world, and Prove/Report remain a fixed tail after the loop. It reviews and
-reports; it does not patch, deploy, or exploit. The remaining steps toward a
-fuller agent are breadth (more read-only tools — follow imports, inspect VCS
-history) and a model-backed Prover so the loop's findings get verified too.
+reports; it does not patch, deploy, or exploit. The remaining breadth toward a
+fuller agent is more read-only tools (follow imports, inspect VCS history) and
+cross-run memory; the Prove seam now has a model backing (`modelProver`), so the
+loop's model-found findings get verified too.
 
 ## How to verify (the CI-equivalent, all currently pass)
 
@@ -150,7 +161,7 @@ history) and a model-backed Prover so the loop's findings get verified too.
 npm ci
 npm run typecheck          # browser TS
 npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 134 tests across engine, server, agent
+npm test                   # 141 tests across engine, server, agent
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```

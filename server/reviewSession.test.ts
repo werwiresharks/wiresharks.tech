@@ -7,6 +7,10 @@ import { fileURLToPath } from "node:url";
 import { recordReview } from "./reviewSession.ts";
 import { SessionLog } from "./log.ts";
 import { playScenario } from "./scenario.ts";
+import { compositeReviewer, modelReviewer } from "../agent/modelReviewer.ts";
+import { patternReviewer } from "../agent/reviewer.ts";
+import { modelPlanner } from "../agent/plan.ts";
+import type { Transport } from "../agent/modelReviewer.ts";
 import { createModel, reduce } from "../src/raptor/engine/model.ts";
 
 /** A controllable clock, so a recorded review plays with no real time elapsed. */
@@ -85,6 +89,38 @@ test("a recorded review plays into a session log, every event accepted", async (
     // The log assigns seqs through its own reducer; no event was rejected.
     assert.equal(log.lastSeq, steps.length);
     assert.equal(log.snapshot.agents.raptor?.state, "completed");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("the recorder accepts a model-driven reviewer and planner, offline", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "rec-"));
+  try {
+    await writeFile(join(dir, "ingest.py"), "obj = pickle.loads(body)\n");
+
+    // A fake transport stands in for the model: the planner lists, reviews, then
+    // finishes; the reviewer reports one finding. No network, no key.
+    const plan = ['{"tool":"review","file":"ingest.py"}', '{"tool":"finish"}'];
+    let i = 0;
+    const plannerTransport: Transport = { model: "fake", async complete() { return plan[Math.min(i++, plan.length - 1)]; } };
+    const reviewerTransport: Transport = {
+      model: "fake",
+      async complete() {
+        return JSON.stringify([{ line: 1, cwe: "CWE-502", severity: "high", title: "Unsafe deserialization" }]);
+      },
+    };
+
+    const steps = await recordReview({
+      root: dir,
+      reviewer: compositeReviewer([patternReviewer(), modelReviewer({ transport: reviewerTransport })]),
+      planner: modelPlanner({ transport: plannerTransport }),
+    });
+
+    assert.equal(steps[0].event.type, "session.reset");
+    assert.equal(steps.at(-1)?.event.type, "conversation.closed");
+    assert.ok(steps.some((s) => s.event.type === "action.proposed"), "the review narrated a finding");
+    assertReducible(steps);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

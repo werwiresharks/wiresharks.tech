@@ -1,6 +1,9 @@
 import { resolveScope, DEFAULT_EXCLUDE } from "../agent/scope.ts";
 import { patternReviewer } from "../agent/reviewer.ts";
+import type { Reviewer } from "../agent/reviewer.ts";
 import { contextProver } from "../agent/prove.ts";
+import type { Prover } from "../agent/prove.ts";
+import type { Planner } from "../agent/plan.ts";
 import { runReview } from "../agent/review.ts";
 import type { ScenarioStep } from "./scenario.ts";
 import type { RaptorEventType, UnsequencedEvent } from "../src/raptor/engine/events.ts";
@@ -43,6 +46,12 @@ export interface RecordReviewOptions {
   root: string;
   include?: readonly string[];
   exclude?: readonly string[];
+  /** Defaults to the offline pattern reviewer. */
+  reviewer?: Reviewer;
+  /** Defaults to the offline context prover. */
+  prover?: Prover;
+  /** When set, Find is planner-driven instead of exhaustive. */
+  planner?: Planner;
 }
 
 /** Run a review of `root` and return its narration as paced scenario steps. */
@@ -61,8 +70,9 @@ export async function recordReview(
   const steps: ScenarioStep[] = [];
   await runReview({
     scope,
-    reviewer: patternReviewer(),
-    prover: contextProver(),
+    reviewer: options.reviewer ?? patternReviewer(),
+    prover: options.prover ?? contextProver(),
+    planner: options.planner,
     emit: (event) => steps.push({ delayMs: delayFor(event), event }),
   });
   return steps;
