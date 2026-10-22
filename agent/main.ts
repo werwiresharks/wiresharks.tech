@@ -2,6 +2,8 @@ import { writeFile } from "node:fs/promises";
 import { argv, exit, stdout } from "node:process";
 import { resolveScope, DEFAULT_EXCLUDE } from "./scope.ts";
 import { patternReviewer } from "./reviewer.ts";
+import type { Reviewer } from "./reviewer.ts";
+import { modelReviewer, anthropicTransport, compositeReviewer } from "./modelReviewer.ts";
 import { contextProver } from "./prove.ts";
 import { runReview } from "./review.ts";
 import { renderReport } from "./report.ts";
@@ -14,14 +16,20 @@ import { renderReport } from "./report.ts";
  *
  *   node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>]
  *                                    [--out <file>] [--quiet] [--no-prove]
+ *                                    [--model | --model=<id>]
  *
  * By default the review also runs the Prove step, ruling each lead
  * verified/dismissed/open. Exits non-zero when a high or critical finding is
  * present and not dismissed, so it can gate CI without failing on a lead the
  * Prove step ruled out.
+ *
+ * `--model` adds an aligned model to the Find step (alongside the offline
+ * pattern pass), so defects are found by model reasoning, not only regex. It
+ * reads ANTHROPIC_API_KEY; `--model=<id>` picks the model (default
+ * claude-opus-5-5).
  */
 const USAGE =
-  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet] [--no-prove]";
+  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet] [--no-prove] [--model | --model=<id>]";
 
 interface Args {
   command: string;
@@ -31,10 +39,12 @@ interface Args {
   out?: string;
   quiet: boolean;
   prove: boolean;
+  model: boolean;
+  modelId?: string;
 }
 
 function parseArgs(args: readonly string[]): Args {
-  const parsed: Args = { command: args[0] ?? "", include: [], exclude: [], quiet: false, prove: true };
+  const parsed: Args = { command: args[0] ?? "", include: [], exclude: [], quiet: false, prove: true, model: false };
   const rest = args.slice(1);
   for (let i = 0; i < rest.length; i += 1) {
     const arg = rest[i];
@@ -43,7 +53,11 @@ function parseArgs(args: readonly string[]): Args {
     else if (arg === "--out") parsed.out = rest[++i];
     else if (arg === "--quiet") parsed.quiet = true;
     else if (arg === "--no-prove") parsed.prove = false;
-    else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
+    else if (arg === "--model") parsed.model = true;
+    else if (arg.startsWith("--model=")) {
+      parsed.model = true;
+      parsed.modelId = arg.slice("--model=".length);
+    } else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
     else if (parsed.root === undefined) parsed.root = arg;
     else throw new Error(`Unexpected argument: ${arg}`);
   }
@@ -85,9 +99,21 @@ async function main(): Promise<number> {
     return 2;
   }
 
+  let reviewer: Reviewer = patternReviewer();
+  if (args.model) {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error(
+        "--model needs ANTHROPIC_API_KEY set (an aligned-model key). It is read at run time and never stored.",
+      );
+      return 2;
+    }
+    const transport = anthropicTransport(args.modelId ? { model: args.modelId } : {});
+    reviewer = compositeReviewer([patternReviewer(), modelReviewer({ transport })]);
+  }
+
   const result = await runReview({
     scope,
-    reviewer: patternReviewer(),
+    reviewer,
     prover: args.prove ? contextProver() : undefined,
     emit: args.quiet ? undefined : (e) => stdout.write(`· ${e.type}\n`),
   });

@@ -92,7 +92,20 @@ patch, deploy, exploit, or reach outside the authorized path.
 - `map.ts` — walks the in-scope file set, never follows directory symlinks.
 - `reviewer.ts` — the detection seam. `patternReviewer()` is a deterministic,
   offline **regex** pass (CWE-502/78/95/295/327/798). The `Reviewer` interface
-  is where a model-backed reviewer would plug in ("works with any model").
+  is where a model-backed reviewer plugs in ("works with any model").
+- `modelReviewer.ts` — **the model-backed Reviewer** (roadmap #2, now built).
+  `modelReviewer()` asks an aligned model to reason over each file and report
+  defects; `anthropicTransport()` calls the Messages API over **raw fetch**
+  (the service ships no runtime deps, so no SDK — `claude-opus-5-5` by default,
+  `ANTHROPIC_API_KEY` / optional `ANTHROPIC_BASE_URL` read at run time, never
+  stored). A `Transport` seam makes the whole reviewer testable offline with no
+  key. Two safety choices: a finding's **evidence is the real source line** read
+  back from the file (the model cannot invent a quote, a hallucinated line is
+  dropped), and it **never throws into the review** (a transport/parse failure
+  yields no findings, like the engine's boundary validators). `compositeReviewer`
+  runs the offline pattern pass and the model pass together, deduping by
+  (line, defect). Model findings have no deterministic prover rule, so Prove
+  leaves them `open` — honest: the model reasoned, a human still checks.
 - `review.ts` — orchestrator; narrates progress in the engine's own event
   vocabulary, so a review can drive `/console`.
 - `prove.ts` — **the Prove step** (roadmap #1, now built). A `Prover` seam
@@ -109,14 +122,15 @@ patch, deploy, exploit, or reach outside the authorized path.
   per-finding reasoning. The CLI runs Prove by default (`--no-prove` to skip)
   and exits non-zero on a high/critical finding **that Prove did not dismiss**
   (CI-gatable, no longer tripped by test-fixture matches). Run:
-  `npm run review -- <path> [--scope ...] [--out report.md] [--no-prove]`.
+  `npm run review -- <path> [--scope ...] [--out report.md] [--no-prove] [--model]`.
 
-**Be honest about what `agent/` is NOT:** it is not an LLM agent. No model, no
-reasoning, no planning loop, no tool use, no memory, no adaptation — a
-deterministic scanner with an agent-shaped event skeleton. The emitted
-`agent.spawned` / `action.proposed` events are narration of a fixed workflow,
-not a model deciding. The `Reviewer` interface is the only seam where real
-model intelligence would enter.
+**Be honest about what `agent/` still is NOT:** even with `--model`, the Find
+step is model reasoning over *one file at a time* — there is still no planning
+loop, no tool use, no memory, no multi-step adaptation. The `agent.spawned` /
+`action.proposed` events narrate a fixed Scope→Map→Find→Prove→Report pipeline,
+not a model deciding what to do next. Model intelligence now enters at the
+`Reviewer` seam (`--model`); a model-driven *planning loop* would be the next
+real step toward an agent, and is not built.
 
 ## How to verify (the CI-equivalent, all currently pass)
 
@@ -124,7 +138,7 @@ model intelligence would enter.
 npm ci
 npm run typecheck          # browser TS
 npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 122 tests across engine, server, agent
+npm test                   # 129 tests across engine, server, agent
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```
@@ -141,10 +155,12 @@ rule: when work is done and checks pass, rebase onto `origin/main` and push to
    is a *reproducing* prover that runs the repo's own test suite in an isolated
    worktree to confirm a lead — note that executes target code, so it must be
    sandboxed and is a deliberate step past the current read-only boundary.
-2. **Model-backed `Reviewer`** — implement the `Reviewer` interface against an
-   **aligned** model (NOT Talon-1) so Find is model-driven reasoning over code.
-   Needs an API key/endpoint from the owner; take it via the host's secret
-   prompt, never commit it.
+2. **Model-backed `Reviewer` — DONE (2026-10-22).** See `modelReviewer.ts`
+   above (`agent/main.ts review <path> --model`). It targets an **aligned**
+   model (NOT Talon-1). To run it live, set `ANTHROPIC_API_KEY` in the
+   environment (take it via the host's secret prompt; never commit it). Natural
+   follow-ons: wire the model reviewer into the `/console` recording, and add a
+   model-backed Prover so model findings can be verified/dismissed too.
 3. **Wire the real review into the live stream — DONE (2026-10-22).** See
    `server/reviewSession.ts` above; `/console` now streams a real recorded
    review. Natural follow-ons: re-record periodically or on demand instead of
@@ -160,5 +176,6 @@ rule: when work is done and checks pass, rebase onto `origin/main` and push to
   typecheck (`*.test.ts`) and run via `node --test`.
 - Engine invariant: events are strictly monotonic by `seq`; engine-fed events
   start at `seq 1`.
-- Blocked/unavailable: Hivemind specs, WhatsApp/Instagram references, and any
-  aligned-model credentials. These gate steps 2+ above.
+- Blocked/unavailable: Hivemind specs and WhatsApp/Instagram references. The
+  model-backed reviewer is built but needs `ANTHROPIC_API_KEY` to run live
+  (take it via the host's secret prompt; the code reads it at run time).
