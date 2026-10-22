@@ -65,6 +65,47 @@ test("the planner reviews the files it chooses and collects their findings", asy
   }
 });
 
+test("the search tool greps the in-scope files and is bounded to them", async () => {
+  const { dir, map } = await fixtureMap();
+  try {
+    const result = await runPlan({
+      map,
+      reviewer: patternReviewer(),
+      planner: scriptedPlanner([
+        { tool: "search", pattern: "pickle\\.loads", glob: "**/*.py" },
+        { tool: "search", pattern: "nothing-here" },
+        { tool: "finish" },
+      ]),
+      parentAgentId: "raptor",
+    });
+
+    assert.match(result.steps[0].result, /ingest\.py:1:/, "finds the pickle line");
+    assert.doesNotMatch(result.steps[0].result, /readme\.md/, "the glob excludes non-Python files");
+    assert.match(result.steps[1].result, /no matches/);
+    // Search reads but never reviews, so it raises no findings on its own.
+    assert.equal(result.findings.length, 0);
+    assert.equal(result.reviewedFiles.length, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("an invalid regex in search is treated as a literal match", async () => {
+  const { dir, map } = await fixtureMap();
+  try {
+    const result = await runPlan({
+      map,
+      reviewer: patternReviewer(),
+      planner: scriptedPlanner([{ tool: "search", pattern: "loads(body" }, { tool: "finish" }]),
+      parentAgentId: "raptor",
+    });
+    // "loads(body" is not valid regex; matched literally it still finds the line.
+    assert.match(result.steps[0].result, /ingest\.py:1:/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("the planner cannot read or review outside the in-scope file set", async () => {
   const { dir, map } = await fixtureMap();
   try {

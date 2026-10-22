@@ -24,11 +24,12 @@ import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
  */
 export type PlanAction =
   | { tool: "list"; glob?: string }
+  | { tool: "search"; pattern: string; glob?: string }
   | { tool: "read"; file: string }
   | { tool: "review"; file: string }
   | { tool: "finish"; reason?: string };
 
-export const PLAN_TOOLS = ["list", "read", "review", "finish"] as const;
+export const PLAN_TOOLS = ["list", "search", "read", "review", "finish"] as const;
 
 export interface PlanStep {
   action: PlanAction;
@@ -80,6 +81,8 @@ const describe = (action: PlanAction): string => {
   switch (action.tool) {
     case "list":
       return `List files${action.glob ? ` matching ${action.glob}` : ""}`;
+    case "search":
+      return `Search for ${action.pattern}${action.glob ? ` in ${action.glob}` : ""}`;
     case "read":
       return `Read ${action.file}`;
     case "review":
@@ -88,6 +91,18 @@ const describe = (action: PlanAction): string => {
       return `Finish${action.reason ? `: ${action.reason}` : ""}`;
   }
 };
+
+/** A pattern as a regex, or — if it is not valid regex — as a literal match. */
+function safeRegExp(pattern: string): RegExp {
+  try {
+    return new RegExp(pattern);
+  } catch {
+    return new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  }
+}
+
+/** Cap on matches a single search returns, so one action stays bounded. */
+const SEARCH_LIMIT = 50;
 
 export async function runPlan(options: PlanOptions): Promise<PlanResult> {
   const { map, reviewer, planner, parentAgentId } = options;
@@ -162,6 +177,26 @@ async function execute(action: PlanAction, deps: ExecDeps): Promise<PlanStep> {
       const more = matched.length > shown.length ? ` (+${matched.length - shown.length} more)` : "";
       return { action, ok: true, result: `${matched.length} file(s): ${shown.join(", ")}${more}` };
     }
+    case "search": {
+      const re = safeRegExp(action.pattern);
+      const fileRe = action.glob ? globToRegExp(action.glob) : null;
+      const files = fileRe ? deps.map.files.filter((f) => fileRe.test(f)) : deps.map.files;
+      const hits: string[] = [];
+      for (const file of files) {
+        if (hits.length >= SEARCH_LIMIT) break;
+        const text = await readMapped(deps.map, file).catch(() => null);
+        if (text === null) continue;
+        const lines = text.split("\n");
+        for (let i = 0; i < lines.length && hits.length < SEARCH_LIMIT; i += 1) {
+          if (re.test(lines[i])) hits.push(`${file}:${i + 1}: ${lines[i].trim().slice(0, 160)}`);
+        }
+      }
+      return {
+        action,
+        ok: true,
+        result: hits.length ? `${hits.length} match(es):\n${hits.join("\n")}` : `no matches for ${action.pattern}`,
+      };
+    }
     case "read": {
       if (!deps.inScope.has(action.file))
         return { action, ok: false, result: `denied: ${action.file} is not an in-scope file` };
@@ -212,10 +247,11 @@ const SYSTEM_PROMPT = [
   "you cannot change anything, and you can only act on in-scope files.",
   "",
   "Tools (respond with exactly one, as a single JSON object, no prose):",
-  '  {"tool":"list","glob":"<optional glob>"}   — list in-scope files',
-  '  {"tool":"read","file":"<path>"}            — read a file to understand it',
-  '  {"tool":"review","file":"<path>"}          — run the detector on a file',
-  '  {"tool":"finish","reason":"<why>"}         — stop',
+  '  {"tool":"list","glob":"<optional glob>"}            — list in-scope files',
+  '  {"tool":"search","pattern":"<regex>","glob":"..."}  — grep in-scope files',
+  '  {"tool":"read","file":"<path>"}                     — read a file to understand it',
+  '  {"tool":"review","file":"<path>"}                   — run the detector on a file',
+  '  {"tool":"finish","reason":"<why>"}                  — stop',
   "",
   "Prioritize files that handle input, auth, crypto, serialization, subprocess or",
   "network calls. Review the files that matter; do not review every file. Finish",
@@ -242,6 +278,8 @@ function toAction(raw: unknown): PlanAction | null {
     return { tool: "finish", reason: typeof item.reason === "string" ? item.reason : undefined };
   if (tool === "list")
     return { tool: "list", glob: typeof item.glob === "string" ? item.glob : undefined };
+  if (tool === "search" && typeof item.pattern === "string")
+    return { tool: "search", pattern: item.pattern, glob: typeof item.glob === "string" ? item.glob : undefined };
   if ((tool === "read" || tool === "review") && typeof item.file === "string")
     return { tool, file: item.file };
   return null;
