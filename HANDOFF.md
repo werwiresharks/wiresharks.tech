@@ -106,8 +106,19 @@ patch, deploy, exploit, or reach outside the authorized path.
   runs the offline pattern pass and the model pass together, deduping by
   (line, defect). Model findings have no deterministic prover rule, so Prove
   leaves them `open` — honest: the model reasoned, a human still checks.
+- `plan.ts` — **the planning loop** (the first step toward a real agent, now
+  built). A read-only agent loop for Find: a `Planner` chooses one action at a
+  time — `list` / `read` / `review` / `finish` — instead of reviewing every
+  file. Strictly bounded: every tool acts only on the Scope's already-mapped
+  file set, so a planner **cannot read or review a path outside scope** however
+  it is asked (proven in `plan.test.ts`), there is no tool that changes anything,
+  and a step budget caps the loop. `modelPlanner` (reusing the model `Transport`)
+  lets a model drive it; `scriptedPlanner` drives it deterministically in tests.
+  `runReview({ planner })` swaps the exhaustive Find for the loop; the report
+  then shows "Files reviewed: N of M in scope".
 - `review.ts` — orchestrator; narrates progress in the engine's own event
-  vocabulary, so a review can drive `/console`.
+  vocabulary, so a review can drive `/console`. Find is exhaustive by default,
+  or planner-driven when a `planner` is supplied.
 - `prove.ts` — **the Prove step** (roadmap #1, now built). A `Prover` seam
   parallel to `Reviewer`: given a lead and the file it cites, it returns
   `verified` / `dismissed` / `open` with a one-sentence rationale. The built-in
@@ -122,15 +133,16 @@ patch, deploy, exploit, or reach outside the authorized path.
   per-finding reasoning. The CLI runs Prove by default (`--no-prove` to skip)
   and exits non-zero on a high/critical finding **that Prove did not dismiss**
   (CI-gatable, no longer tripped by test-fixture matches). Run:
-  `npm run review -- <path> [--scope ...] [--out report.md] [--no-prove] [--model]`.
+  `npm run review -- <path> [--scope ...] [--out report.md] [--no-prove] [--model] [--plan]`.
 
-**Be honest about what `agent/` still is NOT:** even with `--model`, the Find
-step is model reasoning over *one file at a time* — there is still no planning
-loop, no tool use, no memory, no multi-step adaptation. The `agent.spawned` /
-`action.proposed` events narrate a fixed Scope→Map→Find→Prove→Report pipeline,
-not a model deciding what to do next. Model intelligence now enters at the
-`Reviewer` seam (`--model`); a model-driven *planning loop* would be the next
-real step toward an agent, and is not built.
+**Be honest about what `agent/` still is NOT:** `--plan` gives it a real
+model-driven loop that chooses what to read and review — genuine tool use over a
+read-only tool set, bounded and scope-locked. But the tools are only
+list/read/review; there is still no memory across runs, no tool that acts on the
+world, and Prove/Report remain a fixed tail after the loop. It reviews and
+reports; it does not patch, deploy, or exploit. The remaining steps toward a
+fuller agent are breadth (more read-only tools — follow imports, inspect VCS
+history) and a model-backed Prover so the loop's findings get verified too.
 
 ## How to verify (the CI-equivalent, all currently pass)
 
@@ -138,7 +150,7 @@ real step toward an agent, and is not built.
 npm ci
 npm run typecheck          # browser TS
 npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 129 tests across engine, server, agent
+npm test                   # 134 tests across engine, server, agent
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```

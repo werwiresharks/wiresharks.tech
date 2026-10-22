@@ -3,6 +3,8 @@ import { sortFindings, countByStatus } from "./findings.ts";
 import type { Finding } from "./findings.ts";
 import type { Reviewer } from "./reviewer.ts";
 import type { Prover } from "./prove.ts";
+import { runPlan } from "./plan.ts";
+import type { Planner } from "./plan.ts";
 import type { Scope } from "./scope.ts";
 import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
 
@@ -22,10 +24,18 @@ export interface ReviewOptions {
    * Omit to stop after Find and leave every finding `open`.
    */
   prover?: Prover;
+  /**
+   * When set, the Find step is planner-driven: the planner chooses which files
+   * to read and review (within scope) instead of reviewing every file. Omit for
+   * the exhaustive pass.
+   */
+  planner?: Planner;
   /** Receives engine events as the review runs; optional. */
   emit?: (event: UnsequencedEvent) => void;
-  /** Max files reviewed in parallel. */
+  /** Max files reviewed in parallel (exhaustive Find only). */
   concurrency?: number;
+  /** Hard cap on planner turns, when `planner` is set. */
+  maxPlanSteps?: number;
 }
 
 export interface ReviewResult {
@@ -33,7 +43,11 @@ export interface ReviewResult {
   reviewer: string;
   /** The prover that ruled on the leads, or null when Prove did not run. */
   prover: string | null;
+  /** The planner that drove Find, or null for the exhaustive pass. */
+  planner: string | null;
   fileCount: number;
+  /** Files actually reviewed. Equals fileCount for the exhaustive pass. */
+  reviewedCount: number;
   findings: Finding[];
 }
 
@@ -54,40 +68,56 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
   // Map: discover the in-scope file set.
   const map = await mapRepo(scope);
 
-  // Find: a worker reads each file and the reviewer reports on it.
-  emit({ type: "agent.spawned", agentId: WORKER, parentId: PRIMARY, label: "Find" });
-  emit({ type: "agent.state", agentId: WORKER, state: "running" });
-
+  // Find: either a planner chooses what to review (bounded, read-only), or a
+  // worker reviews every in-scope file.
   const findings: Finding[] = [];
-  let next = 0;
-  async function drain(): Promise<void> {
-    while (next < map.files.length) {
-      const relPath = map.files[next++];
-      let content: string;
-      try {
-        content = await readMapped(map, relPath);
-      } catch {
-        continue; // unreadable file: skip, do not fail the review
-      }
-      const found = await reviewer.review({ relPath, content });
-      for (const finding of found) {
-        findings.push(finding);
-        // Each finding is a proposed observation, cited to a file and line.
-        emit({
-          type: "action.proposed",
-          actionId: finding.id,
-          agentId: WORKER,
-          summary: `${finding.severity.toUpperCase()} ${finding.cwe ?? ""} ${finding.file}:${finding.line} — ${finding.title}`.replace(/\s+/g, " ").trim(),
-        });
-      }
-    }
-  }
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, map.files.length || 1) }, drain),
-  );
+  let reviewedCount: number;
+  if (options.planner) {
+    const plan = await runPlan({
+      map,
+      reviewer,
+      planner: options.planner,
+      parentAgentId: PRIMARY,
+      emit,
+      maxSteps: options.maxPlanSteps,
+    });
+    findings.push(...plan.findings);
+    reviewedCount = plan.reviewedFiles.length;
+  } else {
+    emit({ type: "agent.spawned", agentId: WORKER, parentId: PRIMARY, label: "Find" });
+    emit({ type: "agent.state", agentId: WORKER, state: "running" });
 
-  emit({ type: "agent.state", agentId: WORKER, state: "completed" });
-  emit({ type: "agent.reintegrated", agentId: WORKER });
+    let next = 0;
+    const drain = async (): Promise<void> => {
+      while (next < map.files.length) {
+        const relPath = map.files[next++];
+        let content: string;
+        try {
+          content = await readMapped(map, relPath);
+        } catch {
+          continue; // unreadable file: skip, do not fail the review
+        }
+        const found = await reviewer.review({ relPath, content });
+        for (const finding of found) {
+          findings.push(finding);
+          // Each finding is a proposed observation, cited to a file and line.
+          emit({
+            type: "action.proposed",
+            actionId: finding.id,
+            agentId: WORKER,
+            summary: `${finding.severity.toUpperCase()} ${finding.cwe ?? ""} ${finding.file}:${finding.line} — ${finding.title}`.replace(/\s+/g, " ").trim(),
+          });
+        }
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(concurrency, map.files.length || 1) }, drain),
+    );
+    reviewedCount = map.files.length;
+
+    emit({ type: "agent.state", agentId: WORKER, state: "completed" });
+    emit({ type: "agent.reintegrated", agentId: WORKER });
+  }
 
   // Prove: a worker re-examines each lead in the file that raised it and records
   // a verdict — verified, dismissed, or left open. Still strictly read-only: it
@@ -144,7 +174,9 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
     root: scope.root,
     reviewer: reviewer.name,
     prover: options.prover?.name ?? null,
+    planner: options.planner?.name ?? null,
     fileCount: map.files.length,
+    reviewedCount,
     findings: sortFindings(proven),
   };
 }

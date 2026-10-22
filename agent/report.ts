@@ -23,8 +23,13 @@ export function renderReport(result: ReviewResult): string {
   lines.push("");
   lines.push(`- Root: \`${result.root}\``);
   lines.push(`- Reviewer: ${result.reviewer}`);
+  if (result.planner) lines.push(`- Planner: ${result.planner}`);
   if (result.prover) lines.push(`- Prover: ${result.prover}`);
-  lines.push(`- Files reviewed: ${result.fileCount}`);
+  lines.push(
+    result.planner
+      ? `- Files reviewed: ${result.reviewedCount} of ${result.fileCount} in scope`
+      : `- Files reviewed: ${result.fileCount}`,
+  );
   lines.push(`- Findings: ${findings.length}${summary ? ` (${summary})` : ""}`);
   if (result.prover) {
     const status = countByStatus(findings);

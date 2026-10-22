@@ -4,6 +4,8 @@ import { resolveScope, DEFAULT_EXCLUDE } from "./scope.ts";
 import { patternReviewer } from "./reviewer.ts";
 import type { Reviewer } from "./reviewer.ts";
 import { modelReviewer, anthropicTransport, compositeReviewer } from "./modelReviewer.ts";
+import { modelPlanner } from "./plan.ts";
+import type { Planner } from "./plan.ts";
 import { contextProver } from "./prove.ts";
 import { runReview } from "./review.ts";
 import { renderReport } from "./report.ts";
@@ -26,10 +28,12 @@ import { renderReport } from "./report.ts";
  * `--model` adds an aligned model to the Find step (alongside the offline
  * pattern pass), so defects are found by model reasoning, not only regex. It
  * reads ANTHROPIC_API_KEY; `--model=<id>` picks the model (default
- * claude-opus-5-5).
+ * claude-opus-5-5). `--plan` makes Find planner-driven: a model chooses which
+ * in-scope files to read and review instead of reviewing every file (read-only,
+ * bounded, also needs ANTHROPIC_API_KEY).
  */
 const USAGE =
-  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet] [--no-prove] [--model | --model=<id>]";
+  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet] [--no-prove] [--model | --model=<id>] [--plan]";
 
 interface Args {
   command: string;
@@ -41,10 +45,11 @@ interface Args {
   prove: boolean;
   model: boolean;
   modelId?: string;
+  plan: boolean;
 }
 
 function parseArgs(args: readonly string[]): Args {
-  const parsed: Args = { command: args[0] ?? "", include: [], exclude: [], quiet: false, prove: true, model: false };
+  const parsed: Args = { command: args[0] ?? "", include: [], exclude: [], quiet: false, prove: true, model: false, plan: false };
   const rest = args.slice(1);
   for (let i = 0; i < rest.length; i += 1) {
     const arg = rest[i];
@@ -57,7 +62,8 @@ function parseArgs(args: readonly string[]): Args {
     else if (arg.startsWith("--model=")) {
       parsed.model = true;
       parsed.modelId = arg.slice("--model=".length);
-    } else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
+    } else if (arg === "--plan") parsed.plan = true;
+    else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
     else if (parsed.root === undefined) parsed.root = arg;
     else throw new Error(`Unexpected argument: ${arg}`);
   }
@@ -99,21 +105,28 @@ async function main(): Promise<number> {
     return 2;
   }
 
+  if ((args.model || args.plan) && !process.env.ANTHROPIC_API_KEY) {
+    console.error(
+      `${args.plan ? "--plan" : "--model"} needs ANTHROPIC_API_KEY set (an aligned-model key). It is read at run time and never stored.`,
+    );
+    return 2;
+  }
+
   let reviewer: Reviewer = patternReviewer();
   if (args.model) {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error(
-        "--model needs ANTHROPIC_API_KEY set (an aligned-model key). It is read at run time and never stored.",
-      );
-      return 2;
-    }
     const transport = anthropicTransport(args.modelId ? { model: args.modelId } : {});
     reviewer = compositeReviewer([patternReviewer(), modelReviewer({ transport })]);
+  }
+
+  let planner: Planner | undefined;
+  if (args.plan) {
+    planner = modelPlanner({ transport: anthropicTransport(args.modelId ? { model: args.modelId } : {}) });
   }
 
   const result = await runReview({
     scope,
     reviewer,
+    planner,
     prover: args.prove ? contextProver() : undefined,
     emit: args.quiet ? undefined : (e) => stdout.write(`· ${e.type}\n`),
   });

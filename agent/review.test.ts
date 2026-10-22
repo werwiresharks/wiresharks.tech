@@ -136,7 +136,7 @@ test("renderReport summarizes findings and an empty pass", async () => {
     assert.match(report, /CWE-502/);
     assert.match(report, /upload\.py:1/);
 
-    const empty = renderReport({ root: dir, reviewer: "pattern", prover: null, fileCount: 0, findings: [] });
+    const empty = renderReport({ root: dir, reviewer: "pattern", prover: null, planner: null, fileCount: 0, reviewedCount: 0, findings: [] });
     assert.match(empty, /No findings/);
   } finally {
     await rm(dir, { recursive: true, force: true });
