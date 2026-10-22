@@ -7,6 +7,8 @@ import { modelReviewer, anthropicTransport, compositeReviewer } from "./modelRev
 import { modelPlanner } from "./plan.ts";
 import type { Planner } from "./plan.ts";
 import { contextProver } from "./prove.ts";
+import type { Prover } from "./prove.ts";
+import { modelProver, firstDecisiveProver } from "./modelProver.ts";
 import { runReview } from "./review.ts";
 import { renderReport } from "./report.ts";
 
@@ -112,22 +114,33 @@ async function main(): Promise<number> {
     return 2;
   }
 
+  const transport = () => anthropicTransport(args.modelId ? { model: args.modelId } : {});
+
   let reviewer: Reviewer = patternReviewer();
   if (args.model) {
-    const transport = anthropicTransport(args.modelId ? { model: args.modelId } : {});
-    reviewer = compositeReviewer([patternReviewer(), modelReviewer({ transport })]);
+    reviewer = compositeReviewer([patternReviewer(), modelReviewer({ transport: transport() })]);
   }
 
   let planner: Planner | undefined;
   if (args.plan) {
-    planner = modelPlanner({ transport: anthropicTransport(args.modelId ? { model: args.modelId } : {}) });
+    planner = modelPlanner({ transport: transport() });
+  }
+
+  // With a model available, let it rule on the leads the deterministic prover
+  // cannot (model-found findings have no built-in rule); the deterministic
+  // verdict still wins when it exists.
+  let prover: Prover | undefined;
+  if (args.prove) {
+    prover = args.model
+      ? firstDecisiveProver([contextProver(), modelProver({ transport: transport() })])
+      : contextProver();
   }
 
   const result = await runReview({
     scope,
     reviewer,
     planner,
-    prover: args.prove ? contextProver() : undefined,
+    prover,
     emit: args.quiet ? undefined : (e) => stdout.write(`· ${e.type}\n`),
   });
 
