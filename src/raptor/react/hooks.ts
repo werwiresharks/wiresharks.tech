@@ -3,6 +3,12 @@ import { RaptorEngine } from "../engine/engine.ts";
 import { connect } from "../adapters/source.ts";
 import type { RaptorEventSource } from "../adapters/source.ts";
 
+/** A fresh, empty engine, ready to be driven by a live source. */
+export function useEngine() {
+  const [engine] = useState(() => new RaptorEngine());
+  return engine;
+}
+
 /** An engine holding a single idle primary agent. */
 export function useIdleEngine() {
   const [engine] = useState(() => {

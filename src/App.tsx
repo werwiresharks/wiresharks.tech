@@ -5,6 +5,7 @@ import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
 import { Raptor } from "./pages/Raptor";
 import { Talon } from "./pages/Talon";
+import { LiveConsole } from "./pages/LiveConsole";
 import { usePanelGlow } from "./components/usePanelGlow";
 
 function NotFound() {
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/raptor" element={<Raptor />} />
           <Route path="/talos" element={<Navigate to="/raptor" replace />} />
           <Route path="/talon" element={<Talon />} />
+          <Route path="/console" element={<LiveConsole />} />
           <Route path="/products/*" element={<Navigate to="/" replace />} />
           <Route path="/research/*" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
