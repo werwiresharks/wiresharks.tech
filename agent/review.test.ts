@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveScope } from "./scope.ts";
 import { patternReviewer } from "./reviewer.ts";
+import { contextProver } from "./prove.ts";
 import { runReview } from "./review.ts";
 import { renderReport } from "./report.ts";
 import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
@@ -76,6 +77,55 @@ test("emitted events feed the engine reducer without rejection", async () => {
   }
 });
 
+test("the Prove step rules each lead and narrates a reducer-valid session", async () => {
+  const { createModel, reduce } = await import("../src/raptor/engine/model.ts");
+  const dir = await mkdtemp(join(tmpdir(), "review-"));
+  try {
+    // One lead that proves out and one that is dismissed as a placeholder.
+    await writeFile(join(dir, "ingest.py"), "obj = pickle.loads(body)\n");
+    await writeFile(join(dir, "config.py"), 'password = "changeme123"\n');
+    const scope = resolveScope({ root: dir });
+    const events: UnsequencedEvent[] = [];
+    const result = await runReview({
+      scope,
+      reviewer: patternReviewer(),
+      prover: contextProver(),
+      emit: (e) => events.push(e),
+    });
+
+    assert.equal(result.prover, "context");
+    const pickle = result.findings.find((f) => f.file === "ingest.py");
+    const secret = result.findings.find((f) => f.file === "config.py");
+    assert.equal(pickle?.status, "verified");
+    assert.equal(secret?.status, "dismissed");
+    assert.ok(pickle?.rationale && secret?.rationale, "a ruled lead carries its reasoning");
+
+    // The Prove worker and its verification action replay cleanly.
+    const types = events.map((e) => e.type);
+    assert.ok(
+      events.some((e) => e.type === "agent.spawned" && e.label === "Prove"),
+      "a Prove worker is spawned",
+    );
+    assert.ok(types.includes("action.completed"), "the verification action completes");
+    let model = createModel();
+    let seq = 0;
+    for (const e of events) {
+      const r = reduce(model, { ...e, seq: ++seq } as never);
+      assert.ok(r.accepted, `reducer accepted ${e.type}`);
+      model = r.model;
+    }
+
+    // The report shows verdicts and the reasoning behind them.
+    const report = renderReport(result);
+    assert.match(report, /Verification: 1 verified, 1 dismissed, 0 open/);
+    assert.match(report, /## Verification/);
+    assert.match(report, /\*\*verified\*\*/);
+    assert.match(report, /\*\*dismissed\*\*/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("renderReport summarizes findings and an empty pass", async () => {
   const dir = await fixtureRepo();
   try {
@@ -86,7 +136,7 @@ test("renderReport summarizes findings and an empty pass", async () => {
     assert.match(report, /CWE-502/);
     assert.match(report, /upload\.py:1/);
 
-    const empty = renderReport({ root: dir, reviewer: "pattern", fileCount: 0, findings: [] });
+    const empty = renderReport({ root: dir, reviewer: "pattern", prover: null, fileCount: 0, findings: [] });
     assert.match(empty, /No findings/);
   } finally {
     await rm(dir, { recursive: true, force: true });

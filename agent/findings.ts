@@ -20,6 +20,11 @@ export interface Finding {
   /** The source line that triggered the finding, trimmed. */
   evidence: string;
   status: FindingStatus;
+  /**
+   * Why the status is what it is, set by the Prove step. Absent on a raw lead
+   * the reviewer has only `open`ed; present once a prover has ruled on it.
+   */
+  rationale?: string;
 }
 
 const RANK: Record<Severity, number> = {
@@ -52,5 +57,18 @@ export function countBySeverity(
     info: 0,
   };
   for (const f of findings) counts[f.severity] += 1;
+  return counts;
+}
+
+/** Count findings by verification status, for the Prove-step summary. */
+export function countByStatus(
+  findings: readonly Finding[],
+): Record<FindingStatus, number> {
+  const counts: Record<FindingStatus, number> = {
+    open: 0,
+    verified: 0,
+    dismissed: 0,
+  };
+  for (const f of findings) counts[f.status] += 1;
   return counts;
 }

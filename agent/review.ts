@@ -1,7 +1,8 @@
 import { mapRepo, readMapped } from "./map.ts";
-import { sortFindings } from "./findings.ts";
+import { sortFindings, countByStatus } from "./findings.ts";
 import type { Finding } from "./findings.ts";
 import type { Reviewer } from "./reviewer.ts";
+import type { Prover } from "./prove.ts";
 import type { Scope } from "./scope.ts";
 import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
 
@@ -16,6 +17,11 @@ import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
 export interface ReviewOptions {
   scope: Scope;
   reviewer: Reviewer;
+  /**
+   * Rules on each lead the reviewer opens, setting it verified/dismissed/open.
+   * Omit to stop after Find and leave every finding `open`.
+   */
+  prover?: Prover;
   /** Receives engine events as the review runs; optional. */
   emit?: (event: UnsequencedEvent) => void;
   /** Max files reviewed in parallel. */
@@ -25,12 +31,15 @@ export interface ReviewOptions {
 export interface ReviewResult {
   root: string;
   reviewer: string;
+  /** The prover that ruled on the leads, or null when Prove did not run. */
+  prover: string | null;
   fileCount: number;
   findings: Finding[];
 }
 
 const PRIMARY = "raptor";
 const WORKER = "find";
+const PROVER = "prove";
 
 export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
   const { scope, reviewer } = options;
@@ -80,6 +89,44 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
   emit({ type: "agent.state", agentId: WORKER, state: "completed" });
   emit({ type: "agent.reintegrated", agentId: WORKER });
 
+  // Prove: a worker re-examines each lead in the file that raised it and records
+  // a verdict — verified, dismissed, or left open. Still strictly read-only: it
+  // reads the same in-scope files Find did and reaches nothing outside the Scope.
+  let proven = findings;
+  if (options.prover) {
+    const prover = options.prover;
+    emit({ type: "agent.spawned", agentId: PROVER, parentId: PRIMARY, label: "Prove" });
+    emit({ type: "agent.state", agentId: PROVER, state: "running" });
+
+    proven = [];
+    for (const finding of findings) {
+      let content: string;
+      try {
+        content = await readMapped(map, finding.file);
+      } catch {
+        proven.push(finding); // the file is unreadable now: leave the lead open
+        continue;
+      }
+      const proof = await prover.prove({ finding, relPath: finding.file, content });
+      proven.push({ ...finding, status: proof.status, rationale: proof.rationale });
+    }
+
+    const status = countByStatus(proven);
+    const proveAction = "prove-leads";
+    emit({
+      type: "action.proposed",
+      actionId: proveAction,
+      agentId: PROVER,
+      summary: `Verify ${findings.length} lead(s): ${status.verified} verified, ${status.dismissed} dismissed, ${status.open} open`,
+    });
+    emit({ type: "authorization.requested", actionId: proveAction });
+    emit({ type: "authorization.resolved", actionId: proveAction, decision: "approved", authority: "operator scope" });
+    emit({ type: "action.executing", actionId: proveAction });
+    emit({ type: "action.completed", actionId: proveAction });
+    emit({ type: "agent.state", agentId: PROVER, state: "completed" });
+    emit({ type: "agent.reintegrated", agentId: PROVER });
+  }
+
   // Report: writing the report is the one action with an effect, so it goes
   // through the authorization seam the engine models — resolved by the operator
   // who scoped the run, never by the reviewer.
@@ -96,7 +143,8 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
   return {
     root: scope.root,
     reviewer: reviewer.name,
+    prover: options.prover?.name ?? null,
     fileCount: map.files.length,
-    findings: sortFindings(findings),
+    findings: sortFindings(proven),
   };
 }

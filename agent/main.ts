@@ -2,6 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { argv, exit, stdout } from "node:process";
 import { resolveScope, DEFAULT_EXCLUDE } from "./scope.ts";
 import { patternReviewer } from "./reviewer.ts";
+import { contextProver } from "./prove.ts";
 import { runReview } from "./review.ts";
 import { renderReport } from "./report.ts";
 
@@ -12,12 +13,15 @@ import { renderReport } from "./report.ts";
  * reaches outside the named path.
  *
  *   node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>]
- *                                    [--out <file>] [--quiet]
+ *                                    [--out <file>] [--quiet] [--no-prove]
  *
- * Exits non-zero when a high or critical finding is present, so it can gate CI.
+ * By default the review also runs the Prove step, ruling each lead
+ * verified/dismissed/open. Exits non-zero when a high or critical finding is
+ * present and not dismissed, so it can gate CI without failing on a lead the
+ * Prove step ruled out.
  */
 const USAGE =
-  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet]";
+  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet] [--no-prove]";
 
 interface Args {
   command: string;
@@ -26,10 +30,11 @@ interface Args {
   exclude: string[];
   out?: string;
   quiet: boolean;
+  prove: boolean;
 }
 
 function parseArgs(args: readonly string[]): Args {
-  const parsed: Args = { command: args[0] ?? "", include: [], exclude: [], quiet: false };
+  const parsed: Args = { command: args[0] ?? "", include: [], exclude: [], quiet: false, prove: true };
   const rest = args.slice(1);
   for (let i = 0; i < rest.length; i += 1) {
     const arg = rest[i];
@@ -37,6 +42,7 @@ function parseArgs(args: readonly string[]): Args {
     else if (arg === "--exclude") parsed.exclude.push(...splitList(rest[++i]));
     else if (arg === "--out") parsed.out = rest[++i];
     else if (arg === "--quiet") parsed.quiet = true;
+    else if (arg === "--no-prove") parsed.prove = false;
     else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
     else if (parsed.root === undefined) parsed.root = arg;
     else throw new Error(`Unexpected argument: ${arg}`);
@@ -82,6 +88,7 @@ async function main(): Promise<number> {
   const result = await runReview({
     scope,
     reviewer: patternReviewer(),
+    prover: args.prove ? contextProver() : undefined,
     emit: args.quiet ? undefined : (e) => stdout.write(`· ${e.type}\n`),
   });
 
@@ -93,8 +100,12 @@ async function main(): Promise<number> {
     stdout.write("\n" + report);
   }
 
+  // A high/critical lead gates CI unless the Prove step dismissed it. Verified
+  // and still-open leads both block; only a dismissed one is cleared.
   const blocking = result.findings.some(
-    (f) => f.severity === "high" || f.severity === "critical",
+    (f) =>
+      (f.severity === "high" || f.severity === "critical") &&
+      f.status !== "dismissed",
   );
   return blocking ? 1 : 0;
 }
