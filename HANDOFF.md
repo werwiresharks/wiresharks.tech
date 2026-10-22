@@ -65,7 +65,20 @@ Also serves the **waitlist**: `POST /waitlist` → append-only JSONL
 ### Live console — `src/pages/LiveConsole.tsx` at `/console`
 `noindex` route. Connects the SSE source to a fresh engine and renders the live
 session + narration + a waitlist form. Reads `VITE_RAPTOR_STREAM_URL` /
-`VITE_WAITLIST_URL` (default `http://localhost:8787`).
+`VITE_WAITLIST_URL` (default `http://localhost:8787`). The stream it draws is a
+**real recorded review** (below), not a script.
+
+### Real review on the stream — `server/reviewSession.ts` (roadmap #3, now built)
+At startup the server runs the actual review pipeline — the same Scope, pattern
+Reviewer and context Prover the CLI uses — over `REVIEW_TARGET` (default the
+small bundled sample repo `server/demo/review-target/`), captures the engine
+events it narrates, and loops that recording on the SSE stream via the existing
+`playScenario`. So `/console` shows a genuine Scope→Map→Find→Prove→Report
+session (real findings, real verdicts), not `scenario.ts`. If the review cannot
+run, the server falls back to the scripted `REVIEW_SESSION` so the stream is
+never empty. The sample repo trips five rules and the Prove step rules them
+2 verified / 2 dismissed / 1 open. The Dockerfile now also `COPY`s `agent/`,
+since the service runs the review pipeline.
 
 ### Raptor review workflow — `agent/`  ← newest, read this carefully
 The one piece of "Raptor" that is real: the **authorized repository security
@@ -111,7 +124,7 @@ model intelligence would enter.
 npm ci
 npm run typecheck          # browser TS
 npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 119 tests across engine, server, agent
+npm test                   # 122 tests across engine, server, agent
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```
@@ -132,9 +145,10 @@ rule: when work is done and checks pass, rebase onto `origin/main` and push to
    **aligned** model (NOT Talon-1) so Find is model-driven reasoning over code.
    Needs an API key/endpoint from the owner; take it via the host's secret
    prompt, never commit it.
-3. **Wire the real review into the live stream** — `agent/review.ts` already
-   emits engine events; feed them through `server/log.ts` so `/console` shows an
-   actual review instead of the scripted `scenario.ts`.
+3. **Wire the real review into the live stream — DONE (2026-10-22).** See
+   `server/reviewSession.ts` above; `/console` now streams a real recorded
+   review. Natural follow-ons: re-record periodically or on demand instead of
+   once at startup, and let an operator point `REVIEW_TARGET` at their own repo.
 4. **Deploy the Node service** — only with explicit authorization and a chosen
    host; then point the site's `VITE_*` URLs at it.
 

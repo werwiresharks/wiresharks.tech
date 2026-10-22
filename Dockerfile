@@ -13,6 +13,8 @@ ENV PORT=8787
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY server ./server
+# The live console streams a real review, so the review pipeline ships too.
+COPY agent ./agent
 COPY src/raptor ./src/raptor
 EXPOSE 8787
 # Persist the waitlist outside the container by mounting a volume here.

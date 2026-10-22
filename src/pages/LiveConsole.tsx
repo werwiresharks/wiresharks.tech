@@ -65,9 +65,9 @@ export function LiveConsole() {
       <p className="label">Live / Session</p>
       <h1>Raptor, live.</h1>
       <p className="page-lede">
-        A Raptor session streamed from the session server and drawn by the
-        engine. The engine reports the session; it makes no authorization
-        decisions.
+        A real authorized repository review — scope, map, find, prove, report —
+        streamed from the session server and drawn by the engine. The engine
+        reports the session; it makes no authorization decisions.
       </p>
 
       <div style={stageStyle}>
