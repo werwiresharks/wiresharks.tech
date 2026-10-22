@@ -3,6 +3,8 @@ import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import type { RaptorEvent } from "../src/raptor/engine/events.ts";
 import { describeModel } from "../src/raptor/engine/describe.ts";
 import type { SessionLog } from "./log.ts";
+import type { WaitlistStore } from "./store.ts";
+import { isValidEmail } from "./store.ts";
 
 /**
  * An HTTP server that streams a session's validated events to the browser over
@@ -12,9 +14,10 @@ import type { SessionLog } from "./log.ts";
  * engine, it makes no authorization decisions.
  *
  * Routes:
- *   GET /events  SSE stream (honours `Last-Event-ID` or `?since=`)
- *   GET /health  JSON status
- *   GET /        plain-text usage
+ *   GET  /events    SSE stream (honours `Last-Event-ID` or `?since=`)
+ *   GET  /health    JSON status
+ *   POST /waitlist  join the waitlist (when a store is provided)
+ *   GET  /          plain-text usage
  */
 export type SessionServerOptions = {
   log: SessionLog;
@@ -22,7 +25,42 @@ export type SessionServerOptions = {
   origin?: string;
   /** Heartbeat comment interval in ms, to keep proxies from idling the stream. */
   heartbeatMs?: number;
+  /** When set, enables POST /waitlist backed by this store. */
+  waitlist?: WaitlistStore;
 };
+
+const MAX_BODY_BYTES = 4096;
+
+/** Read a capped JSON request body, or reject oversize/invalid input. */
+function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    req.on("data", (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error("too large"));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => {
+      try {
+        const text = Buffer.concat(chunks).toString("utf8") || "{}";
+        const value = JSON.parse(text);
+        if (typeof value !== "object" || value === null || Array.isArray(value)) {
+          reject(new Error("not an object"));
+          return;
+        }
+        resolve(value as Record<string, unknown>);
+      } catch {
+        reject(new Error("invalid json"));
+      }
+    });
+    req.on("error", reject);
+  });
+}
 
 function sseMessage(event: RaptorEvent): string {
   return `id: ${event.seq}\nevent: raptor\ndata: ${JSON.stringify(event)}\n\n`;
@@ -47,9 +85,45 @@ export function createSessionServer(options: SessionServerOptions): Server {
     res.setHeader("Vary", "Origin");
   };
 
+  const sendJson = (res: ServerResponse, status: number, body: unknown) => {
+    res.writeHead(status, { "Content-Type": "application/json" }).end(JSON.stringify(body));
+  };
+
   return createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     cors(res);
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, {
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Last-Event-ID",
+        "Access-Control-Max-Age": "86400",
+      }).end();
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/waitlist") {
+      if (!options.waitlist) {
+        sendJson(res, 404, { error: "waitlist not enabled" });
+        return;
+      }
+      readJsonBody(req)
+        .then(async (body) => {
+          const email = typeof body.email === "string" ? body.email.trim() : "";
+          const source = typeof body.source === "string" ? body.source.slice(0, 64) : undefined;
+          if (!isValidEmail(email)) {
+            sendJson(res, 400, { error: "a valid email is required" });
+            return;
+          }
+          const result = await options.waitlist!.add(email, source);
+          sendJson(res, result === "added" ? 201 : 200, { status: result });
+        })
+        .catch((err: Error) => {
+          const tooLarge = err.message === "too large";
+          sendJson(res, tooLarge ? 413 : 400, { error: tooLarge ? "body too large" : "invalid request body" });
+        });
+      return;
+    }
 
     if (req.method !== "GET") {
       res.writeHead(405, { "Content-Type": "text/plain" }).end("Method Not Allowed");
@@ -91,9 +165,9 @@ export function createSessionServer(options: SessionServerOptions): Server {
     }
 
     if (url.pathname === "/") {
-      res
-        .writeHead(200, { "Content-Type": "text/plain" })
-        .end("Raptor session stream.\nGET /events (SSE)\nGET /health\n");
+      const lines = ["Raptor session stream.", "GET /events (SSE)", "GET /health"];
+      if (options.waitlist) lines.push("POST /waitlist {email}");
+      res.writeHead(200, { "Content-Type": "text/plain" }).end(lines.join("\n") + "\n");
       return;
     }
 

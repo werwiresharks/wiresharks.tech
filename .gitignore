@@ -3,3 +3,6 @@ dist/
 *.tsbuildinfo
 .DS_Store
 .taste-skill/
+
+# server runtime data
+.data/

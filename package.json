@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "typecheck:server": "tsc -p tsconfig.server.json --noEmit",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --test src/raptor/engine/engine.test.ts src/raptor/engine/narration.test.ts src/raptor/home/journey.test.ts src/raptor/home/source.test.ts src/raptor/adapters/stream.test.ts src/components/claw.test.ts src/components/swarmLayout.test.ts server/log.test.ts server/scenario.test.ts server/sessionServer.test.ts"
+    "test": "node --test src/raptor/engine/engine.test.ts src/raptor/engine/narration.test.ts src/raptor/home/journey.test.ts src/raptor/home/source.test.ts src/raptor/adapters/stream.test.ts src/components/claw.test.ts src/components/swarmLayout.test.ts server/log.test.ts server/scenario.test.ts server/store.test.ts server/sessionServer.test.ts"
   },
   "dependencies": {
     "@fontsource/geist": "^5.3.0",

@@ -61,13 +61,35 @@ reconnecting client resumes from its `Last-Event-ID` with no gaps. A scripted
 demonstration session (`server/scenario.ts`) feeds it. The server reports
 events; it makes no authorization decisions.
 
+It also serves the site waitlist: `POST /waitlist {email}` persists to an
+append-only JSONL file (`server/store.ts`), deduplicating by normalized email,
+with no database.
+
 ```sh
-npm run server            # serve on http://localhost:8787 (PORT, CORS_ORIGIN)
+npm run server            # serve on http://localhost:8787
 npm run typecheck:server  # type-check server/ with Node types
 ```
 
+Environment: `PORT` (default 8787), `CORS_ORIGIN` (default `*`),
+`WAITLIST_FILE` (default `./.data/waitlist.jsonl`).
+
 Connect from the app with `createEventSourceSource("http://localhost:8787/events")`
 and feed it to an engine via `useEngineSource` or `RaptorStage`'s `source` prop.
+The `/console` route does exactly this: a live session plus a waitlist sign-up.
+It reads `VITE_RAPTOR_STREAM_URL` and `VITE_WAITLIST_URL` at build time, both
+defaulting to `http://localhost:8787`.
+
+### Deploy
+
+The static site deploys on Vercel as before; this Node service deploys
+separately. The `Dockerfile` builds it (Node strips the TypeScript at run time,
+so there is no build step); mount a volume at `/app/.data` to persist the
+waitlist. Point the site's `VITE_*` URLs at the deployed service.
+
+```sh
+docker build -t wiresharks-server .
+docker run -p 8787:8787 -v "$PWD/.data:/app/.data" wiresharks-server
+```
 - `src/raptor/demo/director.ts` simulated events for the website demonstration.
 
 The engine visualizes authorization decisions; it never makes them.

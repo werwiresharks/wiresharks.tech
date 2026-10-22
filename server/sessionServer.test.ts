@@ -4,9 +4,14 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { SessionLog } from "./log.ts";
 import { createSessionServer } from "./sessionServer.ts";
+import { createMemoryWaitlist } from "./store.ts";
+import type { WaitlistStore } from "./store.ts";
 
-function listen(log: SessionLog): Promise<{ port: number; close: () => Promise<void> }> {
-  const server = createSessionServer({ log });
+function listen(
+  log: SessionLog,
+  waitlist?: WaitlistStore,
+): Promise<{ port: number; close: () => Promise<void> }> {
+  const server = createSessionServer({ log, waitlist });
   return new Promise((resolve) => {
     server.listen(0, () => {
       const { port } = server.address() as AddressInfo;
@@ -121,5 +126,47 @@ test("a reconnecting client only receives events after its Last-Event-ID", async
   });
 
   assert.deepEqual(seen.map((e) => e.seq), [3], "only the missed event replays");
+  await server.close();
+});
+
+test("POST /waitlist adds a valid email once and reports duplicates", async () => {
+  const server = await listen(new SessionLog(), createMemoryWaitlist());
+  const post = (body: unknown) =>
+    fetch(`http://localhost:${server.port}/waitlist`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  const added = await post({ email: "sid@wiresharks.tech", source: "home" });
+  assert.equal(added.status, 201);
+  assert.deepEqual(await added.json(), { status: "added" });
+
+  const dup = await post({ email: "SID@wiresharks.tech" });
+  assert.equal(dup.status, 200);
+  assert.deepEqual(await dup.json(), { status: "duplicate" });
+
+  const bad = await post({ email: "not-an-email" });
+  assert.equal(bad.status, 400);
+
+  await server.close();
+});
+
+test("CORS preflight is answered for the waitlist", async () => {
+  const server = await listen(new SessionLog(), createMemoryWaitlist());
+  const res = await fetch(`http://localhost:${server.port}/waitlist`, { method: "OPTIONS" });
+  assert.equal(res.status, 204);
+  assert.ok(res.headers.get("access-control-allow-methods")?.includes("POST"));
+  await server.close();
+});
+
+test("POST /waitlist is 404 when no store is configured", async () => {
+  const server = await listen(new SessionLog());
+  const res = await fetch(`http://localhost:${server.port}/waitlist`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "a@b.co" }),
+  });
+  assert.equal(res.status, 404);
   await server.close();
 });
