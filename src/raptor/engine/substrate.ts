@@ -66,6 +66,7 @@ type Allocation = {
   from: number;
   to: number;
   kind: FlightKind;
+  /** Particles wanted. A spawn fills its body to the child target, counted when it is assigned. */
   count: number;
   instant: boolean;
 };
@@ -150,6 +151,19 @@ export function packetCount(bytes: number | null) {
   return clamp(Math.round(24 + 14 * Math.log2(1 + bytes / 512)), 24, MAX_PACKET);
 }
 
+/** Live agents, each after its parent: a successor joins `order` after the children it inherits. */
+function parentsFirst(model: RaptorModel) {
+  const depth = (id: string): number => {
+    const parentId = model.agents[id]?.parentId ?? null;
+    return parentId === null ? 0 : 1 + depth(parentId);
+  };
+  return model.order
+    .filter(id => !model.agents[id].retired)
+    .map(id => ({ id, depth: depth(id) }))
+    .sort((a, b) => a.depth - b.depth)
+    .map(({ id }) => id);
+}
+
 export class Substrate {
   private readonly lattice: Lattice;
   private readonly capacity: number;
@@ -227,35 +241,47 @@ export class Substrate {
     this.synced = true;
     const root = rootAgent(model);
     const seen = new Set<string>();
-    for (const id of model.order) {
+    const arrivals: number[] = [];
+    for (const id of parentsFirst(model)) {
       const agent = model.agents[id];
-      if (agent.retired) continue;
       seen.add(id);
       let slot = this.slots.get(id);
-      if (slot === undefined) slot = this.createBody(id, agent.parentId, agent.id === root?.id, hydrating);
+      if (slot === undefined) {
+        slot = this.createBody(id, agent.parentId, agent.id === root?.id);
+        arrivals.push(slot);
+      }
       const body = this.bodies[slot]!;
-      if (body.phase === "returning") this.revive(slot, hydrating);
       body.parentId = agent.parentId;
       body.root = agent.id === root?.id;
+      if (body.phase === "returning") {
+        this.revive(slot, hydrating);
+        arrivals.push(slot);
+      }
       body.tone = TONE_OF[agent.state];
       const pose = agent.state === "awaiting" ? WAITING : POSE_OF[agent.activity];
       if (pose !== body.pose) this.morph(body, pose, hydrating);
     }
+    // Mark every departure before routing any, so nothing is sent to a body that is leaving too.
+    const departures: [number, FlightKind][] = [];
     for (const [id, slot] of this.slots) {
       const body = this.bodies[slot]!;
       if (seen.has(id) || body.phase === "returning") continue;
-      const agent = model.agents[id];
-      const to = (agent?.successorId ?? body.parentId ?? root?.id) || null;
-      const destination = to !== null ? this.slots.get(to) : undefined;
-      if (destination === undefined) continue;
+      const successor = model.agents[id]?.successorId ?? null;
       body.phase = "returning";
-      body.returnTo = to;
-      if (hydrating) {
-        this.settleReturn(slot, destination);
-        continue;
-      }
-      this.pending = this.pending.filter(a => a.to !== slot || a.kind !== "spawn");
-      this.pending.push({ from: slot, to: destination, kind: agent?.successorId ? "handoff" : "return", count: Infinity, instant: hydrating });
+      body.returnTo = successor ?? body.parentId;
+      departures.push([slot, successor ? "handoff" : "return"]);
+    }
+    for (const [slot, kind] of departures) {
+      const destination = this.returnSlot(this.bodies[slot]!);
+      if (destination === undefined) continue;
+      if (hydrating) this.settleReturn(slot, destination);
+      else this.pending.push({ from: slot, to: destination, kind, count: Infinity, instant: false });
+    }
+    // A body that formed or came back fills to a cohort from its parent, after any handoff it inherits.
+    for (const slot of arrivals) {
+      const body = this.bodies[slot]!;
+      const parent = body.parentId !== null ? this.slots.get(body.parentId) : undefined;
+      if (!body.root && parent !== undefined) this.pending.push({ from: parent, to: slot, kind: "spawn", count: Infinity, instant: hydrating });
     }
     for (const transfer of model.transfers) {
       if (transfer.seq <= this.queuedTransferSeq) continue;
@@ -314,7 +340,7 @@ export class Substrate {
     }
   }
 
-  private createBody(id: string, parentId: string | null, root: boolean, hydrating: boolean) {
+  private createBody(id: string, parentId: string | null, root: boolean) {
     const parentSlot = parentId !== null ? this.slots.get(parentId) : undefined;
     // A primary successor adopts the preceding root's place and particles.
     if (root) {
@@ -363,12 +389,8 @@ export class Substrate {
     body.weights[0] = 1;
     this.bodies[slot] = body;
     this.slots.set(id, slot);
-    if (!parent) {
-      // The first body takes every particle not yet owned.
-      for (let i = 0; i < this.capacity; i++) if (this.owner[i] < 0) this.owner[i] = slot;
-    } else {
-      this.pending.push({ from: parentSlot!, to: slot, kind: "spawn", count: this.childTarget(), instant: hydrating });
-    }
+    // The first body takes every particle not yet owned; a child forms from its parent once sync has routed departures.
+    if (root) for (let i = 0; i < this.capacity; i++) if (this.owner[i] < 0) this.owner[i] = slot;
     return slot;
   }
 
@@ -409,6 +431,11 @@ export class Substrate {
     return count;
   }
 
+  /** Whether a body returning to this one, such as a predecessor handing off, still holds particles. */
+  private inheriting(slot: number) {
+    return this.bodies.some((body, s) => body?.phase === "returning" && this.returnSlot(body) === slot && this.held(s) > 0);
+  }
+
   /** Reserve inbound particles before requesting any more. Rebalancing never claims message delivery. */
   private replenish(slot: number, needed: number, instant: boolean) {
     const root = this.bodies.findIndex(b => b !== null && b.root && b.phase === "resident");
@@ -437,18 +464,25 @@ export class Substrate {
     this.pending = this.pending.filter(request => {
       const { from, to, kind, instant } = request;
       const source = this.bodies[from];
-      const target = this.bodies[to];
-      if (!source || !target) return this.resolve(request);
+      if (!source) return this.resolve(request);
       if (kind === "return" || kind === "handoff") {
         if (busy.has(from)) return true;
         // Late inbound returns are handled on landing.
-        this.send(from, to, kind, Infinity, instant);
+        const destination = this.returnSlot(source);
+        if (destination !== undefined) this.send(from, destination, kind, Infinity, instant);
         return false;
       }
-      if (target.phase !== "resident") return this.resolve(request);
+      if (this.bodies[to]?.phase !== "resident") return this.resolve(request);
       const route = `${from}>${to}`;
       if (routes.has(route)) return wait(from, route);
-      const count = source.root ? request.count : Math.min(request.count, Math.max(1, this.childTarget() - this.floor(from)));
+      let count = request.count;
+      if (kind === "spawn") {
+        count = this.childTarget() - this.held(to);
+        if (count <= 0) return false;
+        // A predecessor's particles may still be spent on what it queued first, so count them only once they move.
+        if (this.inheriting(to)) return wait(from, route);
+      }
+      if (!source.root) count = Math.min(count, Math.max(1, this.childTarget() - this.floor(from)));
       if (this.held(from, true) - this.floor(from) < count) {
         this.replenish(from, count, instant);
         if (this.held(from, true) - this.floor(from) < count) return wait(from, route);

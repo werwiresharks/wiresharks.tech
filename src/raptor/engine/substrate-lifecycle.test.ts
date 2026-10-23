@@ -27,7 +27,22 @@ function scene(attached = true, capacity = CAPACITY) {
     const snap = substrate.snapshot();
     assert.equal(snap.inFlight + snap.unowned + snap.bodies.reduce((n, b) => n + b.resident, 0), capacity);
   };
-  return { engine, field, substrate, attach, send, spawn, step, conserved };
+  /** Every particle owned, every live agent drawn with particles, and no globe for an agent the model no longer has. */
+  const drawn = () => {
+    const snap = substrate.snapshot();
+    const live = new Set(Object.values(engine.model.agents).filter(a => !a.retired).map(a => a.id));
+    const problems: string[] = [];
+    if (snap.inFlight + snap.unowned + snap.bodies.reduce((n, b) => n + b.resident, 0) !== capacity) problems.push("not conserved");
+    if (snap.unowned) problems.push(`${snap.unowned} unowned`);
+    for (const b of snap.bodies) {
+      if (live.has(b.agentId) && b.phase === "resident" && b.resident === 0) problems.push(`${b.agentId} live and empty`);
+      if (!live.has(b.agentId) && b.phase === "resident") problems.push(`${b.agentId} drawn but gone from the model`);
+    }
+    for (const id of live) if (!snap.bodies.some(b => b.agentId === id && b.phase === "resident")) problems.push(`${id} has no globe`);
+    return problems;
+  };
+  const offer = (event: UnsequencedEvent) => engine.ingest({ ...event, seq: ++seq }).accepted;
+  return { engine, field, substrate, attach, send, spawn, step, conserved, drawn, offer };
 }
 
 test("a real reset clears every old body and flight before a new session is populated", () => {
@@ -300,4 +315,159 @@ test("an accepted transfer whose destination finishes before it can fly is resol
   assert.equal(snap.resolved, 1, "the transfer is accounted for without a flight");
   assert.equal(snap.pending, 0);
   assert.ok(!snap.bodies.some(b => b.agentId === "c0"), "the finished child's globe is not held open for it");
+});
+
+test("a child that comes back while a flight still leaves its old globe forms a cohort again", () => {
+  const s = scene();
+  s.spawn("root", null);
+  s.spawn("a");
+  s.spawn("b");
+  // b is far away, so a's message to it is still in the air after a's return has landed.
+  s.substrate.setAnchors({ primary: { x: 400, y: 500, radius: 42 }, overflow: { x: 400, y: 200, radius: 18 }, agents: { b: { x: 3000, y: 200, radius: 18 } } });
+  s.step(5);
+  s.send({ type: "transfer", transferId: "t1", kind: "peer", fromAgentId: "a", toAgentId: "b", disposition: "delivered" });
+  s.send({ type: "agent.reintegrated", agentId: "a" });
+  s.step(2.1);
+  assert.equal(s.substrate.snapshot().bodies.find(b => b.agentId === "a")?.resident, 0, "only the outbound message keeps a's globe");
+  s.spawn("a");
+  s.step(10);
+  assert.deepEqual(s.drawn(), []);
+  assert.equal(s.substrate.snapshot().pending, 0);
+});
+
+test("a child that comes back before its first cohort was assigned still forms", () => {
+  const s = scene();
+  s.spawn("root", null);
+  s.spawn("a");
+  s.spawn("b", "a");
+  s.send({ type: "agent.reintegrated", agentId: "b" });
+  s.spawn("b", "a");
+  s.step(10);
+  assert.deepEqual(s.drawn(), []);
+});
+
+test("a view attached after a root handoff draws the successor root and the child it inherited", () => {
+  const s = scene(false);
+  s.spawn("R", null);
+  s.spawn("c", "R");
+  s.send({ type: "agent.handoff", fromAgentId: "R", toAgentId: "H", label: "H" });
+  s.attach();
+  assert.equal(s.substrate.snapshot().inFlight, 0, "a late view draws history in place");
+  assert.deepEqual(s.drawn(), []);
+  const resident = Object.fromEntries(s.substrate.snapshot().bodies.map(b => [b.agentId, b.resident]));
+  assert.ok(resident.H > resident.c, "the root keeps the larger share");
+});
+
+test("a view attached after a child handoff draws the successor and the grandchild it inherited", () => {
+  const s = scene(false);
+  s.spawn("root", null);
+  s.spawn("P");
+  s.spawn("c", "P");
+  s.send({ type: "agent.handoff", fromAgentId: "P", toAgentId: "P2", label: "P2" });
+  s.attach();
+  s.step(5);
+  assert.deepEqual(s.drawn(), []);
+  assert.deepEqual(s.substrate.snapshot().bodies.map(b => b.agentId), ["root", "P2", "c"]);
+});
+
+test("a child handoff moves the predecessor's particles to its successor and nothing more", () => {
+  const s = scene();
+  s.spawn("root", null);
+  s.spawn("a");
+  s.spawn("b");
+  s.step(6);
+  const before = Object.fromEntries(s.substrate.snapshot().bodies.map(b => [b.agentId, b.resident]));
+  s.send({ type: "agent.handoff", fromAgentId: "a", toAgentId: "a2", label: "a2" });
+  for (let frame = 0; frame < 600; frame++) {
+    s.step(1 / 60);
+    s.conserved();
+  }
+  const after = Object.fromEntries(s.substrate.snapshot().bodies.map(b => [b.agentId, b.resident]));
+  assert.deepEqual(after, { root: before.root, b: before.b, a2: before.a });
+});
+
+test("rolling back across a root handoff returns the children it re-parented to the restored root", () => {
+  const s = scene();
+  s.spawn("R", null);
+  s.send({ type: "checkpoint.created", checkpointId: "cp" });
+  s.spawn("c", "R");
+  s.step(5);
+  s.send({ type: "agent.handoff", fromAgentId: "R", toAgentId: "H", label: "H" });
+  s.step(5);
+  s.send({ type: "rollback.started", checkpointId: "cp" });
+  s.send({ type: "rollback.completed", checkpointId: "cp" });
+  for (let frame = 0; frame < 60 * 10; frame++) {
+    s.step(1 / 60);
+    s.conserved();
+  }
+  assert.deepEqual(s.substrate.snapshot().bodies, [{ agentId: "R", phase: "resident", resident: CAPACITY }]);
+});
+
+/** Small deterministic generator, so a failing trial names a seed that replays exactly. */
+function random(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), a | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+test("random lifecycles with revival, handoff and rollback settle with every live agent drawn", () => {
+  const kinds = ["brief", "result", "steer", "peer"] as const;
+  for (let seed = 1; seed <= 24; seed++) {
+    const r = random(seed);
+    const s = scene();
+    const pick = <T>(items: readonly T[]) => items[Math.floor(r() * items.length)];
+    const place = () => ({ x: 200 + r() * 2800, y: 100 + r() * 600, radius: 14 + r() * 30 });
+    const agents: Record<string, ReturnType<typeof place> | undefined> = {};
+    s.substrate.setAnchors({ primary: place(), overflow: place(), agents });
+    s.spawn("root", null);
+    const live = () => Object.values(s.engine.model.agents).filter(a => !a.retired);
+    let next = 0;
+    for (let k = 0; k < 40 + Math.floor(r() * 60); k++) {
+      const ids = live().map(a => a.id);
+      const children = live().filter(a => a.parentId !== null).map(a => a.id);
+      const x = r();
+      if (x < 0.22) {
+        const id = r() < 0.3 && children.length ? `re${pick(children)}` : `a${next++}`;
+        agents[id] = r() < 0.8 ? place() : undefined;
+        s.offer({ type: "agent.spawned", agentId: id, parentId: pick(ids), label: id, hydrate: r() < 0.15 });
+      } else if (x < 0.48 && ids.length > 1) {
+        s.offer({ type: "transfer", transferId: `t${k}`, kind: pick(kinds), fromAgentId: pick(ids), toAgentId: pick(ids), disposition: "delivered", bytes: r() < 0.5 ? r() * 20000 : undefined, hydrate: r() < 0.1 });
+      } else if (x < 0.62 && children.length) {
+        const id = pick(children);
+        if (s.offer({ type: "agent.reintegrated", agentId: id, hydrate: r() < 0.1 }) && r() < 0.5) {
+          s.step(r() < 0.5 ? 0 : r() * 3);
+          s.offer({ type: "agent.spawned", agentId: id, parentId: live().find(a => a.parentId === null)!.id, label: id });
+        }
+      } else if (x < 0.7 && children.length) {
+        const id = pick(children);
+        s.offer({ type: "agent.handoff", fromAgentId: id, toAgentId: `${id}'`, label: id });
+      } else if (x < 0.72) {
+        const head = live().find(a => a.parentId === null)!;
+        s.offer({ type: "agent.handoff", fromAgentId: head.id, toAgentId: `${head.id}'`, label: head.id });
+      } else if (x < 0.78) {
+        const id = pick(ids);
+        s.offer({ type: "agent.spawned", agentId: id, parentId: s.engine.model.agents[id].parentId, label: id, hydrate: true });
+      } else if (x < 0.8) {
+        for (const id of Object.keys(agents)) if (r() < 0.3) agents[id] = r() < 0.7 ? place() : undefined;
+      } else if (x < 0.88) {
+        const checkpoint = s.engine.model.checkpoint;
+        if (!checkpoint || r() < 0.5) s.offer({ type: "checkpoint.created", checkpointId: `cp${k}` });
+        else {
+          s.offer({ type: "rollback.started", checkpointId: checkpoint.id });
+          if (r() < 0.3) s.step(r() * 2);
+          s.offer({ type: "rollback.completed", checkpointId: checkpoint.id });
+        }
+      } else s.step(r() * 4);
+    }
+    s.step(30);
+    const snap = s.substrate.snapshot();
+    assert.deepEqual(s.drawn(), [], `seed ${seed}`);
+    assert.equal(snap.pending, 0, `seed ${seed}: queued requests drain`);
+    assert.equal(snap.inFlight, 0, `seed ${seed}: every flight lands`);
+    assert.ok(snap.bodies.every(b => b.phase === "resident"), `seed ${seed}: finished globes are released`);
+  }
 });
