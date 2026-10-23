@@ -17,7 +17,7 @@ export function Feature({
   tone = "light",
 }: {
   index?: string;
-  eyebrow?: string;
+  eyebrow?: ReactNode;
   title: string;
   children: ReactNode;
   cta?: { to: string; label: string };

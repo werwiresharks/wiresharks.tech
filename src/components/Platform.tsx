@@ -23,8 +23,8 @@ const TIERS = [
     layer: "Environment",
     name: "Authorized scope",
     role: "Execution and approval",
-    text: "Scoped tools, containers, browser and terminal, inside a boundary you set. Before a risky command runs, raptor shows you the whole command.",
-    facts: ["Scoped tools · MCP", "Optional own copy of the code", "Approval record on your machine"],
+    text: "Scoped tools, containers, browser and terminal, inside a boundary you set. Before a risky command runs, verity shows you the whole command.",
+    facts: ["Scoped tools · MCP", "Optional own copy of the code", "verity record on your machine"],
   },
 ];
 

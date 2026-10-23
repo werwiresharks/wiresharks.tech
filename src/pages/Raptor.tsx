@@ -86,7 +86,7 @@ export function Raptor() {
 
       <Feature
         index="03"
-        eyebrow="Approvals"
+        eyebrow={<span className="keep-case">verity</span>}
         tone="soft"
         title="The whole command, before it runs."
         panel={
@@ -107,10 +107,10 @@ export function Raptor() {
         }
       >
         <p>
-          When a command needs your approval, raptor stops and shows the whole command before it
-          runs.
+          verity is raptor's approval system. When a command needs your approval, verity holds it
+          and shows the whole command.
         </p>
-        <p>You run it, reject it, or allow it for the session. Each decision stays on your machine.</p>
+        <p>You approve it once, approve it for the session, or deny it. verity records each decision on your machine.</p>
       </Feature>
 
       <Feature
@@ -123,7 +123,7 @@ export function Raptor() {
             title="raptor / skills"
             rows={[
               { key: "security-audit", name: "Source-code security audit", meta: "optional · Cloudflare · MIT", active: true },
-              { key: "rea", name: "Reverse engineering, 20 tools", meta: "MCP · approval gates" },
+              { key: "rea", name: "Reverse engineering, 20 tools", meta: "MCP · gated by verity" },
               { key: "work-routing", name: "Suggests how to run a task", meta: "suggestion only" },
               { key: "skill-fabric", name: "Cited evidence pages", meta: "opt-in · exact sources", active: true },
             ]}

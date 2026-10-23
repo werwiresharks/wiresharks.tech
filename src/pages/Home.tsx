@@ -20,7 +20,7 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is raptor?",
-    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. A worker can run in its own copy of the code. When a command needs your approval, raptor shows you the whole command first. It runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
+    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. A worker can run in its own copy of the code. Its approval system is verity. When a command needs your approval, verity shows you the whole command first. It runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
   ],
   [
     "What is talon-1?",
@@ -44,7 +44,7 @@ const PRINCIPLES: [string, string][] = [
   ["Runs here. Stays here.", "Prompts, outputs and weights stay on your machine. After install, talon-1 needs no network. There is no telemetry to turn off."],
   ["Built not to refuse security work.", "We remove the refusal behavior from the weights. Then we fine-tune the model for security work."],
   ["Open weights.", "talon-1, its evaluations, raptor and Harness ship together. You run them. You inspect them."],
-  ["You approve what runs.", "raptor shows the whole command before you approve it. It records each decision on your machine."],
+  ["You approve what runs.", "verity shows the whole command before you approve it. It records each decision on your machine."],
 ];
 
 export function Home() {
@@ -132,7 +132,7 @@ export function Home() {
               ["Engines", "Hermes · Claude Code · Codex"],
               ["Models", "talon-1 (local), commercial APIs, private endpoints"],
               ["Workers", "Resumable, optional own copy of the code"],
-              ["Approvals", "The whole command, shown first"],
+              ["Approvals", "verity shows the whole command first"],
             ]}
             to="/raptor"
             linkLabel="Meet raptor"

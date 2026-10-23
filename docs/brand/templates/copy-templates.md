@@ -23,7 +23,7 @@ The world's most dangerous AI. raptor, the agent. talon-1, the model. Both ship 
 
 ## Document introduction
 
-raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. talon-1 is the open-weight security model that powers raptor. raptor plans a task and splits it across parallel workers. Before a risky command runs, raptor shows the whole command for approval.
+raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. talon-1 is the open-weight security model that powers raptor. raptor plans a task and splits it across parallel workers. Before a risky command runs, verity, raptor's approval system, shows the whole command for approval.
 
 ## Slide sequence
 

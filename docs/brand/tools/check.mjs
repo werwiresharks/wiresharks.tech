@@ -72,8 +72,8 @@ for (const p of texts) {
     ok(!/talos/i.test(t), `retired name Talos in ${rel}`);
     ok(!/Raptor Swarm|in development|is developing|does not choose for the owner/i.test(t), `superseded positioning copy in ${rel}`);
     // Product names are lowercase. Rows of the Avoid table name the retired forms on purpose.
-    const prose = t.replace(/^\|[^|\n]*(?:raptor|talon)[^|\n]*\|.*$/gim, "");
-    ok(!/\bRaptor\b(?!-1)|\bTalon-1\b|talon-1\s*(?:®|™|&reg;|&trade;)/.test(prose), `capitalised or marked product name in ${rel}`);
+    const prose = t.replace(/^\|[^|\n]*(?:raptor|talon|verity)[^|\n]*\|.*$/gim, "");
+    ok(!/\bRaptor\b(?!-1)|\bTalon-1\b|\bVerity\b|(?:talon-1|verity)\s*(?:®|™|&reg;|&trade;)/.test(prose), `capitalised or marked product name in ${rel}`);
   }
   if (extname(p) === ".html" || extname(p) === ".md") {
     if (!rel.startsWith("tools/")) for (const h of t.match(/#[0-9a-f]{6}\b/gi) ?? []) ok(allowHex.has(h.toLowerCase()) && !retired.includes(h.toLowerCase()), `unknown or retired hex ${h} in ${rel}`);
@@ -98,9 +98,9 @@ const siteCopy = [...siteWalk("src/pages"), ...siteWalk("src/components"), "src/
 const markHomes = new Set(["src/components/RaptorWordmark.tsx", "scripts/og-image.html"]);
 for (const f of siteCopy) {
   const code = read(join(REPO, f)).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^import .*$/gm, "");
-  const names = [...code.matchAll(/(?<![<\w.])(?:Raptor|Talon-1|Talon)(?![\w(]|-1\b|-)/g)].map((m) => code.slice(Math.max(0, m.index - 30), m.index + 20).replace(/\s+/g, " "));
+  const names = [...code.matchAll(/(?<![<\w.])(?:Raptor|Talon-1|Talon|Verity)(?![\w(]|-1\b|-)/g)].map((m) => code.slice(Math.max(0, m.index - 30), m.index + 20).replace(/\s+/g, " "));
   ok(names.length === 0, `capitalised product name in ${f}: ${names.join(" | ")}`);
-  ok(!/talon-1\s*(?:®|™|&reg;|&trade;)/i.test(code), `talon-1 carries a mark in ${f}`);
+  ok(!/(?:talon-1|verity)\s*(?:®|™|&reg;|&trade;)/i.test(code), `talon-1 or verity carries a mark in ${f}`);
   ok(markHomes.has(f) || !/®|&reg;/.test(code), `® outside the raptor® wordmark in ${f}`);
 }
 

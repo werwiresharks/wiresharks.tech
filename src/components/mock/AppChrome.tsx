@@ -54,7 +54,7 @@ export function StatusBar({ cwd }: { cwd: string }) {
       <span>
         <Folder aria-hidden="true" /> {cwd}
       </span>
-      <span className="app-statusbar-end">
+      <span className="app-statusbar-end" title="verity mode: Manual">
         <Lightning aria-hidden="true" /> Manual
       </span>
     </div>

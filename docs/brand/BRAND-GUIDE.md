@@ -10,6 +10,7 @@ Product names are lowercase wherever they name the product: the wordmark, naviga
 
 - **Wiresharks** is the company. One word, capital W. The logo sets it as WIRESHARKS.
 - **raptor** is the autonomous agent and its runtime. Write raptor, with a lowercase r, never Raptor-1.
+- **verity** is raptor's approval system. It shows the whole command before raptor runs it. Write verity, lowercase, with no mark. Rule adopted October 23, 2026.
 - **talon-1** is the open-weight model. talon is the model layer; the shipping model keeps its version. talon-1 never carries ®, ™ or any other mark.
 - **Harness** is the infrastructure that runs and coordinates raptor's work.
 - **Hermes** is the upstream engine raptor is built on.
@@ -50,6 +51,7 @@ Keep the evidence honest. Do not invent customers, partners, certifications, ben
 | Raptor / RAPTOR as a name in text | raptor |
 | Talon-1 / Talon / Talon1 for the shipping model | talon-1 |
 | talon-1® / talon-1™ | talon-1 |
+| Verity / verity® / verity™ | verity |
 | Raptor® in a sentence | raptor® at first mention, then raptor |
 | Raptor runs on Talon-1 | talon-1 powers raptor |
 | A benchmark-shaped chart without results | A labelled diagram with no invented scores |

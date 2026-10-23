@@ -9,8 +9,8 @@ const HELD = 0;
 const PRESSED = 1;
 
 /**
- * raptor's command approval, as the desktop app draws it: the whole command
- * in a card with Reject, Always allow… and Run. The script holds the card,
+ * verity, raptor's approval system, as the desktop app draws it: the whole
+ * command in a card with Reject, Always allow… and Run. The script holds the card,
  * presses Run, then shows the call as run with its output. Under reduced
  * motion it shows the held card, the state that matters.
  */
@@ -34,7 +34,7 @@ export function Approval({
   const more = command.length - 1;
 
   return (
-    <div ref={ref} className="panel session approval" data-ui aria-label={`raptor command approval: ${title}`}>
+    <div ref={ref} className="panel session approval" data-ui aria-label={`verity approval: ${title}`}>
       <AppTabs title={title} tab={held ? "held" : "busy"} />
       <div className="app-chat">
         <p className="app-user">{prompt}</p>
@@ -43,7 +43,7 @@ export function Approval({
           <div className="approval-card" aria-hidden={!held}>
             <p className="approval-head">
               <TerminalWindow aria-hidden="true" />
-              Command
+              verity
             </p>
             <pre>
               {command.map((line, i) => (
