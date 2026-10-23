@@ -49,6 +49,8 @@ export type ActionState =
 type EventBase = {
   /** Strictly increasing sequence number assigned by the event producer. */
   seq: number;
+  /** Restore known state without replaying historical particle flights. */
+  hydrate?: boolean;
   /** Producer timestamp in milliseconds, informational only. */
   at?: number;
 };
@@ -110,6 +112,7 @@ export type RaptorEvent = EventBase &
     | { type: "action.executing"; actionId: string }
     | { type: "action.completed"; actionId: string }
     | { type: "action.failed"; actionId: string }
+    | { type: "action.withdrawn"; actionId: string }
     | { type: "checkpoint.created"; checkpointId: string }
     | { type: "rollback.started"; checkpointId: string }
     | { type: "rollback.completed"; checkpointId: string }

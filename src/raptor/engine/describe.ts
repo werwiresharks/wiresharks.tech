@@ -52,8 +52,12 @@ export function describeModel(model: RaptorModel): string {
   return parts.join(", ") + ".";
 }
 
-export function describeEvent(event: RaptorEvent, model: RaptorModel): string {
-  const label = (id: string) => model.agents[id]?.label ?? id;
+export function describeEvent(
+  event: RaptorEvent,
+  model: RaptorModel,
+  labelLookup: (id: string) => string | undefined = id => model.agents[id]?.label,
+): string {
+  const label = (id: string) => labelLookup(id) ?? id;
   switch (event.type) {
     case "session.reset":
       return "Session reset";
@@ -88,6 +92,8 @@ export function describeEvent(event: RaptorEvent, model: RaptorModel): string {
       return `${event.actionId} executing`;
     case "action.completed":
       return `${event.actionId} completed`;
+    case "action.withdrawn":
+      return `${event.actionId} withdrawn`;
     case "action.failed":
       return `${event.actionId} failed`;
     case "checkpoint.created":

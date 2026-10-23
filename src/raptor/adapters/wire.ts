@@ -154,6 +154,8 @@ const BODIES: {
     str(m.actionId) ? { type: "action.executing", actionId: m.actionId } : null,
   "action.completed": (m) =>
     str(m.actionId) ? { type: "action.completed", actionId: m.actionId } : null,
+  "action.withdrawn": (m) =>
+    str(m.actionId) ? { type: "action.withdrawn", actionId: m.actionId } : null,
   "action.failed": (m) =>
     str(m.actionId) ? { type: "action.failed", actionId: m.actionId } : null,
   "checkpoint.created": (m) =>
@@ -179,12 +181,14 @@ export function parseEvent(raw: unknown): RaptorEvent | null {
   if (typeof raw.type !== "string" || !(raw.type in BODIES)) return null;
   if (!num(raw.seq) || !Number.isInteger(raw.seq) || raw.seq < 0) return null;
   if (raw.at !== undefined && !num(raw.at)) return null;
+  if (raw.hydrate !== undefined && typeof raw.hydrate !== "boolean") return null;
 
   const body = BODIES[raw.type as RaptorEventType](raw);
   if (!body) return null;
 
   const event = { ...body, seq: raw.seq } as RaptorEvent;
   if (raw.at !== undefined) event.at = raw.at as number;
+  if (raw.hydrate !== undefined) event.hydrate = raw.hydrate as boolean;
   return event;
 }
 

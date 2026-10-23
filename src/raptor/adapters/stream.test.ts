@@ -32,6 +32,34 @@ test("parseEvent accepts a well-formed event and preserves optional at", () => {
   });
 });
 
+test("wire parsing preserves withdrawal identity and optional hydration booleans", () => {
+  for (const hydrate of [true, false, undefined]) {
+    for (const fields of [
+      { type: "action.withdrawn", actionId: "call-1" },
+      { type: "agent.spawned", agentId: "child", parentId: "root", label: "Child" },
+    ]) {
+      const event = { ...fields, seq: 17, ...(hydrate === undefined ? {} : { hydrate }) };
+      assert.deepEqual(parseEvent(event), event);
+      assert.deepEqual(parseMessage(JSON.stringify(event)), [event]);
+    }
+  }
+});
+
+test("wire parsing rejects malformed withdrawal IDs and hydration markers", () => {
+  for (const actionId of [undefined, "", 42, null]) {
+    const event = { type: "action.withdrawn", actionId, seq: 17 };
+    assert.equal(parseEvent(event), null);
+    assert.deepEqual(parseMessage(JSON.stringify(event)), []);
+  }
+  for (const hydrate of [null, "true", "false", 0, 1, {}, []]) {
+    for (const type of ["action.withdrawn", "session.reset"]) {
+      const event = { type, actionId: "call-1", seq: 17, hydrate };
+      assert.equal(parseEvent(event), null);
+      assert.deepEqual(parseMessage(JSON.stringify(event)), []);
+    }
+  }
+});
+
 test("parseEvent rejects malformed, partial, and hostile input", () => {
   for (const bad of [
     null,

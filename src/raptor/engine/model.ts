@@ -60,6 +60,8 @@ export type Checkpoint = {
 
 export type RaptorModel = {
   seq: number;
+  /** Presentation semantics survive renderer attachment and skipped updates. */
+  sync: { resetSeq: number; hydrate: boolean };
   mode: "focus" | "conversation";
   agents: Record<string, AgentNode>;
   /** Agent ids in spawn order; stable layout depends on it. */
@@ -80,6 +82,7 @@ export type ReduceResult =
 export function createModel(): RaptorModel {
   return {
     seq: 0,
+    sync: { resetSeq: 0, hydrate: false },
     mode: "focus",
     agents: {},
     order: [],
@@ -100,6 +103,10 @@ const ACTION_TRANSITIONS: Record<ActionState, ActionState[]> = {
   completed: [],
   failed: [],
 };
+
+function actionReached(current: ActionState, target: ActionState): boolean {
+  return current === target || ACTION_TRANSITIONS[target].some(next => actionReached(current, next));
+}
 
 export function isActiveAgent(model: RaptorModel, id: string | null) {
   if (!id) return false;
@@ -161,7 +168,15 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
     return reject(model, "rollback in progress");
   const next = (patch: Partial<RaptorModel>): ReduceResult => ({
     accepted: true,
-    model: { ...model, ...patch, seq: event.seq },
+    model: {
+      ...model,
+      ...patch,
+      seq: event.seq,
+      sync: {
+        resetSeq: event.type === "session.reset" ? event.seq : model.sync.resetSeq,
+        hydrate: event.hydrate === true,
+      },
+    },
   });
 
   switch (event.type) {
@@ -169,7 +184,7 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
       return next({ ...createModel() });
 
     case "conversation.opened":
-      return model.mode === "conversation"
+      return model.mode === "conversation" && !event.hydrate
         ? reject(model, "conversation already open")
         : next({ mode: "conversation" });
 
@@ -179,8 +194,12 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
         : next({ mode: "focus" });
 
     case "agent.spawned": {
-      if (model.agents[event.agentId])
-        return reject(model, `agent ${event.agentId} exists`);
+      const existing = model.agents[event.agentId];
+      if (existing) {
+        if (!event.hydrate || existing.retired || existing.parentId !== event.parentId)
+          return reject(model, `agent ${event.agentId} exists`);
+        return next({ agents: withAgent(model, event.agentId, { label: event.label }) });
+      }
       if (event.parentId === null) {
         if (rootAgent(model)) return reject(model, "primary agent exists");
       } else if (!isActiveAgent(model, event.parentId)) {
@@ -243,7 +262,7 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
     case "agent.state": {
       if (!isActiveAgent(model, event.agentId))
         return reject(model, `agent ${event.agentId} is not active`);
-      if (model.agents[event.agentId].state === event.state)
+      if (model.agents[event.agentId].state === event.state && !event.hydrate)
         return reject(model, "state unchanged");
       return next({
         agents: withAgent(model, event.agentId, { state: event.state }),
@@ -253,7 +272,7 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
     case "agent.activity": {
       if (!isActiveAgent(model, event.agentId))
         return reject(model, `agent ${event.agentId} is not active`);
-      if (model.agents[event.agentId].activity === event.activity)
+      if (model.agents[event.agentId].activity === event.activity && !event.hydrate)
         return reject(model, "activity unchanged");
       return next({
         agents: withAgent(model, event.agentId, { activity: event.activity }),
@@ -314,8 +333,12 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
     }
 
     case "action.proposed": {
-      if (model.actions[event.actionId])
-        return reject(model, `action ${event.actionId} exists`);
+      const existing = model.actions[event.actionId];
+      if (existing) {
+        if (!event.hydrate || existing.agentId !== event.agentId)
+          return reject(model, `action ${event.actionId} exists`);
+        return next({ actions: { ...model.actions, [existing.id]: { ...existing, summary: event.summary } } });
+      }
       if (!isActiveAgent(model, event.agentId))
         return reject(model, `agent ${event.agentId} is not active`);
       return next({
@@ -330,6 +353,13 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
           },
         },
       });
+    }
+
+    case "action.withdrawn": {
+      if (!model.actions[event.actionId]) return reject(model, `unknown action ${event.actionId}`);
+      const actions = { ...model.actions };
+      delete actions[event.actionId];
+      return next({ actions });
     }
 
     case "authorization.requested":
@@ -349,6 +379,11 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
               : event.type === "action.completed"
                 ? "completed"
                 : "failed";
+      if (event.hydrate && actionReached(action.state, target)) {
+        if (event.type === "authorization.resolved" && action.authority !== event.authority)
+          return reject(model, `action ${action.id}: authority changed`);
+        return next({});
+      }
       if (!ACTION_TRANSITIONS[action.state].includes(target))
         return reject(model, `action ${action.id}: ${action.state} → ${target}`);
       return next({
