@@ -7,6 +7,8 @@ import type { RaptorModel } from "./model.ts";
 import { COLORS, SURFACES } from "./palette.ts";
 import type { Surface } from "./palette.ts";
 import { ParticleField } from "./particles.ts";
+import { Substrate } from "./substrate.ts";
+import type { AnchorSet } from "./substrate.ts";
 import { FrameGovernor, detectQuality } from "./quality.ts";
 import {
   MAX_CUTS,
@@ -31,6 +33,12 @@ export type Framing = { x: number; y: number; radius: number };
 export type RendererOptions = {
   host: HTMLElement;
   home?: { sample: () => HomeFrame; readonly active?: boolean };
+  /**
+   * The chat substrate: one population shared by every agent, drawn at anchors
+   * the host measures. `anchors` is read every frame; `onPresence` reports which
+   * agents still have a globe (a finished one keeps it until its particles leave).
+   */
+  substrate?: { anchors: () => AnchorSet; onPresence?: (agentIds: readonly string[]) => void };
   /** Marks cut through the page that the particles part around, in document pixels. Read each frame of the home journey. */
   cuts?: () => readonly Cut[];
   frame: (width: number, height: number) => Framing;
@@ -55,6 +63,8 @@ export class RaptorRenderer implements RaptorView {
   private camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 50);
   private system = new THREE.Group();
   private field: ParticleField;
+  private substrate: Substrate | null = null;
+  private stillWake = 0;
   private geometry = new THREE.BufferGeometry();
   private positionAttr: THREE.BufferAttribute;
   private colorAttr: THREE.BufferAttribute;
@@ -143,7 +153,8 @@ export class RaptorRenderer implements RaptorView {
       depthWrite: false,
       depthTest: false,
       uniforms: {
-        uDrift: { value: options.home ? 0 : 1 },
+        uDrift: { value: options.home || options.substrate ? 0 : 1 },
+        uLocalDepth: { value: options.substrate ? 1 : 0 },
         uTime: { value: 0 },
         uPixelRatio: { value: 1 },
         uBaseSize: { value: 2.2 },
@@ -157,6 +168,10 @@ export class RaptorRenderer implements RaptorView {
         uCutMark: { value: this.cutMarks },
       },
     });
+    if (options.substrate) {
+      this.substrate = new Substrate(this.field.lattice, this.field.capacity);
+      this.substrate.onPresence = options.substrate.onPresence ?? null;
+    }
     const points = new THREE.Points(this.geometry, this.particleMaterial);
     points.frustumCulled = false;
     this.system.add(points);
@@ -267,6 +282,7 @@ export class RaptorRenderer implements RaptorView {
       // so the decorative canvas can never intercept clicks on content above it.
       const move = (event: PointerEvent) => {
         const rect = this.options.home ? null : host.getBoundingClientRect();
+        if (this.substrate) this.needsRender = true;
         const x = event.clientX - (rect?.left ?? 0);
         const y = event.clientY - (rect?.top ?? 0);
         const inside = x >= 0 && y >= 0 && x <= (rect?.width ?? this.width) && y <= (rect?.height ?? this.height);
@@ -357,6 +373,7 @@ export class RaptorRenderer implements RaptorView {
   /** Recolour for the ground behind the canvas. Structure eases to the new tones. */
   setSurface(surface: Surface) {
     const style = SURFACES[surface];
+    this.substrate?.setSurface(surface);
     this.field.setTones(style.tones);
     this.particleMaterial.uniforms.uFog.value.setRGB(...style.fog);
     this.threadMaterial.uniforms.uInk.value.setRGB(...style.thread);
@@ -377,6 +394,12 @@ export class RaptorRenderer implements RaptorView {
   update(layout: Layout, model: RaptorModel, effects: Effect[]) {
     void model;
     if (this.options.home) return;
+    if (this.substrate) {
+      this.substrate.sync(model);
+      this.needsRender = true;
+      this.start();
+      return;
+    }
     this.field.setTargets(layout.clusters);
     this.targetRingRadius = layout.ring.radius;
     this.targetHold = layout.ring.holdAngle !== null ? 1 : 0;
@@ -458,11 +481,18 @@ export class RaptorRenderer implements RaptorView {
     if (this.pixelRatio > 1) {
       this.maxPixelRatio = Math.max(1, this.pixelRatio - 0.35);
       this.resize();
-    } else this.field.setActive(Math.max(this.options.home ? 2400 : 256, this.field.active * 0.72));
+    } else {
+      this.field.setActive(Math.max(this.options.home || this.substrate ? 2400 : 256, this.field.active * 0.72));
+      this.substrate?.setActive(this.field.active);
+    }
   }
 
   private advance(dt: number, still: boolean) {
     this.time += dt;
+    if (this.substrate) {
+      this.advanceSubstrate(this.substrate, dt, still);
+      return;
+    }
     if (this.options.home) {
       const pose = this.homeMotion.step(this.options.home.sample(), dt, still);
       this.system.position.set(0, 0, 0);
@@ -562,6 +592,38 @@ export class RaptorRenderer implements RaptorView {
     this.updateThreads(dt, still);
   }
 
+  private advanceSubstrate(substrate: Substrate, dt: number, still: boolean) {
+    this.system.position.set(0, 0, 0);
+    this.system.scale.setScalar(1);
+    substrate.setAnchors(this.options.substrate!.anchors());
+    substrate.step(dt, performance.now() / 1000, this.reduced);
+    // The root globe leans toward the pointer while it is large, as the site's hero does.
+    const root = this.options.substrate!.anchors().primary;
+    const response = still ? 1 : 1 - Math.exp(-dt * 3);
+    const pointer = this.pointer;
+    const interactive = !!pointer && !still && !!root && root.radius > 45;
+    const tiltY = interactive ? Math.max(-1, Math.min(1, (pointer.x - root.x) / root.radius / 3)) * 0.25 : 0;
+    const tiltX = interactive ? Math.max(-1, Math.min(1, (pointer.y - root.y) / root.radius / 3)) * 0.2 : 0;
+    this.tiltX += (tiltX - this.tiltX) * response;
+    this.tiltY += (tiltY - this.tiltY) * response;
+    substrate.write(this.field, this.width, this.height, this.worldHeight(), this.tiltX, this.tiltY);
+    this.geometry.setDrawRange(0, this.field.active);
+    this.positionAttr.needsUpdate = true;
+    this.colorAttr.needsUpdate = true;
+    this.paramsAttr.needsUpdate = true;
+    const u = this.particleMaterial.uniforms;
+    u.uTime.value = this.time;
+    u.uPointerStrength.value = 0;
+    u.uBaseSize.value = 2.2;
+    this.ring.visible = this.checkpoint.visible = false;
+    this.threadGeometry.setDrawRange(0, 0);
+    // Reduced motion draws still frames; wake once more when a still route marker lands.
+    window.clearTimeout(this.stillWake);
+    const wake = this.reduced ? substrate.nextStillChange() : null;
+    if (wake !== null)
+      this.stillWake = window.setTimeout(() => this.requestPresentation(), Math.max(16, (wake - performance.now() / 1000) * 1000 + 16));
+  }
+
   /** Hands the page's cuts to the particle shader in viewport pixels, with a shove the moment each one strikes. */
   private partForCuts(scroll: number, dt: number) {
     const cuts = this.options.cuts?.() ?? [];
@@ -635,6 +697,8 @@ export class RaptorRenderer implements RaptorView {
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    window.clearTimeout(this.stillWake);
+    if (this.substrate) this.substrate.onPresence = null;
     this.stop();
     this.observers.forEach((observer) => observer.disconnect());
     this.cleanups.forEach((cleanup) => cleanup());

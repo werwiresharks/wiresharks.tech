@@ -14,6 +14,8 @@ uniform vec3 uPointer;
 uniform float uPointerStrength;
 uniform vec2 uViewport;
 uniform vec3 uFog;
+// 1 when aParams.z carries each particle's depth within its own globe (-1 far, 1 near).
+uniform float uLocalDepth;
 uniform vec4 uCutChord[${MAX_CUTS}]; // ax, ay, bx, by: viewport pixels, y down
 uniform vec4 uCutMark[${MAX_CUTS}]; // bow px, half width px, reach 0..1, strike kick
 attribute vec3 aColor;
@@ -77,6 +79,7 @@ void main() {
   float activity = aParams.z;
   vec3 p = position;
   // Internal motion: small, seeded drift whose speed follows activity.
+  activity *= 1.0 - uLocalDepth;
   float speed = 0.6 + activity * 2.2;
   float amp = 0.006 + activity * 0.022;
   p += uDrift * amp * vec3(
@@ -98,7 +101,7 @@ void main() {
   clip.xy += vec2(shift.x, -shift.y) / uViewport * 2.0 * clip.w;
   gl_Position = clip;
   // Depth cue: the far hemisphere recedes into the page.
-  float depth = clamp((mv.z - uCenterZ) / max(uScale, 0.001), -1.2, 1.2);
+  float depth = mix(clamp((mv.z - uCenterZ) / max(uScale, 0.001), -1.2, 1.2), aParams.z * 1.1, uLocalDepth);
   float near = smoothstep(-1.1, 1.0, depth);
   vAlpha = aParams.x * mix(0.16, 1.0, near);
   vColor = mix(aColor * 0.4 + 0.6 * uFog, aColor, near);

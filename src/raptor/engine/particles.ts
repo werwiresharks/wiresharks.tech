@@ -127,6 +127,11 @@ export class ParticleField {
     this.generateLattice();
   }
 
+  /** Each particle's fixed identity, for views that place particles themselves (the substrate). */
+  get lattice() {
+    return { dir: this.dir, radial: this.radial, shell: this.shell, seed: this.seed, accentMask: this.accentMask };
+  }
+
   /** Fibonacci shells, shuffled so any prefix is an even subsample. */
   private generateLattice() {
     const random = mulberry32(0x7a105);
