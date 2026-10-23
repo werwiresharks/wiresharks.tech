@@ -62,11 +62,14 @@ export function Session({
               return (
                 <li key={agent.name} data-state={state}>
                   <span className="app-agent-orb" data-home-worker={journey ? i : undefined}>
-                    <MiniOrb state={state === "queued" ? "idle" : state} size={22} yieldToJourney={journey} />
+                    <MiniOrb state={state === "queued" ? "idle" : state} size={30} yieldToJourney={journey} />
                   </span>
                   <span className="app-agent-text">
-                    <b>{agent.name}</b>
-                    <span>{agent.activity[state] ?? (state === "queued" ? "Queued" : agent.task)}</span>
+                    <b>
+                      {agent.name}
+                      <i>{state === "done" ? "returned" : state}</i>
+                    </b>
+                    <span>{agent.activity[state] ?? agent.task}</span>
                   </span>
                   <Timer running={state !== "queued" && state !== "done"} index={index} beats={beats} agent={i} />
                 </li>

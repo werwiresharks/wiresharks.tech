@@ -1137,11 +1137,13 @@ main:focus {
    The raptor desktop window: tab strip, chat, subagent roster, composer and
    status bar, laid out as the app lays them out, in the site's palette.
    -------------------------------------------------------------------------- */
+/* Sizes follow the app: 13px conversation text, 24px composer controls, a 26px send button. */
 .session {
   display: flex;
   flex-direction: column;
   font-family: var(--sans);
-  font-size: var(--fs-small);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 .app-tabs {
   display: flex;
@@ -1156,7 +1158,7 @@ main:focus {
   align-items: center;
   gap: 8px;
   min-width: 0;
-  padding: 10px 14px 9px;
+  padding: 8px 14px 7px;
   border-bottom: 2px solid var(--fg);
   margin-bottom: -1px;
   font-family: var(--mono);
@@ -1172,6 +1174,7 @@ main:focus {
   flex: none;
   width: 6px;
   height: 6px;
+  border-radius: 1px;
   background: var(--line-strong);
 }
 .app-tab i[data-tab="busy"] {
@@ -1199,10 +1202,10 @@ main:focus {
   padding: 18px 18px 14px;
 }
 .app-user {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+  border-radius: var(--radius);
+  background: var(--panel-bar);
   color: var(--fg);
 }
 .app-reply {
@@ -1245,6 +1248,7 @@ main:focus {
 }
 .app-stack-head b {
   font-weight: 500;
+  white-space: nowrap;
   color: var(--fg);
 }
 .app-stack-sum {
@@ -1257,7 +1261,7 @@ main:focus {
 }
 .app-agents li {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   padding: 7px 12px;
@@ -1269,8 +1273,8 @@ main:focus {
 }
 .app-agent-orb {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
 }
 .app-agent-text {
   display: grid;
@@ -1284,8 +1288,14 @@ main:focus {
 }
 .app-agent-text b {
   font-weight: 500;
-  font-size: 0.8125rem;
   color: var(--fg);
+}
+.app-agent-text b i {
+  margin-left: 8px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: var(--fs-micro);
+  color: var(--muted);
 }
 .app-agent-text span {
   font-size: var(--fs-micro);
@@ -1310,7 +1320,7 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 52px;
+  min-height: 46px;
   padding: 0 10px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
@@ -1319,8 +1329,8 @@ main:focus {
 .app-composer-orb {
   flex: none;
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 .app-icon {
   flex: none;
@@ -1356,8 +1366,8 @@ main:focus {
   display: grid;
   flex: none;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--fg);
   color: var(--bg);
@@ -1370,8 +1380,9 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 7px 14px;
+  padding: 3px 12px;
   border-top: 1px solid var(--line);
+  background: var(--panel-bar);
   font-size: var(--fs-micro);
   color: var(--muted);
   white-space: nowrap;
@@ -1392,6 +1403,7 @@ main:focus {
 /* Command approval: the card and the run result share one grid cell, so the swap never moves the composer. */
 .approval-swap {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 .approval-swap > * {
   grid-area: 1 / 1;
@@ -1419,13 +1431,13 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px 0;
-  font-size: var(--fs-small);
+  padding: 10px 12px 0;
+  font-size: var(--fs-micro);
   color: var(--fg-2);
 }
 .approval-head svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   color: var(--muted);
 }
 .approval-card pre,
@@ -2601,7 +2613,8 @@ main:focus {
   }
   .app-pill-quiet,
   .app-icon-quiet,
-  .app-statusbar-end {
+  .app-statusbar .app-statusbar-end,
+  .app-agent-text b i {
     display: none;
   }
   .registry li {
@@ -3238,6 +3251,12 @@ main:focus {
   }
   .swarm-steps li > span:last-child {
     display: none;
+  }
+}
+/* At 320px a third of the legend is narrower than "03 Combine" at body size. */
+@media (max-width: 359px) {
+  .swarm-steps b {
+    font-size: var(--fs-small);
   }
 }
 /* The room the short legend frees goes to the figure, so at 541px tall the canvas still fits two 20px pads and six 48px rows. */

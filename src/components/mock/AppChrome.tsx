@@ -26,7 +26,7 @@ export function Composer({ raptor, busy, journey = false }: { raptor: OrbState; 
     <div className="app-composer">
       <Plus className="app-icon" aria-hidden="true" />
       <span className="app-composer-orb" data-home-stop={journey ? "raptor" : undefined}>
-        <MiniOrb state={raptor} size={28} yieldToJourney={journey} />
+        <MiniOrb state={raptor} size={24} yieldToJourney={journey} />
       </span>
       <span className="app-placeholder">Send a follow-up</span>
       <span className="app-pill keep-case">

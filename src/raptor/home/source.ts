@@ -178,7 +178,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       const selector = key === "raptor" ? "[data-home-worker]" : "[data-home-principle]";
       const satellites = Array.from(root.querySelectorAll(selector), (slot, index) => ({
         key: `${key === "raptor" ? "worker" : "principle"}-${index}`,
-        frame: readFrame(slot, mobile ? 7 : 9),
+        frame: readFrame(slot, key === "raptor" ? 13 : mobile ? 7 : 9),
       }));
       const last = satellites.at(-1);
       if (!last) continue;

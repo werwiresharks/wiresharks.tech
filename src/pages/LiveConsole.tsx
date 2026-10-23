@@ -66,9 +66,8 @@ export function LiveConsole() {
       <p className="label">Live / Session</p>
       <h1>raptor<RaptorReg />, live.</h1>
       <p className="page-lede">
-        A raptor session, streamed from the session server and drawn by the
-        engine. The engine shows the session. It makes no authorization
-        decisions.
+        A live raptor session from the session server. The raptor particle
+        engine visualizes agent authorization state. It never makes decisions.
       </p>
 
       <div style={stageStyle}>
