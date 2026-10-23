@@ -1,3 +1,4 @@
+import "./substrate-lifecycle.test.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { RaptorEngine } from "./engine.ts";
@@ -206,7 +207,7 @@ test("reduced motion holds every particle still, and a transfer is a still route
   assert.equal(substrate.snapshot().inFlight, 0, "the route lands by itself");
 });
 
-test("a reset followed by a new root keeps the same particles in the same place", () => {
+test("a reset followed by a new root conserves the particle population", () => {
   const { substrate, send, step } = scene();
   send({ type: "agent.spawned", agentId: "root", parentId: null, label: "Raptor" });
   for (const event of spawn("a")) send(event);

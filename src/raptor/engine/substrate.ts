@@ -14,7 +14,8 @@ import type { Surface, ToneStyle } from "./palette.ts";
  * exactly one body or travels in exactly one flight, so a spawned sub-agent is
  * made of its parent's particles, a brief or a result is a train of particles
  * that leaves one globe and joins another, and a finished agent returns what
- * it holds. Nothing is created or destroyed after construction.
+ * it holds. Dim neutral routes through the root rebalance depleted cohorts.
+ * Nothing is created or destroyed after construction.
  *
  * Pure apart from the typed arrays it writes; the renderer owns WebGL.
  */
@@ -55,7 +56,15 @@ export type SubstrateSnapshot = {
   unowned: number;
 };
 
-type FlightKind = TransferKind | "spawn" | "return" | "handoff";
+type FlightKind = TransferKind | "spawn" | "return" | "handoff" | "balance";
+
+type Allocation = {
+  from: number;
+  to: number;
+  kind: FlightKind;
+  count: number;
+  instant: boolean;
+};
 
 type Body = {
   id: string;
@@ -89,7 +98,6 @@ type Body = {
   spin: number;
   wander: number;
   density: number;
-  resident: number;
 };
 
 type Flight = {
@@ -154,7 +162,9 @@ export class Substrate {
   private readonly clock: () => number;
   private still = false;
   private synced = false;
-  private lastTransferSeq = 0;
+  private resetSeq = 0;
+  private queuedTransferSeq = 0;
+  private pending: Allocation[] = [];
   private tones: Record<Tone, ToneStyle> = SURFACES.light.tones;
   private glow: [number, number, number] = COLORS.red;
   private ink: [number, number, number] = COLORS.graphite;
@@ -196,7 +206,17 @@ export class Substrate {
   // Semantic sync: bodies follow the model's agents; new transfers start flights.
 
   sync(model: RaptorModel) {
-    const hydrating = !this.synced;
+    if (model.sync.resetSeq !== this.resetSeq) {
+      this.resetSeq = model.sync.resetSeq;
+      this.bodies = [];
+      this.slots.clear();
+      this.flights = [];
+      this.owner.fill(-1);
+      this.flightOf.fill(-1);
+      this.queuedTransferSeq = 0;
+      this.pending = [];
+    }
+    const hydrating = !this.synced || model.sync.hydrate;
     this.synced = true;
     const root = rootAgent(model);
     const seen = new Set<string>();
@@ -207,6 +227,7 @@ export class Substrate {
       let slot = this.slots.get(id);
       if (slot === undefined) slot = this.createBody(id, agent.parentId, agent.id === root?.id, hydrating);
       const body = this.bodies[slot]!;
+      if (body.phase === "returning") this.revive(slot, hydrating);
       body.parentId = agent.parentId;
       body.root = agent.id === root?.id;
       body.tone = TONE_OF[agent.state];
@@ -219,27 +240,76 @@ export class Substrate {
       const agent = model.agents[id];
       const to = (agent?.successorId ?? body.parentId ?? root?.id) || null;
       const destination = to !== null ? this.slots.get(to) : undefined;
-      // A root with nowhere to go (reset) stays, to be adopted by the next root.
       if (destination === undefined) continue;
       body.phase = "returning";
       body.returnTo = to;
-      this.send(slot, destination, agent?.successorId ? "handoff" : "return", Infinity, hydrating);
+      if (hydrating) {
+        this.settleReturn(slot, destination);
+        continue;
+      }
+      this.pending = this.pending.filter(a => a.to !== slot || a.kind !== "spawn");
+      this.pending.push({ from: slot, to: destination, kind: agent?.successorId ? "handoff" : "return", count: Infinity, instant: hydrating });
     }
     for (const transfer of model.transfers) {
-      if (transfer.seq <= this.lastTransferSeq) continue;
-      this.lastTransferSeq = transfer.seq;
+      if (transfer.seq <= this.queuedTransferSeq) continue;
+      this.queuedTransferSeq = transfer.seq;
       if (hydrating) continue;
       const from = this.slots.get(transfer.from);
       const to = this.slots.get(transfer.to);
       if (from === undefined || to === undefined) continue;
-      this.send(from, to, transfer.kind, packetCount(transfer.bytes), false);
+      this.pending.push({ from, to, kind: transfer.kind, count: packetCount(transfer.bytes), instant: false });
     }
+    this.allocate();
+    if (hydrating) this.releaseEmptyBodies();
     this.reportPresence();
+  }
+
+  private settleReturn(from: number, to: number) {
+    this.pending = this.pending.filter(a => a.from !== from && a.to !== from);
+    for (let f = 0; f < this.flights.length; f++) {
+      const flight = this.flights[f];
+      if (!flight || (flight.from !== from && flight.to !== from)) continue;
+      for (const i of flight.members) this.flightOf[i] = -1;
+      this.flights[f] = null;
+    }
+    for (let i = 0; i < this.capacity; i++) if (this.owner[i] === from) this.owner[i] = to;
+  }
+
+  private revive(slot: number, instant: boolean) {
+    const body = this.bodies[slot]!;
+    body.phase = "resident";
+    body.returnTo = null;
+    body.holdUntil = 0;
+    this.pending = this.pending.filter(a => a.from !== slot || (a.kind !== "return" && a.kind !== "handoff"));
+    for (let f = 0; f < this.flights.length; f++) {
+      const flight = this.flights[f];
+      if (!flight || flight.from !== slot || (flight.kind !== "return" && flight.kind !== "handoff")) continue;
+      const moving: number[] = [];
+      for (const i of flight.members) {
+        this.owner[i] = slot;
+        const local = (this.time - this.depart[i]) / flight.duration;
+        if (instant || local <= 0) this.flightOf[i] = -1;
+        else {
+          this.depart[i] = this.time - (1 - Math.min(1, local)) * flight.duration;
+          moving.push(i);
+        }
+      }
+      if (!moving.length) {
+        this.flights[f] = null;
+        continue;
+      }
+      flight.from = flight.to;
+      flight.to = slot;
+      flight.members = Int32Array.from(moving);
+      flight.start = Math.min(...moving.map(i => this.depart[i]));
+      flight.spread = Math.max(...moving.map(i => this.depart[i])) - flight.start;
+      flight.landAt = this.clock() + STILL_HOLD;
+    }
   }
 
   private createBody(id: string, parentId: string | null, root: boolean, hydrating: boolean) {
     const parentSlot = parentId !== null ? this.slots.get(parentId) : undefined;
-    // A new root adopts an orphaned root body: same place, same particles, no jump.
+    // A primary successor adopts the preceding root's place and particles.
     if (root) {
       for (const [orphanId, slot] of this.slots) {
         const body = this.bodies[slot]!;
@@ -282,7 +352,6 @@ export class Substrate {
       spin: 1,
       wander: 1,
       density: 1,
-      resident: 0,
     };
     body.weights[0] = 1;
     this.bodies[slot] = body;
@@ -291,8 +360,7 @@ export class Substrate {
       // The first body takes every particle not yet owned.
       for (let i = 0; i < this.capacity; i++) if (this.owner[i] < 0) this.owner[i] = slot;
     } else {
-      const cohort = clamp(Math.round(this.active * 0.03), 120, 420);
-      this.send(parentSlot!, slot, "spawn", cohort, hydrating);
+      this.pending.push({ from: parentSlot!, to: slot, kind: "spawn", count: this.childTarget(), instant: hydrating });
     }
     return slot;
   }
@@ -310,6 +378,63 @@ export class Substrate {
     body.morphAt = this.time;
   }
 
+  private childTarget() {
+    const children = this.bodies.filter(b => b && !b.root && b.phase === "resident").length;
+    return Math.min(clamp(Math.round(this.capacity * 0.03), 120, 420), Math.floor(this.capacity * 0.7 / Math.max(1, children)));
+  }
+
+  private floor(slot: number) {
+    const body = this.bodies[slot]!;
+    if (body.phase === "returning") return 0;
+    return body.root ? Math.round(this.capacity * 0.3) : Math.min(24, Math.floor(this.childTarget() / 2));
+  }
+
+  private held(slot: number, residentOnly = false) {
+    let count = 0;
+    for (let i = 0; i < this.capacity; i++)
+      if (this.owner[i] === slot && (!residentOnly || this.flightOf[i] < 0)) count++;
+    return count;
+  }
+
+  /** Reserve inbound particles before requesting any more. Rebalancing never claims message delivery. */
+  private replenish(slot: number, needed: number, instant: boolean) {
+    const root = this.bodies.findIndex(b => b !== null && b.root && b.phase === "resident");
+    if (root < 0) return;
+    const deficit = this.floor(slot) + needed - this.held(slot);
+    if (deficit <= 0) return;
+    for (let donor = 0; donor < this.bodies.length; donor++) {
+      const body = this.bodies[donor];
+      if (!body || body.root || body.phase !== "resident" || donor === slot) continue;
+      const surplus = this.held(donor, true) - this.childTarget();
+      if (surplus > 0) this.send(donor, root, "balance", surplus, instant);
+    }
+    if (slot !== root) this.send(root, slot, "balance", deficit, instant);
+  }
+
+  private allocate() {
+    const blocked = new Set<number>();
+    this.pending = this.pending.filter(request => {
+      const { from, to, kind, instant } = request;
+      if (!this.bodies[from] || !this.bodies[to]) return false;
+      if (blocked.has(from)) return true;
+      const returning = kind === "return" || kind === "handoff";
+      const count = returning ? Infinity : Math.min(request.count,
+        this.bodies[from]!.root ? request.count : Math.max(1, this.childTarget() - this.floor(from)));
+      if (!returning && this.held(from, true) - this.floor(from) < count) {
+        this.replenish(from, count, instant);
+        if (this.held(from, true) - this.floor(from) < count) {
+          blocked.add(from);
+          return true;
+        }
+      }
+      // A request is consumed only after a cohort is assigned. Late inbound returns are handled on landing.
+      const assigned = this.send(from, to, kind, count, instant);
+      if (assigned > 0 || returning) return false;
+      blocked.add(from);
+      return true;
+    });
+  }
+
   /** Starts a flight of up to `count` particles; `instant` reassigns them in place. */
   private send(from: number, to: number, kind: FlightKind, count: number, instant: boolean) {
     const source = this.bodies[from]!;
@@ -317,10 +442,9 @@ export class Substrate {
     const candidates: number[] = [];
     for (let i = 0; i < this.capacity; i++)
       if (this.owner[i] === from && this.flightOf[i] < 0) candidates.push(i);
-    const floor = kind === "return" || kind === "handoff" ? 0 : source.root ? Math.round(this.active * 0.3) : 24;
+    const floor = kind === "return" || kind === "handoff" ? 0 : this.floor(from);
     const take = Math.min(count, candidates.length - floor);
-    if (take < 6 && kind !== "return" && kind !== "handoff") return;
-    if (take <= 0) return;
+    if (take <= 0) return 0;
     // A uniform sample, independent of seed rank, keeps every body's visible density honest.
     const offset = fract(this.time * 0.37 + to * 0.618);
     const seed = this.lattice.seed;
@@ -328,7 +452,7 @@ export class Substrate {
     const members = Int32Array.from(candidates.slice(0, take));
     if (instant) {
       for (const i of members) this.owner[i] = to;
-      return;
+      return take;
     }
     let slot = this.flights.findIndex((f) => f === null);
     if (slot < 0) slot = this.flights.length;
@@ -347,7 +471,7 @@ export class Substrate {
       duration: clamp(0.55 + distance / 420, 0.9, 2.4),
       spread: clamp(0.25 + take * 0.004, 0.25, 0.9),
       members,
-      bend: kind === "result" ? 0.6 : kind === "peer" ? 0.8 : 1,
+      bend: kind === "balance" ? 0.3 : kind === "result" ? 0.6 : kind === "peer" ? 0.8 : 1,
       landAt: this.clock() + STILL_HOLD,
     };
     this.flights[slot] = flight;
@@ -363,6 +487,7 @@ export class Substrate {
       this.flightOf[i] = slot;
       this.depart[i] = start + (rank / Math.max(1, take - 1)) * flight.spread;
     });
+    return take;
   }
 
   // ---------------------------------------------------------------------------
@@ -389,6 +514,7 @@ export class Substrate {
       for (const i of flight.members) if (this.flightOf[i] === f) this.flightOf[i] = -1;
       this.flights[f] = null;
     }
+    this.allocate();
     this.releaseEmptyBodies();
   }
 
@@ -469,7 +595,7 @@ export class Substrate {
       const body = this.bodies[slot]!;
       if (body.phase !== "returning") continue;
       // A body stays until its last train lands: its particles fly from its pose.
-      let holds = this.flights.some((flight) => flight !== null && flight.from === slot);
+      let holds = this.pending.some(a => a.from === slot || a.to === slot) || this.flights.some((flight) => flight !== null && flight.from === slot);
       let landed = false;
       for (let i = 0; i < this.capacity; i++) {
         if (this.owner[i] !== slot) continue;
@@ -478,7 +604,7 @@ export class Substrate {
       }
       // Particles that arrived after the return left follow it.
       const onward = this.returnSlot(body);
-      if (landed && onward !== undefined) this.send(slot, onward, "return", Infinity, false);
+      if (landed && onward !== undefined && !this.pending.some(a => a.from === slot)) this.send(slot, onward, "return", Infinity, false);
       if (holds) continue;
       this.slots.delete(id);
       this.bodies[slot] = null;
@@ -535,17 +661,17 @@ export class Substrate {
     const unit = worldHeight / height;
     const t = this.still ? STILL_TIME : this.time;
     const counts = new Int32Array(this.bodies.length);
-    for (let i = 0; i < this.active; i++) if (this.owner[i] >= 0 && this.flightOf[i] < 0) counts[this.owner[i]]++;
+    for (let i = 0; i < this.active; i++) if (this.owner[i] >= 0) counts[this.owner[i]]++;
     for (let s = 0; s < this.bodies.length; s++) {
       const body = this.bodies[s];
       if (!body) continue;
-      body.resident = counts[s];
       const small = smallness(body.frame.radius);
       // Small globes keep more of their particles visible, so a row's globe still reads as a globe.
       body.density = Math.min(1, (body.frame.radius * body.frame.radius * DENSITY * (1 + 1.6 * small)) / Math.max(1, counts[s]));
       const time = this.still ? 0 : this.time + body.offset;
-      const lean = body.root ? 1 : 0;
-      this.setTilt(body, tiltX * lean + small * 0.45 * Math.sin(time * 0.29), tiltY * lean + small * 0.36 * Math.sin(time * 0.21 + 1));
+      const moving = 1 - body.weights[WAITING];
+      const lean = body.root ? moving : 0;
+      this.setTilt(body, tiltX * lean + small * moving * 0.45 * Math.sin(time * 0.29), tiltY * lean + small * moving * 0.36 * Math.sin(time * 0.21 + 1));
     }
     const { position, color, params } = out;
     const seed = this.lattice.seed;
@@ -695,6 +821,7 @@ export class Substrate {
     } else local = (this.time - this.depart[i]) / flight.duration;
     if (!from || local >= 1) {
       this.place(to, i, t, unit, width, height, sample, 0);
+      sample[3] *= this.visibility(to, this.lattice.seed[i]);
       if (local < 1) sample[3] *= clamp(local * 4, 0, 1);
       return;
     }
@@ -736,7 +863,8 @@ export class Substrate {
     const arrive = smoothstep((local - 0.85) / 0.15);
     const fromAlpha = sample[3] * this.visibility(from, seed);
     const toAlpha = sample[12] * this.visibility(to, seed);
-    sample[3] = fromAlpha + (1 - fromAlpha) * leave + (toAlpha - 1) * arrive;
+    const flightAlpha = flight.kind === "balance" ? 0.25 : 1;
+    sample[3] = fromAlpha + (flightAlpha - fromAlpha) * leave + (toAlpha - flightAlpha) * arrive;
     // In the air a particle is a little larger than at rest, so a train reads at row scale.
     const resting = sample[4] * q + sample[13] * u;
     sample[4] = resting + (Math.max(0.8, resting) * 1.3 - resting) * Math.sin(Math.PI * u);

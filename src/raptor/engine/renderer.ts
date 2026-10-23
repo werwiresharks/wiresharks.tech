@@ -595,10 +595,11 @@ export class RaptorRenderer implements RaptorView {
   private advanceSubstrate(substrate: Substrate, dt: number, still: boolean) {
     this.system.position.set(0, 0, 0);
     this.system.scale.setScalar(1);
-    substrate.setAnchors(this.options.substrate!.anchors());
+    const anchors = this.options.substrate!.anchors();
+    substrate.setAnchors(anchors);
     substrate.step(dt, this.reduced);
     // The root globe leans toward the pointer while it is large, as the site's hero does.
-    const root = this.options.substrate!.anchors().primary;
+    const root = anchors.primary;
     const response = still ? 1 : 1 - Math.exp(-dt * 3);
     const pointer = this.pointer;
     const interactive = !!pointer && !still && !!root && root.radius > 45;
