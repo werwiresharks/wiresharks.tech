@@ -4,6 +4,7 @@ import { Reveal, Words } from "../components/Reveal";
 import { Stats } from "../components/Stats";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
+import { RaptorReg } from "../components/RaptorWordmark";
 import { Compare } from "../components/mock/Compare";
 import { Console } from "../components/mock/Console";
 import { Registry } from "../components/mock/Registry";
@@ -59,7 +60,7 @@ export function Talon() {
           </div>
         }
       >
-        talon-1 is the open-weight security model that powers raptor. It is fine-tuned for
+        talon-1 is the open-weight security model that powers raptor<RaptorReg />. It is fine-tuned for
         offensive and defensive security work. After you install it, it runs on your machine.
       </PageHead>
 

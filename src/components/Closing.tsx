@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Reveal, Words } from "./Reveal";
 import { Countdown } from "./Countdown";
 import { Cta } from "./Cta";
+import { RaptorReg } from "./RaptorWordmark";
 
 export function Closing({ title, text, mark }: { title: string; text: string; mark?: ReactNode }) {
   return (
@@ -16,7 +17,7 @@ export function Closing({ title, text, mark }: { title: string; text: string; ma
           </Reveal>
           <Reveal delay={180} className="closing-ctas">
             <Cta to="/raptor" variant="inverse">
-              Meet raptor
+              Meet raptor<RaptorReg />
             </Cta>
             <Cta to="/talon" variant="secondary">
               Explore talon-1

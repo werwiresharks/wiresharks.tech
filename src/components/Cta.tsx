@@ -24,7 +24,7 @@ export function Cta({
           {icon}
         </span>
       )}
-      {children}
+      <span className="cta-label">{children}</span>
       <span className="cta-arrow" aria-hidden="true">
         →
       </span>

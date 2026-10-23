@@ -2478,6 +2478,8 @@ main:focus {
   padding-right: 150px;
 }
 .home-page .section-head h2 { max-width: 760px; }
+/* The FAQ head has no landing stop, and its column is too narrow to give the space away. */
+.home-page .faq-layout .section-head { padding-right: 0; }
 .home-landing,
 .home-local-landing,
 .home-section-landing {
@@ -3064,8 +3066,9 @@ main:focus {
 
 /* ==========================================================================
    Brand names
-   Product names stay lowercase, also inside uppercase labels. The ® belongs
-   to the raptor® wordmark only, never to running text.
+   Product names stay lowercase, also inside uppercase labels. raptor carries
+   ® in the wordmark, headings, questions, buttons, product names and its first
+   mention on a page; later running text writes plain "raptor".
    ========================================================================== */
 .keep-case {
   text-transform: none;
@@ -3096,6 +3099,18 @@ main:focus {
   font-weight: 500;
   letter-spacing: 0;
   transform: translateY(-1.15em);
+}
+/* ® after raptor in display text: small, raised to the height of the t. */
+.raptor-reg {
+  display: inline-block;
+  margin-left: 0.04em;
+  /* 0.36em reads in display type; text sizes need the floor to stay legible. */
+  font-size: max(0.36em, 0.62rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+  vertical-align: top;
+  transform: translateY(0.1em);
 }
 /* In navigation, labels and headings the wordmark takes the weight of its surroundings. */
 .nav .raptor-wordmark,
@@ -3169,72 +3184,7 @@ main:focus {
   transform: scaleX(1);
 }
 
-/* ==========================================================================
-   New in raptor: merged work, grouped by the job it does
-   ========================================================================== */
-.shipped-label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 16px;
-}
-.shipped-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 8px;
-  border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent);
-  border-radius: 4px;
-  font-size: var(--fs-micro);
-  letter-spacing: 0.06em;
-  color: var(--ok);
-}
-.shipped-status::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  background: var(--ok);
-}
-.shipped-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(28px, 3vw, 40px);
-}
-.shipped-group {
-  min-width: 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--line-strong);
-}
-.shipped-group ul {
-  margin-top: 8px;
-}
-.shipped-group li {
-  position: relative;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--line);
-  opacity: 0;
-  transform: translate3d(0, 8px, 0);
-  transition:
-    opacity var(--dur-3) var(--ease-out),
-    transform var(--dur-3) var(--ease-out);
-  transition-delay: calc(160ms + var(--i) * 70ms);
-}
-.shipped-group.in li {
-  opacity: 1;
-  transform: none;
-}
-.shipped-group li::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: var(--red);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--dur-2) var(--ease-out);
-}
+
 /* A command named in running text. */
 p > code {
   font-family: var(--mono);
@@ -3242,55 +3192,10 @@ p > code {
   overflow-wrap: anywhere;
   color: var(--fg);
 }
-.shipped-group code {
-  display: inline-block;
-  max-width: 100%;
-  padding: 2px 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--fg) 3%, transparent);
-  font: var(--fs-micro) / 1.5 var(--mono);
-  color: var(--fg-2);
-  overflow-wrap: anywhere;
-}
-.shipped-group b {
-  display: block;
-  margin-top: 12px;
-  font-size: var(--fs-ui);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--fg);
-}
-.shipped-group p {
-  margin-top: 6px;
-  font-size: var(--fs-small);
-  line-height: 1.55;
-  color: var(--muted);
-}
-@media (hover: hover) {
-  .shipped-group li:hover::after {
-    transform: scaleX(1);
-  }
-}
-@media (max-width: 1100px) {
-  .shipped-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 48px;
-  }
-}
-@media (max-width: 599px) {
-  .shipped-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .page-lockup .raptor-wordmark {
     animation: none;
-  }
-  .shipped-group li {
-    opacity: 1;
-    transform: none;
   }
   .section-head > .label.reveal::after {
     transform: none;

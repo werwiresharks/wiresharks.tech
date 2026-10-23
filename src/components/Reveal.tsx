@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { RaptorReg } from "./RaptorWordmark";
 
 /**
  * Splits a display heading into word spans for a `words` Reveal. `from`
@@ -11,7 +12,15 @@ export function Words({ children, from = 0 }: { children: string; from?: number 
     <Fragment key={i}>
       {i > 0 && " "}
       <span className="word" style={{ "--i": from + i } as CSSProperties}>
-        {word}
+        {word.startsWith("raptor") && !/^raptor\w/.test(word) ? (
+          <>
+            raptor
+            <RaptorReg />
+            {word.slice("raptor".length)}
+          </>
+        ) : (
+          word
+        )}
       </span>
     </Fragment>
   ));

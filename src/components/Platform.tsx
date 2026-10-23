@@ -1,5 +1,6 @@
 import { RELEASE_ARTIFACTS, REVIEW_STEPS } from "../content";
 import { Reveal, Words } from "./Reveal";
+import { withRaptorReg } from "./RaptorWordmark";
 
 const TIERS = [
   {
@@ -53,7 +54,7 @@ export function Platform() {
                 <span>{tier.index}</span>
                 <span>{tier.layer}</span>
               </p>
-              <h3>{tier.name}</h3>
+              <h3>{withRaptorReg(tier.name)}</h3>
               <p className="tier-role">{tier.role}</p>
               <p className="tier-text">{tier.text}</p>
               <ul className="tier-facts">

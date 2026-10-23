@@ -19,7 +19,7 @@ Product names are lowercase wherever they name the product: the wordmark, naviga
 
 The raptor® wordmark is the name in lowercase Geist with the registered mark. The name tracks at -0.045em. The ® is 0.34em, Geist 500, raised to the height of the t. The claw mark may stand before the name, as it does in the claw-tear reveal. In navigation, labels and the product heading the wordmark takes the weight of the text around it; standing alone it is Geist 600.
 
-The ® belongs to the wordmark only. Never write ® in running text, headings, buttons, page titles or metadata. On the site, the `RaptorWordmark` component draws it in the navigation, the home hero, the home product block, the claw-tear reveal, the raptor page mark and the footer. The social image draws it too. `tools/check.mjs` fails a ® anywhere else in the site source.
+raptor carries ® in the wordmark, in headings, FAQ questions, buttons and product names, and at its first mention on a page. Later running text, command lines, panel titles, page titles and metadata write plain "raptor". Outside the wordmark the ® is `max(0.36em, 0.62rem)`, Geist 500, raised to the top of the line. On the site, `src/components/RaptorWordmark.tsx` is the only file that writes ®: `RaptorWordmark` draws the wordmark, `RaptorReg` the mark alone, and `withRaptorReg` marks the first "raptor" in a display string. The social image draws it too. `tools/check.mjs` fails a ® written anywhere else in the site source.
 
 ## Product sentences
 
@@ -50,7 +50,7 @@ Keep the evidence honest. Do not invent customers, partners, certifications, ben
 | Raptor / RAPTOR as a name in text | raptor |
 | Talon-1 / Talon / Talon1 for the shipping model | talon-1 |
 | talon-1® / talon-1™ | talon-1 |
-| Raptor® in a sentence | raptor |
+| Raptor® in a sentence | raptor® at first mention, then raptor |
 | Raptor runs on Talon-1 | talon-1 powers raptor |
 | A benchmark-shaped chart without results | A labelled diagram with no invented scores |
 

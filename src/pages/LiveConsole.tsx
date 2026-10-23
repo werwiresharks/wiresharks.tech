@@ -5,6 +5,7 @@ import { EngineNarration, useEngineNarration } from "../raptor/react/EngineNarra
 import { useEngine } from "../raptor/react/hooks";
 import { createEventSourceSource } from "../raptor/adapters/sse";
 import type { Framing } from "../raptor/engine/renderer";
+import { RaptorReg } from "../components/RaptorWordmark";
 
 const STREAM_URL =
   import.meta.env.VITE_RAPTOR_STREAM_URL ?? "http://localhost:8787/events";
@@ -63,7 +64,7 @@ export function LiveConsole() {
       <title>Live console | Wiresharks</title>
       <meta name="robots" content="noindex" />
       <p className="label">Live / Session</p>
-      <h1>raptor, live.</h1>
+      <h1>raptor<RaptorReg />, live.</h1>
       <p className="page-lede">
         A raptor session, streamed from the session server and drawn by the
         engine. The engine shows the session. It makes no authorization

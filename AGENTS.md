@@ -21,7 +21,7 @@ npx vite preview --port 4319   # serve dist/ to check a build
 The brand kit is in `docs/brand/` and documents the live `src/styles.css`. The canonical brand record is hivemind's `brand-design-language` node. Names, product sentences and voice come from there.
 
 - Product names are lowercase wherever they name the product, also at the start of a sentence and inside uppercase labels (wrap them in `keep-case`). The agent is raptor, never Raptor-1. The model is talon-1. Wiresharks, Harness, Hermes and other names keep their own casing.
-- The ® belongs to the raptor® wordmark only: render it with `src/components/RaptorWordmark.tsx`. Never write ® in running text, headings, buttons, titles or metadata.
+- raptor carries ®: in the wordmark, in headings, FAQ questions, buttons and product names, and at its first mention on a page. Later running text, command lines (`$ raptor …`), panel titles and metadata write plain "raptor". Render the mark only through `src/components/RaptorWordmark.tsx` (`RaptorWordmark`, `RaptorReg`, `withRaptorReg`; `Words` marks headings itself).
 - talon-1 never carries ®, ™ or any other mark.
 - Copy follows ASD-STE100 and describes only merged raptor work. Routing only suggests. `docs/brand/tools/check.mjs` enforces the casing and mark rules on the site source.
 

@@ -4,7 +4,7 @@ import { Countdown } from "../components/Countdown";
 import { Cta } from "../components/Cta";
 import { TalonIcon, RaptorIcon } from "../components/ProductIcons";
 import { Reveal, Words } from "../components/Reveal";
-import { RaptorWordmark } from "../components/RaptorWordmark";
+import { RaptorReg, RaptorWordmark } from "../components/RaptorWordmark";
 import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
 import { Platform } from "../components/Platform";
@@ -87,7 +87,7 @@ export function Home() {
           </Reveal>
           <Reveal delay={180} className="hero-ctas">
             <Cta to="/raptor" icon={<RaptorIcon />}>
-              Meet raptor
+              Meet raptor<RaptorReg />
             </Cta>
             <Cta to="/talon" variant="secondary" icon={<TalonIcon />}>
               Explore talon-1

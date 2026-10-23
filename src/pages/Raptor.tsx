@@ -1,7 +1,6 @@
 import { PageHead } from "../components/PageHead";
 import { RaptorMarkDrawn } from "../components/ProductIcons";
 import { RaptorWordmark } from "../components/RaptorWordmark";
-import { Shipped } from "../components/Shipped";
 import { Reveal, Words } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
@@ -49,10 +48,8 @@ export function Raptor() {
         Codex.
       </PageHead>
 
-      <Shipped index="01" />
-
       <Feature
-        index="02"
+        index="01"
         eyebrow="Engines"
         tone="soft"
         title="Three engines. One workspace."
@@ -76,7 +73,7 @@ export function Raptor() {
       </Feature>
 
       <Feature
-        index="03"
+        index="02"
         eyebrow="Orchestration"
         title="Parallel workers. Durable checkpoints."
         flip
@@ -105,7 +102,7 @@ export function Raptor() {
       </Feature>
 
       <Feature
-        index="04"
+        index="03"
         eyebrow="Knowledge"
         title="Skills on demand. Memory that lasts."
         tone="soft"
@@ -134,7 +131,7 @@ export function Raptor() {
       </Feature>
 
       <Feature
-        index="05"
+        index="04"
         eyebrow="Workflow"
         title="Authorized repository security review."
         flip

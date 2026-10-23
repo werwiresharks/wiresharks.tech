@@ -1,4 +1,5 @@
 import { Reveal, Words } from "./Reveal";
+import { withRaptorReg } from "./RaptorWordmark";
 
 export function Faq({ items }: { items: [string, string][] }) {
   return (
@@ -20,7 +21,7 @@ export function Faq({ items }: { items: [string, string][] }) {
                   <span className="faq-index" aria-hidden="true">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="faq-q">{q}</span>
+                  <span className="faq-q">{withRaptorReg(q)}</span>
                   <span className="faq-icon" aria-hidden="true" />
                 </summary>
                 <p>{a}</p>
