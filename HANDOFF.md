@@ -82,7 +82,44 @@ failure it falls back to the offline review, then to the scripted
 and the Prove step rules them 2 verified / 2 dismissed / 1 open. The Dockerfile
 now also `COPY`s `agent/`, since the service runs the review pipeline.
 
-### Raptor review workflow — `agent/`  ← newest, read this carefully
+### Raptor orchestrator — `agent/` (orchestration layer)  ← newest
+The product vision (and the homepage swarm figure, `src/components/swarmLayout.ts`)
+is a **swarm**: split an objective into jobs for specialized workers, run them in
+parallel, and combine their findings into one report. This layer builds exactly
+that **on top of** the single-reviewer pipeline below — nothing below was removed.
+
+- `task.ts` — the unit of delegated work: a `Task` (capability + title) and a
+  `TaskRecord` with a status state machine (pending→running→completed/failed/
+  cancelled). A task is inert; delegation never widens authority.
+- `worker.ts` — the **pluggable worker seam**. `InvestigationWorker` (capability,
+  `applicableTo(map)`, `run(ctx)`); a `WorkerRegistry` with **capability
+  discovery** (`capabilities()`, `applicable(map)`). Every worker is read-only and
+  scope-bound *by construction*: its only filesystem door is `scopedReader(map)`,
+  which re-checks in-scope membership on every read — a permission enforced in
+  code, not a rule a model is asked to honor.
+- `scheduler.ts` — reusable execution harness: `runScheduled` runs jobs with
+  **bounded concurrency, per-job timeout, cooperative cancellation (AbortSignal),
+  and an activity log**. Generic (knows nothing about reviews); a stuck job can
+  never hang the run.
+- `workers.ts` — the first two specialized workers: `sourceVulnWorker(reviewer)`
+  (wraps any Reviewer over source files) and `dependencyWorker()` (inspects
+  `requirements*.txt` / `Pipfile` / `package.json` for unpinned/floating
+  dependencies, CWE-1104 — genuinely distinct, read-only, the figure's
+  "Dependency worker").
+- `orchestrator.ts` — **the central intelligence.** `runAssessment` maps the repo
+  once, discovers applicable workers, asks an `AssessmentStrategy` which to
+  dispatch (the **reasoning seam**: `allApplicableStrategy` / `keywordStrategy`
+  deterministic, or `modelStrategy` reusing the model `Transport` — model-agnostic),
+  delegates one task per worker to the scheduler (parallel engine agents under the
+  orchestrator), then **consolidates**: merge + dedupe findings (tagged with their
+  `source` worker), and rule on the merged set with the Prover. Writes nothing,
+  executes nothing, reaches nothing outside scope.
+- `report.ts` → `renderAssessment()` renders the consolidated report (a Workers
+  dispatch table + a Source column). CLI: `node agent/main.ts assess <path>
+  [--objective "<text>"] [--model] [shared flags]`; same read-only boundary and
+  the same high/critical CI gate as `review`.
+
+### Raptor review workflow — `agent/`  ← read this carefully
 The one piece of "Raptor" that is real: the **authorized repository security
 review** the product page calls Raptor's first end-to-end workflow
 (Scope → Map → Find → Report). It is **read-only**: it maps a repo you name,
@@ -172,7 +209,7 @@ exploit. The remaining breadth toward a fuller agent is more read-only tools
 npm ci
 npm run typecheck          # browser TS
 npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 144 tests across engine, server, agent
+npm test                   # 153 tests across engine, server, agent
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```
@@ -182,6 +219,20 @@ rule: when work is done and checks pass, rebase onto `origin/main` and push to
 `main`; never force-push.
 
 ## Suggested next steps
+
+0. **Milestone 1 — orchestration & multi-agent — DONE (2026-10-23).** The
+   orchestrator, worker seam + registry, bounded scheduler, two specialized
+   workers, and the `assess` CLI are built and tested (see the orchestrator
+   section above). The directive's next milestones, all behind seams now in
+   place: **persistent (cross-run) memory** — remember analyzed repos, track
+   unresolved findings, invalidate stale ones when source changes (the natural
+   next build; in-run notes already exist); **more workers** (auth-logic,
+   data-flow / trust-boundary, secrets-across-all-files, cloud-config) behind the
+   same `InvestigationWorker` seam; a **model-provider abstraction** generalizing
+   `Transport` for future local Talon-1 inference (still read-only; Talon-1
+   weights are NOT assumed present — constraint #1 stands); and wiring the
+   orchestrated assessment into the `/console` stream. All must keep the
+   read-only, scope-locked, no-exploit boundary until it is explicitly changed.
 
 1. **Prove step — DONE (2026-10-22).** First tier built: a deterministic,
    read-only `contextProver()` behind a `Prover` seam, wired through the

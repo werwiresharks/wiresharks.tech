@@ -10,7 +10,12 @@ import { contextProver } from "./prove.ts";
 import type { Prover } from "./prove.ts";
 import { modelProver, firstDecisiveProver } from "./modelProver.ts";
 import { runReview } from "./review.ts";
-import { renderReport } from "./report.ts";
+import { WorkerRegistry } from "./worker.ts";
+import { sourceVulnWorker, dependencyWorker } from "./workers.ts";
+import { runAssessment, keywordStrategy, modelStrategy } from "./orchestrator.ts";
+import type { AssessmentStrategy } from "./orchestrator.ts";
+import { renderReport, renderAssessment } from "./report.ts";
+import type { Finding } from "./findings.ts";
 
 /**
  * The Raptor review CLI. The authorization is the first argument: a repository
@@ -33,9 +38,17 @@ import { renderReport } from "./report.ts";
  * claude-opus-5-5). `--plan` makes Find planner-driven: a model chooses which
  * in-scope files to read and review instead of reviewing every file (read-only,
  * bounded, also needs ANTHROPIC_API_KEY).
+ *
+ *   node agent/main.ts assess <path> [--objective "<text>"] [shared flags]
+ *
+ * `assess` runs the orchestrator: it discovers which specialized workers apply
+ * to the repository, dispatches them in parallel, and consolidates their
+ * findings into one report. `--objective` shapes which workers run; with
+ * `--model` the orchestrator lets a model choose the plan. Same read-only
+ * boundary and the same CI gate as `review`.
  */
 const USAGE =
-  "Usage: node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--quiet] [--no-prove] [--model | --model=<id>] [--plan]";
+  "Usage: node agent/main.ts <review|assess> <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--objective <text>] [--quiet] [--no-prove] [--model | --model=<id>] [--plan]";
 
 interface Args {
   command: string;
@@ -43,6 +56,7 @@ interface Args {
   include: string[];
   exclude: string[];
   out?: string;
+  objective?: string;
   quiet: boolean;
   prove: boolean;
   model: boolean;
@@ -58,6 +72,7 @@ function parseArgs(args: readonly string[]): Args {
     if (arg === "--scope") parsed.include.push(...splitList(rest[++i]));
     else if (arg === "--exclude") parsed.exclude.push(...splitList(rest[++i]));
     else if (arg === "--out") parsed.out = rest[++i];
+    else if (arg === "--objective") parsed.objective = rest[++i];
     else if (arg === "--quiet") parsed.quiet = true;
     else if (arg === "--no-prove") parsed.prove = false;
     else if (arg === "--model") parsed.model = true;
@@ -85,7 +100,7 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  if (args.command !== "review") {
+  if (args.command !== "review" && args.command !== "assess") {
     console.error(USAGE);
     return 2;
   }
@@ -121,11 +136,6 @@ async function main(): Promise<number> {
     reviewer = compositeReviewer([patternReviewer(), modelReviewer({ transport: transport() })]);
   }
 
-  let planner: Planner | undefined;
-  if (args.plan) {
-    planner = modelPlanner({ transport: transport() });
-  }
-
   // With a model available, let it rule on the leads the deterministic prover
   // cannot (model-found findings have no built-in rule); the deterministic
   // verdict still wins when it exists.
@@ -136,28 +146,41 @@ async function main(): Promise<number> {
       : contextProver();
   }
 
-  const result = await runReview({
-    scope,
-    reviewer,
-    planner,
-    prover,
-    emit: args.quiet ? undefined : (e) => stdout.write(`· ${e.type}\n`),
-  });
+  const emit = args.quiet ? undefined : (e: { type: string }) => stdout.write(`· ${e.type}\n`);
 
-  const report = renderReport(result);
+  let findings: Finding[];
+  let report: string;
+  if (args.command === "assess") {
+    // Orchestrated: discover applicable workers, dispatch them in parallel, and
+    // consolidate. The source worker reuses the same reviewer the CLI built.
+    const registry = new WorkerRegistry()
+      .register(sourceVulnWorker(reviewer))
+      .register(dependencyWorker());
+    const strategy: AssessmentStrategy = args.model
+      ? modelStrategy({ transport: transport() })
+      : keywordStrategy();
+    const result = await runAssessment({ scope, registry, objective: args.objective, prover, strategy, emit });
+    findings = result.findings;
+    report = renderAssessment(result);
+  } else {
+    let planner: Planner | undefined;
+    if (args.plan) planner = modelPlanner({ transport: transport() });
+    const result = await runReview({ scope, reviewer, planner, prover, emit });
+    findings = result.findings;
+    report = renderReport(result);
+  }
+
   if (args.out) {
     await writeFile(args.out, report, "utf8");
-    console.error(`Wrote ${result.findings.length} finding(s) to ${args.out}`);
+    console.error(`Wrote ${findings.length} finding(s) to ${args.out}`);
   } else {
     stdout.write("\n" + report);
   }
 
   // A high/critical lead gates CI unless the Prove step dismissed it. Verified
   // and still-open leads both block; only a dismissed one is cleared.
-  const blocking = result.findings.some(
-    (f) =>
-      (f.severity === "high" || f.severity === "critical") &&
-      f.status !== "dismissed",
+  const blocking = findings.some(
+    (f) => (f.severity === "high" || f.severity === "critical") && f.status !== "dismissed",
   );
   return blocking ? 1 : 0;
 }

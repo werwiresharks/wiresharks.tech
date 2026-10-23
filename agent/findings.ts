@@ -25,6 +25,11 @@ export interface Finding {
    * the reviewer has only `open`ed; present once a prover has ruled on it.
    */
   rationale?: string;
+  /**
+   * The worker capability that raised this finding, set when a multi-worker
+   * assessment consolidates results. Absent for a single-reviewer run.
+   */
+  source?: string;
 }
 
 const RANK: Record<Severity, number> = {
