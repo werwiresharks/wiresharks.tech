@@ -4,20 +4,26 @@ import { globToRegExp } from "./scope.ts";
 import { sortFindings } from "./findings.ts";
 import type { Finding } from "./findings.ts";
 import type { Reviewer } from "./reviewer.ts";
+import type { Prover } from "./prove.ts";
 import type { Transport } from "./modelReviewer.ts";
 import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
 
 /**
- * The planning loop: a read-only agent loop for the Find step.
+ * The agent loop: a read-only, model-driven investigation for the Find step.
  *
  * The exhaustive Find reviews every in-scope file. A planner instead *decides*
- * what to look at next — list the repo, read an entry point, review the files
- * that look risky, then stop — which is the first piece of `agent/` that chooses
- * its own actions rather than running a fixed script. It stays strictly inside
- * the authorization boundary: every tool acts only on the Scope's already-mapped
- * file set, so a planner can never read or review a path outside it, however it
- * is asked. The loop is bounded by a step budget and only ever reads and
- * reviews; it has no tool that changes anything.
+ * what to look at next — list the repo, search for risky calls, read an entry
+ * point, review the files that look dangerous, verify the leads it raised, and
+ * record what it concluded — which is the piece of `agent/` that chooses its own
+ * actions rather than running a fixed script. It is a genuine agentic cycle:
+ * observe the state, reason into a working note, act, verify, and decide when it
+ * is done.
+ *
+ * It stays strictly inside the authorization boundary: every tool acts only on
+ * the Scope's already-mapped file set, so a planner can never read, review or
+ * prove a path outside it, however it is asked. The loop is bounded by a step
+ * budget and only ever reads, reviews and rules on what it reads; it has no tool
+ * that changes anything in the world.
  *
  * The `Planner` seam mirrors `Reviewer`/`Transport`: `modelPlanner` lets a model
  * drive the loop, and a scripted planner drives it deterministically in tests.
@@ -27,9 +33,11 @@ export type PlanAction =
   | { tool: "search"; pattern: string; glob?: string }
   | { tool: "read"; file: string }
   | { tool: "review"; file: string }
+  | { tool: "prove"; finding: string }
+  | { tool: "note"; text: string }
   | { tool: "finish"; reason?: string };
 
-export const PLAN_TOOLS = ["list", "search", "read", "review", "finish"] as const;
+export const PLAN_TOOLS = ["list", "search", "read", "review", "prove", "note", "finish"] as const;
 
 export interface PlanStep {
   action: PlanAction;
@@ -39,6 +47,15 @@ export interface PlanStep {
   ok: boolean;
 }
 
+/** A lead the agent can choose to verify, as the planner sees it. */
+export interface OpenLead {
+  id: string;
+  file: string;
+  line: number;
+  severity: string;
+  title: string;
+}
+
 /** What the planner sees before choosing its next action. */
 export interface PlanState {
   /** Every in-scope file (the Scope's mapped set). */
@@ -46,6 +63,10 @@ export interface PlanState {
   /** Files already reviewed this run. */
   reviewed: readonly string[];
   findingCount: number;
+  /** Leads raised but not yet ruled on — the agent can `prove` any of these. */
+  openLeads: readonly OpenLead[];
+  /** The agent's own running notes, oldest first. */
+  notes: readonly string[];
   history: readonly PlanStep[];
   stepsLeft: number;
 }
@@ -59,6 +80,8 @@ export interface PlanOptions {
   /** The in-scope file set; the loop never touches anything outside it. */
   map: RepoMap;
   reviewer: Reviewer;
+  /** When set, the `prove` tool is available so the agent can verify its leads. */
+  prover?: Prover;
   planner: Planner;
   /** The agent that owns the planner, for narration. */
   parentAgentId: string;
@@ -75,6 +98,8 @@ export interface PlanResult {
   steps: PlanStep[];
   reviewedFiles: string[];
   findings: Finding[];
+  /** The agent's working notes, in the order it wrote them. */
+  notes: string[];
 }
 
 const describe = (action: PlanAction): string => {
@@ -87,6 +112,10 @@ const describe = (action: PlanAction): string => {
       return `Read ${action.file}`;
     case "review":
       return `Review ${action.file}`;
+    case "prove":
+      return `Verify lead ${action.finding}`;
+    case "note":
+      return `Note: ${action.text.slice(0, 80)}`;
     case "finish":
       return `Finish${action.reason ? `: ${action.reason}` : ""}`;
   }
@@ -118,12 +147,15 @@ export async function runPlan(options: PlanOptions): Promise<PlanResult> {
   const history: PlanStep[] = [];
   const reviewed = new Set<string>();
   const findings: Finding[] = [];
+  const notes: string[] = [];
 
   for (let i = 0; i < maxSteps; i += 1) {
     const action = await planner.next({
       files: map.files,
       reviewed: [...reviewed],
       findingCount: findings.length,
+      openLeads: findings.filter((f) => f.status === "open" && f.rationale === undefined).map(toLead),
+      notes,
       history,
       stepsLeft: maxSteps - i,
     });
@@ -138,8 +170,10 @@ export async function runPlan(options: PlanOptions): Promise<PlanResult> {
       map,
       inScope,
       reviewer,
+      prover: options.prover,
       reviewed,
       findings,
+      notes,
       maxReadBytes,
     });
     history.push(step);
@@ -156,15 +190,26 @@ export async function runPlan(options: PlanOptions): Promise<PlanResult> {
     steps: history,
     reviewedFiles: [...reviewed],
     findings: sortFindings(findings),
+    notes,
   };
 }
+
+const toLead = (f: Finding): OpenLead => ({
+  id: f.id,
+  file: f.file,
+  line: f.line,
+  severity: f.severity,
+  title: f.title,
+});
 
 interface ExecDeps {
   map: RepoMap;
   inScope: Set<string>;
   reviewer: Reviewer;
+  prover?: Prover;
   reviewed: Set<string>;
   findings: Finding[];
+  notes: string[];
   maxReadBytes: number;
 }
 
@@ -224,6 +269,30 @@ async function execute(action: PlanAction, deps: ExecDeps): Promise<PlanStep> {
         : "no findings";
       return { action, ok: true, result: `reviewed ${action.file}: ${found.length} finding(s)${found.length ? ` — ${summary}` : ""}` };
     }
+    case "prove": {
+      if (!deps.prover)
+        return { action, ok: false, result: "no prover is available in this run" };
+      const finding = deps.findings.find(
+        (f) => f.id === action.finding || `${f.file}:${f.line}` === action.finding,
+      );
+      if (!finding)
+        return { action, ok: false, result: `no open lead matches ${action.finding}` };
+      if (finding.rationale !== undefined)
+        return { action, ok: false, result: `${finding.id} was already ruled ${finding.status}` };
+      // Prove reads only the in-scope file the lead cites — same boundary as Find.
+      const text = await readMapped(deps.map, finding.file).catch(() => null);
+      if (text === null) return { action, ok: false, result: `could not read ${finding.file}` };
+      const proof = await deps.prover.prove({ finding, relPath: finding.file, content: text });
+      finding.status = proof.status;
+      finding.rationale = proof.rationale;
+      return { action, ok: true, result: `${finding.id} → ${proof.status}: ${proof.rationale}` };
+    }
+    case "note": {
+      const text = action.text.trim();
+      if (!text) return { action, ok: false, result: "an empty note was ignored" };
+      deps.notes.push(text);
+      return { action, ok: true, result: `noted (${deps.notes.length} total)` };
+    }
     case "finish":
       return { action, ok: true, result: action.reason ?? "done" };
   }
@@ -241,21 +310,27 @@ export function scriptedPlanner(actions: readonly PlanAction[], name = "scripted
 }
 
 const SYSTEM_PROMPT = [
-  "You are the planner for an authorized, read-only security review of a",
-  "repository the operator controls. You choose one action at a time to find the",
-  "files most worth reviewing, then finish. You can only read and review files;",
-  "you cannot change anything, and you can only act on in-scope files.",
+  "You are Raptor, running an authorized, read-only security review of a",
+  "repository the operator controls. You investigate on your own: choose one",
+  "action at a time, build up an understanding, verify the leads you raise, and",
+  "finish when you have. You can only read, review and rule on in-scope files;",
+  "you cannot change anything, run anything, or reach outside the repository.",
   "",
   "Tools (respond with exactly one, as a single JSON object, no prose):",
   '  {"tool":"list","glob":"<optional glob>"}            — list in-scope files',
   '  {"tool":"search","pattern":"<regex>","glob":"..."}  — grep in-scope files',
   '  {"tool":"read","file":"<path>"}                     — read a file to understand it',
   '  {"tool":"review","file":"<path>"}                   — run the detector on a file',
+  '  {"tool":"prove","finding":"<lead id>"}              — verify one open lead',
+  '  {"tool":"note","text":"<a sentence>"}               — record a conclusion for later',
   '  {"tool":"finish","reason":"<why>"}                  — stop',
   "",
-  "Prioritize files that handle input, auth, crypto, serialization, subprocess or",
-  "network calls. Review the files that matter; do not review every file. Finish",
-  "once the risky files are reviewed or the step budget is low.",
+  "Work like an analyst: search and read to find where input, auth, crypto,",
+  "serialization, subprocess or network handling lives; review the files that",
+  "matter (not every file); then PROVE the leads you raised so each is confirmed",
+  "or dismissed rather than left for a human. Use note to record what you have",
+  "concluded so you do not repeat work. Finish once the risky files are reviewed",
+  "and their leads are ruled on, or the step budget is low.",
 ].join("\n");
 
 /** Pull the first balanced JSON object out of a reply, tolerant of fences. */
@@ -282,16 +357,25 @@ function toAction(raw: unknown): PlanAction | null {
     return { tool: "search", pattern: item.pattern, glob: typeof item.glob === "string" ? item.glob : undefined };
   if ((tool === "read" || tool === "review") && typeof item.file === "string")
     return { tool, file: item.file };
+  if (tool === "prove" && typeof item.finding === "string")
+    return { tool: "prove", finding: item.finding };
+  if (tool === "note" && typeof item.text === "string")
+    return { tool: "note", text: item.text };
   return null;
 }
 
 /** Render the current state compactly for the model. */
 function statePrompt(state: PlanState): string {
   const recent = state.history.slice(-6).map((s) => `- ${describe(s.action)} → ${s.result.slice(0, 300)}`);
+  const leads = state.openLeads
+    .slice(0, 20)
+    .map((l) => `- ${l.id} (${l.severity} — ${l.title})`);
   return [
     `In-scope files (${state.files.length}): ${state.files.slice(0, 200).join(", ")}`,
     `Reviewed so far (${state.reviewed.length}): ${state.reviewed.join(", ") || "none"}`,
     `Findings so far: ${state.findingCount}. Steps left: ${state.stepsLeft}.`,
+    leads.length ? `Open leads to prove:\n${leads.join("\n")}` : "No open leads yet.",
+    state.notes.length ? `Your notes:\n${state.notes.map((n) => `- ${n}`).join("\n")}` : "No notes yet.",
     recent.length ? `Recent actions:\n${recent.join("\n")}` : "No actions yet.",
     "Choose the next action as one JSON object.",
   ].join("\n\n");

@@ -71,6 +71,15 @@ export function renderReport(result: ReviewResult): string {
     lines.push("");
   }
 
+  // When the agentic loop drove the review, show the notes it reasoned into as
+  // it worked — a record of how it reached the findings above, in its own words.
+  if (result.notes.length > 0) {
+    lines.push("## Agent notes");
+    lines.push("");
+    for (const note of result.notes) lines.push(`- ${note}`);
+    lines.push("");
+  }
+
   lines.push(
     result.prover
       ? "Verified findings have corroborating evidence; open findings are leads to check. Nothing here authorizes action — read the cited line first."

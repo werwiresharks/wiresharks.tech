@@ -108,18 +108,27 @@ patch, deploy, exploit, or reach outside the authorized path.
   runs the offline pattern pass and the model pass together, deduping by
   (line, defect). Model findings have no deterministic prover rule, so Prove
   leaves them `open` — honest: the model reasoned, a human still checks.
-- `plan.ts` — **the planning loop** (the first step toward a real agent, now
-  built). A read-only agent loop for Find: a `Planner` chooses one action at a
-  time — `list` / `search` / `read` / `review` / `finish` — instead of reviewing
-  every file. (`search` greps the in-scope set; an invalid regex is matched
-  literally; bounded to 50 hits.) Strictly bounded: every tool acts only on the
-  Scope's already-mapped
-  file set, so a planner **cannot read or review a path outside scope** however
-  it is asked (proven in `plan.test.ts`), there is no tool that changes anything,
-  and a step budget caps the loop. `modelPlanner` (reusing the model `Transport`)
-  lets a model drive it; `scriptedPlanner` drives it deterministically in tests.
-  `runReview({ planner })` swaps the exhaustive Find for the loop; the report
-  then shows "Files reviewed: N of M in scope".
+- `plan.ts` — **the agentic loop** (a real model-driven investigation, now the
+  core of "Raptor as an agent"). A read-only loop where a `Planner` chooses one
+  action at a time from a six-tool set — `list` / `search` / `read` / `review` /
+  `prove` / `note` / `finish` — instead of running a fixed script. It is the full
+  investigative cycle: observe the state, reason into a working **note**, act
+  (search/read/review), **verify** the leads it raised with `prove`, and finish.
+  (`search` greps the in-scope set; an invalid regex is matched literally;
+  bounded to 50 hits.) Strictly bounded: every tool — `prove` included — acts
+  only on the Scope's already-mapped file set, so the agent **cannot read,
+  review or prove a path outside scope** however it is asked (proven in
+  `plan.test.ts`); there is no tool that changes anything; a step budget caps the
+  loop. The agent carries **working memory**: its notes and still-open leads are
+  fed back into state each turn (so it does not repeat work and can reference a
+  lead by id to prove it). `prove` is available only when a `Prover` is supplied,
+  and a lead is never proved twice. `modelPlanner` (reusing the model
+  `Transport`) lets a model drive it; `scriptedPlanner` drives it
+  deterministically in tests. `runReview({ planner, prover })` swaps the
+  exhaustive Find for the loop and hands it the prover, so leads are verified
+  in-loop; the report then shows "Files reviewed: N of M in scope", a
+  `## Verification` section, and an `## Agent notes` section of what the agent
+  concluded in its own words.
 - `review.ts` — orchestrator; narrates progress in the engine's own event
   vocabulary, so a review can drive `/console`. Find is exhaustive by default,
   or planner-driven when a `planner` is supplied.
@@ -146,14 +155,16 @@ patch, deploy, exploit, or reach outside the authorized path.
   `npm run review -- <path> [--scope ...] [--out report.md] [--no-prove] [--model] [--plan]`.
 
 **Be honest about what `agent/` still is NOT:** `--plan` gives it a real
-model-driven loop that chooses what to read and review — genuine tool use over a
-read-only tool set, bounded and scope-locked. But the tools are only
-list/read/review; there is still no memory across runs, no tool that acts on the
-world, and Prove/Report remain a fixed tail after the loop. It reviews and
-reports; it does not patch, deploy, or exploit. The remaining breadth toward a
-fuller agent is more read-only tools (follow imports, inspect VCS history) and
-cross-run memory; the Prove seam now has a model backing (`modelProver`), so the
-loop's model-found findings get verified too.
+model-driven loop that chooses what to read, review and verify — genuine tool
+use over a read-only tool set, bounded and scope-locked, with working memory
+*within a run* (notes + open leads carried turn to turn) and in-loop proving, so
+the loop decides when a lead is confirmed rather than deferring all of it to a
+fixed tail. The deterministic Prove tail still runs after the loop, but now only
+to rule on leads the agent left unproven. What it is still NOT: there is no
+memory **across** runs, no tool that acts on the world, and Report is still a
+fixed final step. It reviews, verifies and reports; it does not patch, deploy, or
+exploit. The remaining breadth toward a fuller agent is more read-only tools
+(follow imports, inspect VCS history) and cross-run memory.
 
 ## How to verify (the CI-equivalent, all currently pass)
 
@@ -161,7 +172,7 @@ loop's model-found findings get verified too.
 npm ci
 npm run typecheck          # browser TS
 npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 141 tests across engine, server, agent
+npm test                   # 144 tests across engine, server, agent
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```

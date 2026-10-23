@@ -49,6 +49,8 @@ export interface ReviewResult {
   /** Files actually reviewed. Equals fileCount for the exhaustive pass. */
   reviewedCount: number;
   findings: Finding[];
+  /** Conclusions the agentic loop recorded as it worked; empty otherwise. */
+  notes: string[];
 }
 
 const PRIMARY = "raptor";
@@ -71,17 +73,21 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
   // Find: either a planner chooses what to review (bounded, read-only), or a
   // worker reviews every in-scope file.
   const findings: Finding[] = [];
+  const notes: string[] = [];
   let reviewedCount: number;
   if (options.planner) {
     const plan = await runPlan({
       map,
       reviewer,
+      // Give the agent the prover so it can verify its own leads in the loop.
+      prover: options.prover,
       planner: options.planner,
       parentAgentId: PRIMARY,
       emit,
       maxSteps: options.maxPlanSteps,
     });
     findings.push(...plan.findings);
+    notes.push(...plan.notes);
     reviewedCount = plan.reviewedFiles.length;
   } else {
     emit({ type: "agent.spawned", agentId: WORKER, parentId: PRIMARY, label: "Find" });
@@ -130,6 +136,11 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
 
     proven = [];
     for (const finding of findings) {
+      // The agentic loop may already have ruled on this lead; don't re-prove it.
+      if (finding.rationale !== undefined) {
+        proven.push(finding);
+        continue;
+      }
       let content: string;
       try {
         content = await readMapped(map, finding.file);
@@ -178,5 +189,6 @@ export async function runReview(options: ReviewOptions): Promise<ReviewResult> {
     fileCount: map.files.length,
     reviewedCount,
     findings: sortFindings(proven),
+    notes,
   };
 }

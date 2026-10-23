@@ -8,6 +8,7 @@ import { mapRepo } from "./map.ts";
 import { patternReviewer } from "./reviewer.ts";
 import { runPlan, scriptedPlanner, modelPlanner } from "./plan.ts";
 import type { PlanAction } from "./plan.ts";
+import { contextProver } from "./prove.ts";
 import type { Transport } from "./modelReviewer.ts";
 import { createModel, reduce } from "../src/raptor/engine/model.ts";
 import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
@@ -162,6 +163,116 @@ test("reviewing the same file twice is refused, and the step budget is enforced"
   }
 });
 
+test("the agent reviews, notes, and proves a lead within the loop", async () => {
+  const { dir, map } = await fixtureMap();
+  try {
+    const result = await runPlan({
+      map,
+      reviewer: patternReviewer(),
+      prover: contextProver(),
+      planner: scriptedPlanner([
+        { tool: "review", file: "ingest.py" },
+        { tool: "note", text: "pickle.loads takes the request body directly" },
+        { tool: "prove", finding: "py-pickle-loads:ingest.py:1" },
+        { tool: "finish", reason: "lead verified" },
+      ]),
+      parentAgentId: "raptor",
+    });
+
+    // The agent verified its own lead in the loop, not a downstream Prove step.
+    assert.equal(result.findings.length, 1);
+    assert.equal(result.findings[0].status, "verified");
+    assert.ok(result.findings[0].rationale, "the proof left a rationale on the finding");
+    assert.deepEqual(result.notes, ["pickle.loads takes the request body directly"]);
+
+    const proveStep = result.steps.find((s) => s.action.tool === "prove");
+    assert.ok(proveStep?.ok, "the prove step succeeded");
+    assert.match(proveStep!.result, /verified/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("prove is refused without a prover, on an unknown lead, and when re-run", async () => {
+  const { dir, map } = await fixtureMap();
+  try {
+    // No prover configured: prove is unavailable.
+    const noProver = await runPlan({
+      map,
+      reviewer: patternReviewer(),
+      planner: scriptedPlanner([
+        { tool: "review", file: "ingest.py" },
+        { tool: "prove", finding: "py-pickle-loads:ingest.py:1" },
+        { tool: "finish" },
+      ]),
+      parentAgentId: "raptor",
+    });
+    assert.equal(noProver.steps[1].ok, false);
+    assert.match(noProver.steps[1].result, /no prover/);
+    assert.equal(noProver.findings[0].status, "open", "the lead stays open with no prover");
+
+    // With a prover: an unknown lead id is refused, and a lead can't be re-proved.
+    const withProver = await runPlan({
+      map,
+      reviewer: patternReviewer(),
+      prover: contextProver(),
+      planner: scriptedPlanner([
+        { tool: "prove", finding: "nope:does-not-exist:9" },
+        { tool: "review", file: "ingest.py" },
+        { tool: "prove", finding: "py-pickle-loads:ingest.py:1" },
+        { tool: "prove", finding: "py-pickle-loads:ingest.py:1" },
+        { tool: "finish" },
+      ]),
+      parentAgentId: "raptor",
+    });
+    assert.equal(withProver.steps[0].ok, false, "unknown lead refused");
+    assert.match(withProver.steps[0].result, /no open lead/);
+    assert.equal(withProver.steps[2].ok, true, "the real lead proves");
+    assert.equal(withProver.steps[3].ok, false, "a ruled lead is not re-proved");
+    assert.match(withProver.steps[3].result, /already ruled/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("the model agent sees its open leads and notes, and can reference a lead id", async () => {
+  const { dir, map } = await fixtureMap();
+  try {
+    // The transport records what state it was shown, and drives a prove by id.
+    const prompts: string[] = [];
+    const script = [
+      '{"tool":"review","file":"ingest.py"}',
+      '{"tool":"note","text":"deserializes the body"}',
+      '{"tool":"prove","finding":"py-pickle-loads:ingest.py:1"}',
+      '{"tool":"finish"}',
+    ];
+    let i = 0;
+    const transport: Transport = {
+      model: "fake",
+      async complete({ user }) {
+        prompts.push(user);
+        return script[Math.min(i++, script.length - 1)];
+      },
+    };
+    const result = await runPlan({
+      map,
+      reviewer: patternReviewer(),
+      prover: contextProver(),
+      planner: modelPlanner({ transport }),
+      parentAgentId: "raptor",
+    });
+
+    assert.equal(result.findings[0].status, "verified");
+    assert.deepEqual(result.notes, ["deserializes the body"]);
+    // By the prove turn, the state shown the model listed the open lead and note.
+    const proveTurn = prompts[2];
+    assert.match(proveTurn, /py-pickle-loads:ingest\.py:1/, "the open lead was offered to the model");
+    assert.match(proveTurn, /deserializes the body/, "the note was carried back into state");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("modelPlanner parses a JSON action and finishes on a bad reply", async () => {
   const replies = [
     'Let me review that file: {"tool":"review","file":"ingest.py"}',
@@ -175,7 +286,7 @@ test("modelPlanner parses a JSON action and finishes on a bad reply", async () =
     },
   };
   const planner = modelPlanner({ transport });
-  const state = { files: ["ingest.py"], reviewed: [], findingCount: 0, history: [], stepsLeft: 5 };
+  const state = { files: ["ingest.py"], reviewed: [], findingCount: 0, openLeads: [], notes: [], history: [], stepsLeft: 5 };
 
   const first = await planner.next(state);
   assert.deepEqual(first, { tool: "review", file: "ingest.py" } satisfies PlanAction);
