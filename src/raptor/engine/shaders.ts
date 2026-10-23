@@ -20,8 +20,10 @@ uniform vec4 uCutChord[${MAX_CUTS}]; // ax, ay, bx, by: viewport pixels, y down
 uniform vec4 uCutMark[${MAX_CUTS}]; // bow px, half width px, reach 0..1, strike kick
 attribute vec3 aColor;
 attribute vec4 aParams; // alpha, size, activity, seed
+attribute vec4 aClip;
 varying vec3 vColor;
 varying float vAlpha;
+varying vec4 vClip;
 
 const float PI = 3.14159265;
 
@@ -75,6 +77,7 @@ vec2 partForCuts(vec2 px) {
 }
 
 void main() {
+  vClip = aClip * uPixelRatio;
   float seed = aParams.w;
   float activity = aParams.z;
   vec3 p = position;
@@ -113,7 +116,9 @@ void main() {
 export const particleFragment = /* glsl */ `
 varying vec3 vColor;
 varying float vAlpha;
+varying vec4 vClip;
 void main() {
+  if (vClip.z > vClip.x && (gl_FragCoord.x < vClip.x || gl_FragCoord.x > vClip.z || gl_FragCoord.y < vClip.y || gl_FragCoord.y > vClip.w)) discard;
   vec2 c = gl_PointCoord - 0.5;
   float r = length(c);
   float a = smoothstep(0.5, 0.32, r) * vAlpha;

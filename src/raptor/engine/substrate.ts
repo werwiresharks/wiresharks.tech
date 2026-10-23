@@ -21,7 +21,13 @@ import type { Surface, ToneStyle } from "./palette.ts";
  */
 
 /** A globe's place in the stage, in CSS pixels. */
-export type Frame = { x: number; y: number; radius: number };
+export type Frame = {
+  x: number;
+  y: number;
+  radius: number;
+  /** Resident particles stay inside this viewport; flights can cross it. */
+  clip?: { left: number; top: number; right: number; bottom: number };
+};
 
 export type AnchorSet = {
   /** The root agent: the hero when the conversation is empty, the composer dock after. */
@@ -46,6 +52,7 @@ export type ParticleBuffers = {
   readonly position: Float32Array;
   readonly color: Float32Array;
   readonly params: Float32Array;
+  readonly clip: Float32Array;
 };
 
 export type BodyPhase = "resident" | "returning";
@@ -120,7 +127,6 @@ type Flight = {
 
 const SHELL_SPEED = [0.11, -0.08, 0.15];
 const ROOT_SPRING = 4.6;
-const SPRING = 9;
 /** Visible particles per square pixel of radius: a globe's density, as on the site. */
 const DENSITY = 0.9;
 const STILL_HOLD = 1.6;
@@ -594,23 +600,22 @@ export class Substrate {
   }
 
   private advanceBody(body: Body, dt: number) {
-    // A returning body holds its place until its last particle has left.
-    const target = body.phase === "returning" ? body.frame : this.targetFrame(body);
-    const goal = body.phase === "returning" ? null : (target ?? (body.parentId !== null ? this.bodyFrame(body.parentId) : null));
+    const target = this.targetFrame(body);
     const shown = target ? 1 : 0;
-    body.presence = this.still || !body.placed ? shown : body.presence + (shown - body.presence) * (1 - Math.exp(-6 * dt));
-    if (goal) {
-      if (!body.placed || this.still) {
-        if (target || !body.placed) Object.assign(body.frame, goal);
+    body.presence = !body.root || this.still || !body.placed ? shown : body.presence + (shown - body.presence) * (1 - Math.exp(-6 * dt));
+    if (target) {
+      body.frame.clip = target.clip;
+      if (!body.root || !body.placed || this.still) {
+        Object.assign(body.frame, target);
         body.velocity.x = body.velocity.y = body.velocity.radius = 0;
-        body.placed = !!target || body.placed;
+        body.placed = true;
       } else {
-        const omega = body.root ? ROOT_SPRING : SPRING;
+        const omega = ROOT_SPRING;
         const decay = Math.exp(-omega * dt);
         for (const axis of ["x", "y", "radius"] as const) {
-          const e = body.frame[axis] - goal[axis];
+          const e = body.frame[axis] - target[axis];
           const b = body.velocity[axis] + omega * e;
-          body.frame[axis] = goal[axis] + (e + b * dt) * decay;
+          body.frame[axis] = target[axis] + (e + b * dt) * decay;
           body.velocity[axis] = (body.velocity[axis] - omega * b * dt) * decay;
         }
       }
@@ -645,11 +650,6 @@ export class Substrate {
       body.accent[a] += (style.accent[a] - body.accent[a]) * k;
     }
     body.alpha += (style.alpha - body.alpha) * k;
-  }
-
-  private bodyFrame(id: string): Frame | null {
-    const slot = this.slots.get(id);
-    return slot === undefined ? null : this.bodies[slot]!.frame;
   }
 
   private releaseEmptyBodies() {
@@ -738,7 +738,8 @@ export class Substrate {
       const lean = body.root ? moving : 0;
       this.setTilt(body, tiltX * lean + small * moving * 0.45 * Math.sin(time * 0.29), tiltY * lean + small * moving * 0.36 * Math.sin(time * 0.21 + 1));
     }
-    const { position, color, params } = out;
+    const { position, color, params, clip } = out;
+    clip.fill(0);
     const seed = this.lattice.seed;
     const sample = this.sample;
     for (let i = 0; i < this.capacity; i++) {
@@ -759,6 +760,13 @@ export class Substrate {
           continue;
         }
         this.place(body, i, t, unit, width, height, sample, 0);
+        const bounds = body.frame.clip;
+        if (bounds) {
+          clip[i4] = bounds.left;
+          clip[i4 + 1] = height - bounds.bottom;
+          clip[i4 + 2] = bounds.right;
+          clip[i4 + 3] = height - bounds.top;
+        }
         position[i3] = sample[0];
         position[i3 + 1] = sample[1];
         position[i3 + 2] = sample[2];

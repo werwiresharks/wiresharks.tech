@@ -220,3 +220,65 @@ test("a reset followed by a new root conserves the particle population", () => {
   assert.deepEqual(snap.bodies.map((b) => b.agentId), ["root-2"]);
   assert.equal(snap.bodies[0].resident, CAPACITY);
 });
+
+
+test("row residents follow layout on the next frame and clipped rows disappear without a trail", () => {
+  const s = scene();
+  s.send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  for (const event of spawn("a")) s.send(event);
+  s.step(4);
+  const before = s.write();
+  const child = s.substrate.owner.findIndex(slot => slot === 1);
+  const root = s.substrate.owner.findIndex(slot => slot === 0);
+  assert.ok(child >= 0 && root >= 0);
+  s.substrate.setAnchors({
+    primary: { x: 300, y: 300, radius: 90 },
+    agents: { a: { x: 160, y: 280, radius: 18 } },
+  });
+  const moved = s.write();
+  assert.ok(Math.abs(moved[child * 3] - before[child * 3] - 40 * 4 / 600) < 1e-6, "row x follows immediately");
+  assert.ok(Math.abs(moved[child * 3 + 1] - before[child * 3 + 1] - 200 * 4 / 600) < 1e-6, "row y follows immediately");
+  assert.equal(moved[root * 3], before[root * 3], "the root keeps its docking spring");
+  assert.equal(moved[root * 3 + 1], before[root * 3 + 1]);
+  s.substrate.setAnchors({ primary: ANCHORS.primary, agents: { a: null } });
+  s.write();
+  assert.ok(s.field.params.some((alpha, i) => i % 4 === 0 && alpha > 0), "the root remains visible");
+  for (let i = 0; i < CAPACITY; i++) {
+    if (s.substrate.owner[i] === 1 && s.substrate.flightOf[i] < 0) assert.equal(s.field.params[i * 4], 0, "hidden row residents never fade over the composer");
+  }
+  s.substrate.setAnchors(ANCHORS);
+  const returned = s.write();
+  assert.equal(returned[child * 3], before[child * 3], "scrolling back restores the row immediately");
+  assert.equal(returned[child * 3 + 1], before[child * 3 + 1]);
+  s.send({ type: "transfer", transferId: "steer-visible", kind: "steer", fromAgentId: "root", toAgentId: "a", disposition: "delivered" });
+  assert.ok(s.substrate.snapshot().inFlight > 0, "layout following preserves particle flights");
+});
+
+test("returning rows follow their clipped slots while flights cross the viewport freely", () => {
+  const s = scene();
+  s.send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  for (const event of spawn("a")) s.send(event);
+  s.step(4);
+  const clip = { left: 20, top: 120, right: 360, bottom: 510 };
+  s.substrate.setAnchors({ primary: ANCHORS.primary, agents: { a: { x: 120, y: 130, radius: 18, clip } } });
+  const before = s.write();
+  let residents = 0;
+  for (let i = 0; i < CAPACITY; i++) {
+    if (s.substrate.owner[i] !== 1 || s.field.params[i * 4] <= 0) continue;
+    residents++;
+    assert.deepEqual([...s.field.clip.subarray(i * 4, i * 4 + 4)], [20, 90, 360, 480], "the renderer receives the viewport in bottom-origin pixels");
+  }
+  assert.ok(residents > 0, "the visible part of a top row keeps its particles");
+  s.send({ type: "agent.reintegrated", agentId: "a" });
+  s.substrate.setAnchors({ primary: ANCHORS.primary, agents: { a: { x: 160, y: 200, radius: 18, clip } } });
+  s.write();
+  let flights = 0;
+  for (let i = 0; i < CAPACITY; i++) {
+    if (s.substrate.flightOf[i] < 0) continue;
+    flights++;
+    assert.deepEqual([...s.field.clip.subarray(i * 4, i * 4 + 4)], [0, 0, 0, 0], "return flights retain no resident clip");
+    assert.ok(Math.abs(s.field.position[i * 3] - before[i * 3] - 40 * 4 / 600) < 1e-6, "a returning row follows horizontal layout before departure");
+    assert.ok(Math.abs(s.field.position[i * 3 + 1] - before[i * 3 + 1] + 70 * 4 / 600) < 1e-6, "a returning row follows vertical layout before departure");
+  }
+  assert.ok(flights > 0);
+});

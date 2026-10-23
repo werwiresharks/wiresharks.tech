@@ -87,6 +87,7 @@ export class ParticleField {
   readonly position: Float32Array;
   readonly color: Float32Array;
   readonly params: Float32Array;
+  readonly clip: Float32Array;
   private velocity: Float32Array;
   private dir: Float32Array;
   private shell: Uint8Array;
@@ -116,6 +117,7 @@ export class ParticleField {
     this.color = new Float32Array(capacity * 3);
     this.colorState = new Float32Array(capacity * 3);
     this.params = new Float32Array(capacity * 4);
+    this.clip = new Float32Array(capacity * 4);
     this.dir = new Float32Array(capacity * 3);
     this.shell = new Uint8Array(capacity);
     this.radial = new Float32Array(capacity);

@@ -69,6 +69,7 @@ export class RaptorRenderer implements RaptorView {
   private positionAttr: THREE.BufferAttribute;
   private colorAttr: THREE.BufferAttribute;
   private paramsAttr: THREE.BufferAttribute;
+  private clipAttr: THREE.BufferAttribute;
   private particleMaterial: THREE.ShaderMaterial;
   private ring: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
   private checkpoint: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
@@ -144,9 +145,11 @@ export class RaptorRenderer implements RaptorView {
     this.positionAttr = new THREE.BufferAttribute(this.field.position, 3).setUsage(THREE.DynamicDrawUsage);
     this.colorAttr = new THREE.BufferAttribute(this.field.color, 3).setUsage(THREE.DynamicDrawUsage);
     this.paramsAttr = new THREE.BufferAttribute(this.field.params, 4).setUsage(THREE.DynamicDrawUsage);
+    this.clipAttr = new THREE.BufferAttribute(this.field.clip, 4).setUsage(THREE.DynamicDrawUsage);
     this.geometry.setAttribute("position", this.positionAttr);
     this.geometry.setAttribute("aColor", this.colorAttr);
     this.geometry.setAttribute("aParams", this.paramsAttr);
+    this.geometry.setAttribute("aClip", this.clipAttr);
     this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 6);
     this.particleMaterial = new THREE.ShaderMaterial({
       vertexShader: particleVertex,
@@ -619,6 +622,7 @@ export class RaptorRenderer implements RaptorView {
     this.tiltX += (tiltX - this.tiltX) * response;
     this.tiltY += (tiltY - this.tiltY) * response;
     substrate.write(this.field, this.width, this.height, this.worldHeight(), this.tiltX, this.tiltY);
+    this.clipAttr.needsUpdate = true;
     this.geometry.setDrawRange(0, this.field.active);
     this.positionAttr.needsUpdate = true;
     this.colorAttr.needsUpdate = true;
