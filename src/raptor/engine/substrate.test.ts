@@ -1,3 +1,4 @@
+import "./activity-continuity.test.ts";
 import "./substrate-lifecycle.test.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";

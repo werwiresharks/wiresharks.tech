@@ -195,8 +195,10 @@ export function writePose(
     case 4: {
       const { n, u, v } = RIBBON;
       const along = dx * n[0] + dy * n[1] + dz * n[2];
-      const member = shell !== 0 || (fract(seed * 5.31) < 0.46 && Math.abs(along) < 0.82);
-      if (!member) {
+      // Fade before the projection's poles, where ribbon azimuth is undefined.
+      const weight = shell === 0 ? ease((0.82 - Math.abs(along)) / 0.22) : 1;
+      const member = shell !== 0 || fract(seed * 5.31) < 0.46;
+      if (!member || weight === 0) {
         alpha = 0.72;
         break;
       }
@@ -212,12 +214,16 @@ export function writePose(
       y = Math.cos(a) * r * u[1] + Math.sin(a) * r * v[1] + off * n[1];
       z = Math.cos(a) * r * u[2] + Math.sin(a) * r * v[2] + off * n[2];
       if (shell === 0) {
+        x = dx * radial * (1 - weight) + x * weight;
+        y = dy * radial * (1 - weight) + y * weight;
+        z = dz * radial * (1 - weight) + z * weight;
         const l = radial / Math.hypot(x, y, z);
         x *= l;
         y *= l;
         z *= l;
+        alpha = 0.72 + 0.28 * weight;
       }
-      energy = 0.4 + 0.6 * Math.pow(0.5 + 0.5 * Math.sin(2 * a - t * 2.4), 6);
+      energy = weight * (0.4 + 0.6 * Math.pow(0.5 + 0.5 * Math.sin(2 * a - t * 2.4), 6));
       break;
     }
     case 5: {
