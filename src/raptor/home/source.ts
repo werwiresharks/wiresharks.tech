@@ -10,6 +10,10 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   let quietEnd = Infinity;
   let pending = 0;
   let disposed = false;
+  // The journey canvas is sized to the large viewport (100lvh), which stays put while a phone's toolbar slides in and
+  // out mid-scroll. Planning against it keeps every stop where it was instead of re-planning under the reader.
+  const viewportHeight = () => root.querySelector<HTMLElement>(".home-journey")?.clientHeight || window.innerHeight;
+  let viewport = { width: window.innerWidth, height: viewportHeight() };
   // Reveal translates its contents. Layout coordinates remain stable throughout its entrance.
   const revealOffset = (node: Element) => {
     let offset = 0;
@@ -65,7 +69,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     return above >= 30 ? { x: width / 2, y: (area.top + column.top) / 2, radius: above } : null;
   };
   const measure = () => {
-    const height = window.innerHeight;
+    const height = viewport.height;
     const mobile = window.innerWidth < 768;
     const hero = root.querySelector<HTMLElement>(".hero");
     if (!hero) return;
@@ -257,8 +261,13 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   const mutations = new MutationObserver(invalidate);
   root.querySelectorAll(".reveal").forEach((node) => mutations.observe(node, { attributes: true, attributeFilter: ["class"] }));
   window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", invalidate);
-  window.visualViewport?.addEventListener("resize", invalidate);
+  const onResize = () => {
+    const next = { width: window.innerWidth, height: viewportHeight() };
+    if (next.width === viewport.width && next.height === viewport.height) return;
+    viewport = next;
+    invalidate();
+  };
+  window.addEventListener("resize", onResize);
   // Pseudo-element transitions (the panel glow) never move layout.
   const onTransitionEnd = (e: TransitionEvent) => { if (!e.pseudoElement) invalidate(); };
   root.addEventListener("transitionend", onTransitionEnd);
@@ -277,8 +286,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       resize.disconnect();
       mutations.disconnect();
       window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", invalidate);
-      window.visualViewport?.removeEventListener("resize", invalidate);
+      window.removeEventListener("resize", onResize);
       root.removeEventListener("transitionend", onTransitionEnd);
       document.fonts.removeEventListener("loadingdone", invalidate);
     },

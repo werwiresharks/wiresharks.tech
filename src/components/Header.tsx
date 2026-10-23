@@ -18,26 +18,56 @@ export function Header() {
 
   useEffect(() => {
     let frame = 0;
+    let max = 0;
     const update = () => {
       frame = 0;
-      const root = document.documentElement;
-      const max = root.scrollHeight - window.innerHeight;
       header.current?.style.setProperty("--p", String(max > 0 ? Math.min(1, window.scrollY / max) : 0));
       setScrolled(window.scrollY > 24);
-      // The first page layer under the bar's centre line decides its glass tone.
-      const below = document.elementsFromPoint(window.innerWidth / 2, 40).find((node) => !header.current?.contains(node));
-      setDark(Boolean(below?.closest(".tone-dark")));
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
+    // Scroll frames never read layout. The page length is read again only when layout changes.
+    const length = new ResizeObserver(() => {
+      max = document.documentElement.scrollHeight - window.innerHeight;
+      schedule();
+    });
+    length.observe(document.body);
+    // The dark section under the bar's centre line decides its glass tone. The observer's root is a
+    // one-pixel band at that line, so the browser reports only the scrolls that cross a section edge.
+    const under = new Set<Element>();
+    let band: IntersectionObserver | null = null;
+    const watch = () => {
+      band?.disconnect();
+      under.clear();
+      band = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) under.add(entry.target);
+            else under.delete(entry.target);
+          }
+          setDark(under.size > 0);
+        },
+        { rootMargin: `-40px 0px ${41 - window.innerHeight}px 0px` },
+      );
+      for (const node of document.querySelectorAll("main .tone-dark, footer.tone-dark")) {
+        if (!node.closest(".claw")) band.observe(node);
+      }
+    };
+    const onResize = () => {
+      watch();
+      schedule();
+    };
+    watch();
     update();
     window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    window.addEventListener("resize", onResize);
     return () => {
       cancelAnimationFrame(frame);
+      length.disconnect();
+      band?.disconnect();
       window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
+      window.removeEventListener("resize", onResize);
     };
   }, [location]);
 

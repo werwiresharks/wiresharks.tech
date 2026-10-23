@@ -7,14 +7,16 @@ import type { Box } from "./claw";
 const DISTANCE = 0.55;
 /** Under reduced motion the tear does not hold the page; it fades in past this point. */
 const STILL_AT = 0.12;
-/** Scrolling this soon after wheel, touch or key input is still that input (smooth scrolling, momentum), so it is held too. */
+/** Scrolling this soon after wheel or key input is still that input (smooth scrolling, momentum), so it is held too. */
 const INPUT_MS = 1500;
 
 /**
  * The hero's surface as a torn skin. When the page reaches its lock point it
- * holds still, and scroll input drives three claw marks through the surface
- * to expose the Raptor layer beneath. Only a finished tear lets the page
- * scroll on; scrolling back up at the lock point seals it again.
+ * holds still, and wheel or key input drives three claw marks through the
+ * surface to expose the raptor layer beneath. Only a finished tear lets the
+ * page scroll on; scrolling back up at the lock point seals it again. Touch
+ * scrolling is never held. It stays native, and crossing the lock plays the
+ * tear open or sealed.
  */
 export function ClawTear() {
   const root = useRef<HTMLDivElement>(null);
@@ -48,7 +50,6 @@ export function ClawTear() {
     let current = 0;
     let last = -1;
     let frame = 0;
-    let touchY: number | null = null;
     let inputAt = -Infinity;
     let mapped = false;
     let lastY = window.scrollY;
@@ -125,11 +126,11 @@ export function ClawTear() {
       return true;
     };
 
-    // Scrolls that got past the input handlers. Ones that carry the user's own
-    // scrolling across the lock (smooth-scroll tails, touch momentum) are held
-    // there; scrollbar drags, anchors, focus, find-in-page and restored
-    // positions are never trapped and finish or seal the tear in the direction
-    // the page moved. Moving away from the lock never changes the tear.
+    // Scrolls that got past the input handlers. Smooth-scroll tails of wheel or
+    // key input that cross the lock are held there; touch scrolling, scrollbar
+    // drags, anchors, focus, find-in-page and restored positions are never
+    // trapped and finish or seal the tear in the direction the page moved.
+    // Moving away from the lock never changes the tear.
     const onScroll = () => {
       const y = window.scrollY;
       const from = lastY;
@@ -167,17 +168,6 @@ export function ClawTear() {
       inputAt = performance.now();
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
       if (consume(event.deltaY * unit)) event.preventDefault();
-    };
-    const onTouchStart = (event: TouchEvent) => {
-      touchY = event.touches.length === 1 ? event.touches[0].clientY : null;
-    };
-    const onTouchMove = (event: TouchEvent) => {
-      if (touchY === null || event.touches.length !== 1 || outside(event)) return;
-      const y = event.touches[0].clientY;
-      const delta = touchY - y;
-      touchY = y;
-      inputAt = performance.now();
-      if (consume(delta) && event.cancelable) event.preventDefault();
     };
     const KEYS: Record<string, number> = { ArrowDown: 40, ArrowUp: -40, PageDown: 0.85, PageUp: -0.85, " ": 0.85 };
     const onKey = (event: KeyboardEvent) => {
@@ -245,7 +235,7 @@ export function ClawTear() {
         node.dataset.torn = String(y > lock + window.innerHeight * STILL_AT);
       } else if (!mapped) {
         target = current = y > lock + 1 ? 1 : 0;
-      } else if (current > 0 && current < 1) {
+      } else if (current > 0 && current < 1 && performance.now() - inputAt < INPUT_MS) {
         hold();
       }
       mapped = true;
@@ -270,8 +260,6 @@ export function ClawTear() {
     window.addEventListener("click", navigating);
     window.addEventListener("hashchange", navigating);
     window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("keydown", onKey);
     motion.addEventListener("change", measure);
     return () => {
@@ -285,8 +273,6 @@ export function ClawTear() {
       window.removeEventListener("click", navigating);
       window.removeEventListener("hashchange", navigating);
       window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKey);
       motion.removeEventListener("change", measure);
     };

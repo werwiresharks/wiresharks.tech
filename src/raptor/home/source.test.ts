@@ -272,3 +272,55 @@ test("with the countdown set full width under the copy, the release orb fills th
   assert.ok(y - mother.radius >= section[1], "orb stays inside the section");
   assert.ok(mother.x + mother.radius <= 1440 + mother.radius * 0.3 + 0.01, "at most 30% leaves the right edge");
 });
+
+test("a phone toolbar sliding in or out mid-scroll leaves the journey plan where it was", (t) => {
+  const layout = layouts[4];
+  let source: ReturnType<typeof createHomeSource> | undefined;
+  t.after(() => source?.dispose());
+  const listeners = new Map<string, () => void>();
+  const viewport = { innerWidth: layout.width, innerHeight: layout.height, scrollY: 0,
+    addEventListener: (type: string, listener: () => void) => listeners.set(type, listener), removeEventListener() {} };
+  const observer = class { observe() {} disconnect() {} };
+  const globals = {
+    window: viewport,
+    document: { documentElement: { scrollHeight: 12000 }, fonts: { addEventListener() {}, removeEventListener() {}, ready: Promise.resolve() } },
+    ResizeObserver: observer, MutationObserver: observer,
+    getComputedStyle: () => ({ transform: "none" }),
+    cancelAnimationFrame() {}, requestAnimationFrame: () => 1,
+  };
+  for (const [key, value] of Object.entries(globals)) {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, key);
+    Object.defineProperty(globalThis, key, { configurable: true, value });
+    t.after(() => previous ? Object.defineProperty(globalThis, key, previous) : Reflect.deleteProperty(globalThis, key));
+  }
+  const nodes = new Map<string, unknown>();
+  const root = { querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
+  const node = (rect: number[]) => ({
+    parentElement: root,
+    getBoundingClientRect: () => ({ left: rect[0], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),
+    closest: () => null,
+    querySelector: () => undefined,
+    querySelectorAll: () => [],
+  });
+  // The journey canvas spans the large viewport: the height with the toolbar hidden.
+  const canvas = { clientHeight: layout.height + 56 };
+  nodes.set(".home-journey", canvas);
+  nodes.set(".hero", node([0, 0, layout.width, layout.hero]));
+  nodes.set('[data-home-stop="products"]', node(layout.products));
+  nodes.set('[data-home-stop="platform"]', node(layout.platform));
+  nodes.set("#platform", node(layout.platformSection));
+  const created = createHomeSource(root as unknown as HTMLElement, () => {});
+  source = created;
+  const plan = (scroll: number) => { viewport.scrollY = scroll; return structuredClone(created.sample()); };
+  const scrolls = [400, 1200, 2600, 5200];
+  const before = scrolls.map(plan);
+  for (const height of [layout.height + 56, layout.height]) {
+    viewport.innerHeight = height;
+    listeners.get("resize")?.();
+    assert.deepEqual(scrolls.map(plan), before, `toolbar change to ${height}px moved the journey`);
+  }
+  viewport.innerWidth = 844;
+  canvas.clientHeight = 390;
+  listeners.get("resize")?.();
+  assert.notDeepEqual(scrolls.map(plan), before, "rotating the phone re-plans the journey");
+});

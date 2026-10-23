@@ -2397,9 +2397,14 @@ button {
   position: relative;
   isolation: isolate;
 }
+/* Sized to the large viewport, so a phone toolbar sliding in or out mid-scroll never resizes the WebGL canvas. */
 .home-journey {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
   z-index: 3;
   pointer-events: none;
 }
