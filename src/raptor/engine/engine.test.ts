@@ -157,3 +157,27 @@ test("rapid random commands never produce rejected events or broken layouts", ()
   // they must be rejected by the model, never applied out of order.
   for (const reason of rejected) assert.doesNotMatch(reason, /stale sequence/);
 });
+
+test("hydrated action and agent history update the view without replaying one-shot effects", () => {
+  const engine = new RaptorEngine();
+  const effects: string[] = [];
+  engine.attach({
+    update: (_layout, _model, next) => { effects.push(...next.map(effect => effect.kind)); },
+    dispose() {},
+  });
+  const history = [
+    { type: "agent.spawned", agentId: "root", parentId: null, label: "Root" },
+    { type: "action.proposed", actionId: "call", agentId: "root", summary: "work" },
+    { type: "authorization.requested", actionId: "call" },
+    { type: "authorization.resolved", actionId: "call", decision: "approved", authority: "user" },
+    { type: "action.executing", actionId: "call" },
+    { type: "action.completed", actionId: "call" },
+    { type: "agent.state", agentId: "root", state: "completed" },
+  ] as const;
+  let seq = 0;
+  for (const event of history) assert.ok(engine.ingest({ ...event, seq: ++seq }).accepted);
+  assert.ok(effects.includes("bloom") && effects.includes("flash"));
+  effects.length = 0;
+  for (const event of history) assert.ok(engine.ingest({ ...event, hydrate: true, seq: ++seq }).accepted);
+  assert.deepEqual(effects, []);
+});

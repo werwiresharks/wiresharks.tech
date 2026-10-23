@@ -331,6 +331,7 @@ export function deriveEffects(
   next: RaptorModel,
   event: RaptorEvent,
 ): Effect[] {
+  if (event.hydrate) return [];
   switch (event.type) {
     case "authorization.resolved": {
       if (event.decision !== "approved") return [];
