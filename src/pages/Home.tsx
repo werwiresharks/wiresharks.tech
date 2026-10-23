@@ -161,7 +161,7 @@ export function Home() {
           </ProductBlock>
 
           <div className="product-link" aria-hidden="true">
-            <span className="label keep-case">raptor</span>
+            <span className="label keep-case">raptor<RaptorReg /></span>
             <i />
             <span className="label">powered by</span>
             <i />

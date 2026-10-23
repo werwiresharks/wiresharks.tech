@@ -1,6 +1,6 @@
 # Reusable copy
 
-Ratified copy for collateral. Use the names and sentences verbatim. Product names are lowercase, also at the start of a sentence. The ® belongs to the raptor® wordmark only, and talon-1 carries no mark. Public pieces use the bold, present-tense register. Engineering pieces use the plain register with the same names.
+Ratified copy for collateral. Use the names and sentences verbatim. Product names are lowercase, also at the start of a sentence. raptor carries ® in the wordmark, headings, buttons, product names and its first mention in a piece; later running text writes plain raptor. talon-1 carries no mark. Public pieces use the bold, present-tense register. Engineering pieces use the plain register with the same names.
 
 ## Tagline
 
@@ -34,7 +34,7 @@ raptor is the autonomous cybersecurity agent, built on Hermes and running on Har
 
 ## Naming
 
-Wiresharks, raptor, talon-1, Harness and the raptor particle engine. Write raptor, never Raptor-1. talon-1 keeps its version and carries no mark. talon-1 powers raptor; raptor runs on Harness. The ® appears only in the raptor® wordmark.
+Wiresharks, raptor, talon-1, Harness and the raptor particle engine. Write raptor, never Raptor-1. talon-1 keeps its version and carries no mark. talon-1 powers raptor; raptor runs on Harness. raptor carries ® in display text and at its first mention; later running text writes plain raptor.
 
 ## Publishing skeletons
 

@@ -1,6 +1,6 @@
 import { PageHead } from "../components/PageHead";
 import { RaptorMarkDrawn } from "../components/ProductIcons";
-import { RaptorWordmark } from "../components/RaptorWordmark";
+import { RaptorReg, RaptorWordmark } from "../components/RaptorWordmark";
 import { Reveal, Words } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
@@ -31,7 +31,7 @@ export function Raptor() {
       <PageHead
         label={
           <>
-            Agent / <span className="keep-case">raptor</span>
+            Agent / <span className="keep-case">raptor<RaptorReg /></span>
           </>
         }
         title="The autonomous cybersecurity agent."
@@ -42,7 +42,7 @@ export function Raptor() {
           </div>
         }
       >
-        raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
+        raptor<RaptorReg /> is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
         works with any model. It plans the work and keeps its own memory and skills. Harness is the
         infrastructure that runs and coordinates raptor's work. It adds support for Claude Code and
         Codex.
@@ -173,7 +173,7 @@ export function Raptor() {
         <div className="wrap">
           <header className="section-head">
             <Reveal as="p" className="label">
-              <span className="index">06</span> / Architecture
+              <span className="index">05</span> / Architecture
             </Reveal>
             <Reveal as="h2" delay={60} words>
               <span id="arch-title"><Words>Eight layers. One system.</Words></span>
@@ -195,7 +195,7 @@ export function Raptor() {
         <div className="wrap lineage-layout">
           <div>
             <Reveal as="p" className="label">
-              <span className="index">07</span> / Lineage
+              <span className="index">06</span> / Lineage
             </Reveal>
             <Reveal as="h2" delay={60} words>
               <span id="lineage-title">

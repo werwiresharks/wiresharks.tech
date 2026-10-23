@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { CLAW_LAYOUTS, clawFeed, clawShape } from "./claw";
-import { RaptorWordmark } from "./RaptorWordmark";
+import { RaptorReg, RaptorWordmark } from "./RaptorWordmark";
 import type { Box } from "./claw";
 
 /** Scroll input, in viewport heights, that takes the tear from intact to fully open. */
@@ -283,7 +283,7 @@ export function ClawTear() {
       <div className="claw-under tone-dark">
         <div ref={under} className="claw-under-inner">
           <p className="label">
-            <i /> <span className="keep-case">raptor</span> / Autonomous agent / Powered by{" "}
+            <i /> <span className="keep-case">raptor<RaptorReg /></span> / Autonomous agent / Powered by{" "}
             <span className="keep-case">talon-1</span>
           </p>
           <p className="claw-under-name">

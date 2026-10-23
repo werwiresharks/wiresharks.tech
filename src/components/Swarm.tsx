@@ -4,6 +4,7 @@ import { CLAWS } from "./ProductIcons";
 import { Reveal, Words } from "./Reveal";
 import { pinProgress, routePath, swarmFrame, swarmLayout, TASK } from "./swarmLayout";
 import type { Stage, SwarmLayout } from "./swarmLayout";
+import { RaptorReg } from "./RaptorWordmark";
 
 const STEPS: [Stage, string, string][] = [
   ["split", "Split", "One task becomes smaller jobs. Each job goes to a specialized worker."],
@@ -170,7 +171,7 @@ export function Swarm() {
         <header className="section-head">
           <Reveal as="p" className="label swarm-label">
             <span><span className="index">02</span> / Swarm</span>
-            <span className="swarm-status">In <span className="keep-case">raptor</span></span>
+            <span className="swarm-status">In <span className="keep-case">raptor<RaptorReg /></span></span>
           </Reveal>
           <Reveal as="h2" delay={60} words>
             <span id="swarm-title"><Words>One task. Many workers.</Words></span>
