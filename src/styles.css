@@ -2084,6 +2084,7 @@ main:focus {
   .brand-link,
   .text-link,
   .footer-col a {
+    min-width: 44px;
     min-height: 44px;
   }
   .footer-col li {
@@ -3033,6 +3034,15 @@ main:focus {
 @media (max-height: 540px) {
   .swarm-figure {
     height: 440px;
+  }
+}
+/* Landscape phones: the title opens the page; the stacked mark would push it below the fold. */
+@media (max-width: 1023px) and (max-height: 540px) {
+  .page-head {
+    padding-top: calc(var(--header-height) + 32px);
+  }
+  .page-mark {
+    display: none;
   }
 }
 /* Unpinned phones have room to list each stage with its description. */
