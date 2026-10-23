@@ -13,6 +13,22 @@ const STATE_WORDS: Record<string, string> = {
   failed: "failed",
 };
 
+const ACTIVITY_WORDS: Record<string, string> = {
+  listening: "listening",
+  working: "working",
+  searching: "searching",
+  solving: "solving",
+  composing: "composing",
+  shaping: "shaping",
+};
+
+const TRANSFER_NOUNS: Record<string, string> = {
+  brief: "A brief",
+  result: "A result",
+  steer: "A steer",
+  peer: "A message",
+};
+
 export function describeModel(model: RaptorModel): string {
   const root = rootAgent(model);
   if (!root) return "No agent is active.";
@@ -53,6 +69,13 @@ export function describeEvent(event: RaptorEvent, model: RaptorModel): string {
       return `${label(event.fromAgentId)} handed off to ${event.label}`;
     case "agent.state":
       return `${label(event.agentId)} ${STATE_WORDS[event.state]}`;
+    case "agent.activity":
+      return `${label(event.agentId)} is ${ACTIVITY_WORDS[event.activity]}`;
+    case "transfer": {
+      const noun = event.label ? `A ${event.label}` : TRANSFER_NOUNS[event.kind];
+      const verb = event.disposition === "queued" ? "is queued" : "moved";
+      return `${noun} ${verb} from ${label(event.fromAgentId)} to ${label(event.toAgentId)}`;
+    }
     case "agent.reintegrated":
       return `${event.agentId} reintegrated`;
     case "action.proposed":

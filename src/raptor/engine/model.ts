@@ -1,4 +1,10 @@
-import type { ActionState, AgentState, RaptorEvent } from "./events.ts";
+import type {
+  ActionState,
+  Activity,
+  AgentState,
+  RaptorEvent,
+  TransferKind,
+} from "./events.ts";
 
 /**
  * The engine's view of a Raptor session: an agent hierarchy, pending actions,
@@ -15,6 +21,7 @@ export type AgentNode = {
   predecessorId: string | null;
   successorId: string | null;
   state: AgentState;
+  activity: Activity;
   /** Retired agents have handed off; they remain as lineage traces. */
   retired: boolean;
   generation: number;
@@ -28,6 +35,21 @@ export type ActionNode = {
   state: ActionState;
   authority: string | null;
 };
+
+export type TransferRecord = {
+  id: string;
+  kind: TransferKind;
+  from: string;
+  to: string;
+  disposition: "queued" | "delivered";
+  bytes: number | null;
+  label: string | null;
+  seq: number;
+};
+
+/** Recent transfers kept for views that animate them; ids are remembered longer, to reject replays. */
+const RECENT_TRANSFERS = 32;
+const REMEMBERED_TRANSFERS = 512;
 
 export type Checkpoint = {
   id: string;
@@ -45,6 +67,10 @@ export type RaptorModel = {
   actions: Record<string, ActionNode>;
   checkpoint: Checkpoint | null;
   rollback: { checkpointId: string } | null;
+  /** Most recent accepted transfers, oldest first. */
+  transfers: TransferRecord[];
+  /** Ids of accepted transfers, oldest first, so a replay is not drawn twice. */
+  transferIds: string[];
 };
 
 export type ReduceResult =
@@ -60,6 +86,8 @@ export function createModel(): RaptorModel {
     actions: {},
     checkpoint: null,
     rollback: null,
+    transfers: [],
+    transferIds: [],
   };
 }
 
@@ -166,6 +194,7 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
         predecessorId: null,
         successorId: null,
         state: "idle",
+        activity: "listening",
         retired: false,
         generation: parent ? parent.generation : 1,
         spawnedSeq: event.seq,
@@ -189,6 +218,7 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
         predecessorId: from.id,
         successorId: null,
         state: "running",
+        activity: from.activity,
         retired: false,
         generation: from.generation + 1,
         spawnedSeq: event.seq,
@@ -217,6 +247,43 @@ export function reduce(model: RaptorModel, event: RaptorEvent): ReduceResult {
         return reject(model, "state unchanged");
       return next({
         agents: withAgent(model, event.agentId, { state: event.state }),
+      });
+    }
+
+    case "agent.activity": {
+      if (!isActiveAgent(model, event.agentId))
+        return reject(model, `agent ${event.agentId} is not active`);
+      if (model.agents[event.agentId].activity === event.activity)
+        return reject(model, "activity unchanged");
+      return next({
+        agents: withAgent(model, event.agentId, { activity: event.activity }),
+      });
+    }
+
+    case "transfer": {
+      if (model.transferIds.includes(event.transferId))
+        return reject(model, `transfer ${event.transferId} already seen`);
+      if (event.fromAgentId === event.toAgentId)
+        return reject(model, "transfer to itself");
+      for (const id of [event.fromAgentId, event.toAgentId])
+        if (!isActiveAgent(model, id))
+          return reject(model, `agent ${id} is not active`);
+      const record: TransferRecord = {
+        id: event.transferId,
+        kind: event.kind,
+        from: event.fromAgentId,
+        to: event.toAgentId,
+        disposition: event.disposition,
+        bytes:
+          event.bytes !== undefined && Number.isFinite(event.bytes) && event.bytes >= 0
+            ? event.bytes
+            : null,
+        label: event.label ?? null,
+        seq: event.seq,
+      };
+      return next({
+        transfers: [...model.transfers, record].slice(-RECENT_TRANSFERS),
+        transferIds: [...model.transferIds, record.id].slice(-REMEMBERED_TRANSFERS),
       });
     }
 

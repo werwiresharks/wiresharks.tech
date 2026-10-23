@@ -1,7 +1,9 @@
 import type {
+  Activity,
   AgentState,
   RaptorEvent,
   RaptorEventType,
+  TransferKind,
 } from "../engine/events.ts";
 
 /**
@@ -24,6 +26,20 @@ const AGENT_STATES: readonly AgentState[] = [
   "completed",
   "failed",
 ];
+
+const ACTIVITIES: readonly Activity[] = [
+  "listening",
+  "working",
+  "searching",
+  "solving",
+  "composing",
+  "shaping",
+];
+
+const TRANSFER_KINDS: readonly TransferKind[] = ["brief", "result", "steer", "peer"];
+
+const oneOf = <T extends string>(values: readonly T[], value: unknown): value is T =>
+  typeof value === "string" && (values as readonly string[]).includes(value);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -84,6 +100,29 @@ const BODIES: {
   "agent.state": (m) =>
     str(m.agentId) && isAgentState(m.state)
       ? { type: "agent.state", agentId: m.agentId, state: m.state }
+      : null,
+  "agent.activity": (m) =>
+    str(m.agentId) && oneOf(ACTIVITIES, m.activity)
+      ? { type: "agent.activity", agentId: m.agentId, activity: m.activity }
+      : null,
+  transfer: (m) =>
+    str(m.transferId) &&
+    oneOf(TRANSFER_KINDS, m.kind) &&
+    str(m.fromAgentId) &&
+    str(m.toAgentId) &&
+    (m.disposition === "queued" || m.disposition === "delivered") &&
+    (m.bytes === undefined || (num(m.bytes) && m.bytes >= 0)) &&
+    (m.label === undefined || str(m.label))
+      ? {
+          type: "transfer",
+          transferId: m.transferId,
+          kind: m.kind,
+          fromAgentId: m.fromAgentId,
+          toAgentId: m.toAgentId,
+          disposition: m.disposition,
+          ...(m.bytes === undefined ? {} : { bytes: m.bytes as number }),
+          ...(m.label === undefined ? {} : { label: m.label as string }),
+        }
       : null,
   "agent.reintegrated": (m) =>
     str(m.agentId) ? { type: "agent.reintegrated", agentId: m.agentId } : null,

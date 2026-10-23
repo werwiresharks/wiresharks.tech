@@ -18,6 +18,25 @@ export type AgentState =
   | "completed"
   | "failed";
 
+/**
+ * What an agent is doing, in the particle vocabulary. Independent of its
+ * lifecycle state: a running agent may be searching, then solving. Waiting on
+ * authority is lifecycle (`awaiting`), never an activity.
+ */
+export type Activity =
+  | "listening"
+  | "working"
+  | "searching"
+  | "solving"
+  | "composing"
+  | "shaping";
+
+/**
+ * Data a runtime reported moving between two agents: a delegation brief down,
+ * a result up, a steer, or a message between peers. Never inferred from timing.
+ */
+export type TransferKind = "brief" | "result" | "steer" | "peer";
+
 export type ActionState =
   | "proposed"
   | "awaiting"
@@ -54,6 +73,21 @@ export type RaptorEvent = EventBase &
         label: string;
       }
     | { type: "agent.state"; agentId: string; state: AgentState }
+    | { type: "agent.activity"; agentId: string; activity: Activity }
+    | {
+        type: "transfer";
+        /** Unique per transfer; a replayed id is rejected. */
+        transferId: string;
+        kind: TransferKind;
+        fromAgentId: string;
+        toAgentId: string;
+        /** Accepted for delivery (queued) or reported delivered. Never assumed read. */
+        disposition: "queued" | "delivered";
+        /** Payload size when the runtime reports it; it sets the packet's density. */
+        bytes?: number;
+        /** A short noun for the payload, e.g. "finding". */
+        label?: string;
+      }
     | {
         /** A subagent has finished and folds back into its parent. */
         type: "agent.reintegrated";
