@@ -10,8 +10,8 @@ import { runPlan, scriptedPlanner, modelPlanner } from "./plan.ts";
 import type { PlanAction } from "./plan.ts";
 import { contextProver } from "./prove.ts";
 import type { Transport } from "./modelReviewer.ts";
-import { createModel, reduce } from "../src/raptor/engine/model.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import { createModel, reduce } from "./narration.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 async function fixtureMap() {
   const dir = await mkdtemp(join(tmpdir(), "plan-"));

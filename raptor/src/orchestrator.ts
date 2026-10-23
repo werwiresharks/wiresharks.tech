@@ -10,7 +10,7 @@ import type { InvestigationWorker, WorkerCapability, WorkerContext, WorkerResult
 import { runScheduled } from "./scheduler.ts";
 import type { ScheduledJob } from "./scheduler.ts";
 import type { Task, TaskRecord } from "./task.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 /**
  * The Raptor orchestrator: the central intelligence of the assessment.

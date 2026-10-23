@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { writeFile } from "node:fs/promises";
 import { argv, exit, stdout } from "node:process";
 import { resolveScope, DEFAULT_EXCLUDE } from "./scope.ts";
@@ -23,7 +24,7 @@ import type { Finding } from "./findings.ts";
  * read-only — it maps, finds and writes a report; it never patches, deploys or
  * reaches outside the named path.
  *
- *   node agent/main.ts review <path> [--scope <glob,...>] [--exclude <glob,...>]
+ *   raptor review <path> [--scope <glob,...>] [--exclude <glob,...>]
  *                                    [--out <file>] [--quiet] [--no-prove]
  *                                    [--model | --model=<id>]
  *
@@ -39,7 +40,7 @@ import type { Finding } from "./findings.ts";
  * in-scope files to read and review instead of reviewing every file (read-only,
  * bounded, also needs ANTHROPIC_API_KEY).
  *
- *   node agent/main.ts assess <path> [--objective "<text>"] [shared flags]
+ *   raptor assess <path> [--objective "<text>"] [shared flags]
  *
  * `assess` runs the orchestrator: it discovers which specialized workers apply
  * to the repository, dispatches them in parallel, and consolidates their
@@ -48,7 +49,7 @@ import type { Finding } from "./findings.ts";
  * boundary and the same CI gate as `review`.
  */
 const USAGE =
-  "Usage: node agent/main.ts <review|assess> <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--objective <text>] [--quiet] [--no-prove] [--model | --model=<id>] [--plan]";
+  "Usage: raptor <review|assess> <path> [--scope <glob,...>] [--exclude <glob,...>] [--out <file>] [--objective <text>] [--quiet] [--no-prove] [--model | --model=<id>] [--plan]";
 
 interface Args {
   command: string;

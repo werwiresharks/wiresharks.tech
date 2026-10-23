@@ -44,6 +44,17 @@ the full product the pages advertise. Be precise with yourself about the gap:
 
 ## What is built and working (all tested, CI-green)
 
+> **2026-10-23 — Raptor extracted to its own package.** The agent is no longer a
+> folder inside the website. It now lives in **`raptor/`** as a standalone,
+> dependency-free package: its own `package.json` (bin `raptor`, `npm test`,
+> `npm run typecheck`), its own `tsconfig.json`, its own `README.md`, and a
+> vendored copy of the event contract + reducer (`raptor/src/events.ts`,
+> `raptor/src/narration.ts`) so it imports nothing from the website. It is
+> runnable on its own: `cd raptor && node src/cli.ts assess <path>`. The website
+> is a *consumer*: `server/` imports the pipeline from `../raptor/src/`, and CI
+> (root `npm test` / `typecheck:server`) still covers it. The CLI entry was
+> renamed `main.ts` → `cli.ts`.
+
 ### Visualization engine — `src/raptor/`
 Pure visualization of an agent/authorization session. **It makes no
 authorization decisions**; it renders events it is given. Typed event vocabulary
@@ -80,9 +91,9 @@ to record a **model-driven** review (model reviewer + planner) instead — on
 failure it falls back to the offline review, then to the scripted
 `REVIEW_SESSION`, so the stream is never empty. The sample repo trips five rules
 and the Prove step rules them 2 verified / 2 dismissed / 1 open. The Dockerfile
-now also `COPY`s `agent/`, since the service runs the review pipeline.
+now also `COPY`s `raptor/`, since the service runs the review pipeline.
 
-### Raptor orchestrator — `agent/` (orchestration layer)  ← newest
+### Raptor orchestrator — `raptor/src/` (orchestration layer)  ← newest
 The product vision (and the homepage swarm figure, `src/components/swarmLayout.ts`)
 is a **swarm**: split an objective into jobs for specialized workers, run them in
 parallel, and combine their findings into one report. This layer builds exactly
@@ -115,11 +126,11 @@ that **on top of** the single-reviewer pipeline below — nothing below was remo
   `source` worker), and rule on the merged set with the Prover. Writes nothing,
   executes nothing, reaches nothing outside scope.
 - `report.ts` → `renderAssessment()` renders the consolidated report (a Workers
-  dispatch table + a Source column). CLI: `node agent/main.ts assess <path>
+  dispatch table + a Source column). CLI: `node raptor/src/cli.ts assess <path>
   [--objective "<text>"] [--model] [shared flags]`; same read-only boundary and
   the same high/critical CI gate as `review`.
 
-### Raptor review workflow — `agent/`  ← read this carefully
+### Raptor review workflow — `raptor/src/`  ← read this carefully
 The one piece of "Raptor" that is real: the **authorized repository security
 review** the product page calls Raptor's first end-to-end workflow
 (Scope → Map → Find → Report). It is **read-only**: it maps a repo you name,
@@ -189,9 +200,9 @@ patch, deploy, exploit, or reach outside the authorized path.
   per-finding reasoning. The CLI runs Prove by default (`--no-prove` to skip)
   and exits non-zero on a high/critical finding **that Prove did not dismiss**
   (CI-gatable, no longer tripped by test-fixture matches). Run:
-  `npm run review -- <path> [--scope ...] [--out report.md] [--no-prove] [--model] [--plan]`.
+  `raptor review <path>  (or: node raptor/src/cli.ts review <path>)
 
-**Be honest about what `agent/` still is NOT:** `--plan` gives it a real
+**Be honest about what `raptor/src/` still is NOT:** `--plan` gives it a real
 model-driven loop that chooses what to read, review and verify — genuine tool
 use over a read-only tool set, bounded and scope-locked, with working memory
 *within a run* (notes + open leads carried turn to turn) and in-loop proving, so
@@ -208,13 +219,22 @@ exploit. The remaining breadth toward a fuller agent is more read-only tools
 ```sh
 npm ci
 npm run typecheck          # browser TS
-npm run typecheck:server   # server/ + agent/ with Node types
-npm test                   # 153 tests across engine, server, agent
+npm run typecheck:server   # server/ + raptor/src/ with Node types
+npm test                   # 153 tests across engine, server, raptor
 npm run build
 node docs/brand/tools/build.mjs && node docs/brand/tools/check.mjs
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same on push to `main` and PRs. Ship
+The Raptor package also verifies on its own, with no website toolchain:
+
+```sh
+cd raptor
+npm run typecheck          # raptor/src with Node types, standalone
+npm test                   # 54 Raptor tests (scope → orchestrator)
+node src/cli.ts assess <path>   # run it
+```
+
+CI (`.github/workflows/ci.yml`) runs the root gate on push to `main` and PRs. Ship
 rule: when work is done and checks pass, rebase onto `origin/main` and push to
 `main`; never force-push.
 
@@ -241,7 +261,7 @@ rule: when work is done and checks pass, rebase onto `origin/main` and push to
    worktree to confirm a lead — note that executes target code, so it must be
    sandboxed and is a deliberate step past the current read-only boundary.
 2. **Model-backed `Reviewer` — DONE (2026-10-22).** See `modelReviewer.ts`
-   above (`agent/main.ts review <path> --model`). It targets an **aligned**
+   above (`raptor/src/cli.ts`). It targets an **aligned**
    model (NOT Talon-1). To run it live, set `ANTHROPIC_API_KEY` in the
    environment (take it via the host's secret prompt; never commit it). Natural
    follow-ons: wire the model reviewer into the `/console` recording, and add a

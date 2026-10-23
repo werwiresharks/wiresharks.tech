@@ -2,7 +2,7 @@ import type { Finding } from "./findings.ts";
 import { readMapped } from "./map.ts";
 import type { RepoMap } from "./map.ts";
 import type { Scope } from "./scope.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 /**
  * A specialized investigation agent and the registry the orchestrator discovers

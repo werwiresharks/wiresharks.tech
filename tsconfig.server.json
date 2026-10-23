@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["server/**/*.ts", "agent/**/*.ts"],
-  "exclude": ["server/**/*.test.ts", "agent/**/*.test.ts"]
+  "include": ["server/**/*.ts", "raptor/src/**/*.ts"],
+  "exclude": ["server/**/*.test.ts", "raptor/src/**/*.test.ts"]
 }

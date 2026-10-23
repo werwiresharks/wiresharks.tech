@@ -1,0 +1,25 @@
+{
+  "name": "raptor",
+  "version": "0.1.0",
+  "description": "Raptor — an authorized, read-only repository security-review agent. Maps a repo you name, dispatches specialized workers, proves its findings, and writes an evidence report. It never patches, executes, deploys, or reaches outside the authorized path.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "raptor": "./src/cli.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "raptor": "node src/cli.ts",
+    "review": "node src/cli.ts review",
+    "assess": "node src/cli.ts assess",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test src/scope.test.ts src/reviewer.test.ts src/modelReviewer.test.ts src/modelProver.test.ts src/plan.test.ts src/prove.test.ts src/review.test.ts src/scheduler.test.ts src/orchestrator.test.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "license": "UNLICENSED"
+}

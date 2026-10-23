@@ -1,10 +1,10 @@
-import { resolveScope, DEFAULT_EXCLUDE } from "../agent/scope.ts";
-import { patternReviewer } from "../agent/reviewer.ts";
-import type { Reviewer } from "../agent/reviewer.ts";
-import { contextProver } from "../agent/prove.ts";
-import type { Prover } from "../agent/prove.ts";
-import type { Planner } from "../agent/plan.ts";
-import { runReview } from "../agent/review.ts";
+import { resolveScope, DEFAULT_EXCLUDE } from "../raptor/src/scope.ts";
+import { patternReviewer } from "../raptor/src/reviewer.ts";
+import type { Reviewer } from "../raptor/src/reviewer.ts";
+import { contextProver } from "../raptor/src/prove.ts";
+import type { Prover } from "../raptor/src/prove.ts";
+import type { Planner } from "../raptor/src/plan.ts";
+import { runReview } from "../raptor/src/review.ts";
 import type { ScenarioStep } from "./scenario.ts";
 import type { RaptorEventType, UnsequencedEvent } from "../src/raptor/engine/events.ts";
 

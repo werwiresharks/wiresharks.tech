@@ -6,7 +6,7 @@ import type { Prover } from "./prove.ts";
 import { runPlan } from "./plan.ts";
 import type { Planner } from "./plan.ts";
 import type { Scope } from "./scope.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 /**
  * The review orchestrator: Raptor's first end-to-end workflow, the authorized

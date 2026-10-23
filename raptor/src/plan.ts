@@ -6,7 +6,7 @@ import type { Finding } from "./findings.ts";
 import type { Reviewer } from "./reviewer.ts";
 import type { Prover } from "./prove.ts";
 import type { Transport } from "./modelReviewer.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 /**
  * The agent loop: a read-only, model-driven investigation for the Find step.

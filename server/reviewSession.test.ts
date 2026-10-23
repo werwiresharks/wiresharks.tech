@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 import { recordReview } from "./reviewSession.ts";
 import { SessionLog } from "./log.ts";
 import { playScenario } from "./scenario.ts";
-import { compositeReviewer, modelReviewer } from "../agent/modelReviewer.ts";
-import { patternReviewer } from "../agent/reviewer.ts";
-import { modelPlanner } from "../agent/plan.ts";
-import type { Transport } from "../agent/modelReviewer.ts";
+import { compositeReviewer, modelReviewer } from "../raptor/src/modelReviewer.ts";
+import { patternReviewer } from "../raptor/src/reviewer.ts";
+import { modelPlanner } from "../raptor/src/plan.ts";
+import type { Transport } from "../raptor/src/modelReviewer.ts";
 import { createModel, reduce } from "../src/raptor/engine/model.ts";
 
 /** A controllable clock, so a recorded review plays with no real time elapsed. */

@@ -17,8 +17,8 @@ import {
   modelStrategy,
 } from "./orchestrator.ts";
 import type { Transport } from "./modelReviewer.ts";
-import { createModel, reduce } from "../src/raptor/engine/model.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import { createModel, reduce } from "./narration.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 async function fixtureRepo() {
   const dir = await mkdtemp(join(tmpdir(), "orch-"));

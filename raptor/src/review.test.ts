@@ -8,7 +8,7 @@ import { patternReviewer } from "./reviewer.ts";
 import { contextProver } from "./prove.ts";
 import { runReview } from "./review.ts";
 import { renderReport } from "./report.ts";
-import type { UnsequencedEvent } from "../src/raptor/engine/events.ts";
+import type { UnsequencedEvent } from "./events.ts";
 
 async function fixtureRepo(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "review-"));
@@ -59,7 +59,7 @@ test("runReview narrates a well-formed engine session", async () => {
 test("emitted events feed the engine reducer without rejection", async () => {
   // The session server assigns seqs; here we just assert the shapes are the
   // engine's own vocabulary by replaying them through the real reducer.
-  const { createModel, reduce } = await import("../src/raptor/engine/model.ts");
+  const { createModel, reduce } = await import("./narration.ts");
   const dir = await fixtureRepo();
   try {
     const scope = resolveScope({ root: dir });
@@ -78,7 +78,7 @@ test("emitted events feed the engine reducer without rejection", async () => {
 });
 
 test("the Prove step rules each lead and narrates a reducer-valid session", async () => {
-  const { createModel, reduce } = await import("../src/raptor/engine/model.ts");
+  const { createModel, reduce } = await import("./narration.ts");
   const dir = await mkdtemp(join(tmpdir(), "review-"));
   try {
     // One lead that proves out and one that is dismissed as a placeholder.

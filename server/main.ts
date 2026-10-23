@@ -4,9 +4,9 @@ import { playScenario } from "./scenario.ts";
 import type { ScenarioStep } from "./scenario.ts";
 import { recordReview } from "./reviewSession.ts";
 import type { RecordReviewOptions } from "./reviewSession.ts";
-import { patternReviewer } from "../agent/reviewer.ts";
-import { anthropicTransport, modelReviewer, compositeReviewer } from "../agent/modelReviewer.ts";
-import { modelPlanner } from "../agent/plan.ts";
+import { patternReviewer } from "../raptor/src/reviewer.ts";
+import { anthropicTransport, modelReviewer, compositeReviewer } from "../raptor/src/modelReviewer.ts";
+import { modelPlanner } from "../raptor/src/plan.ts";
 import { createSessionServer } from "./sessionServer.ts";
 import { createFileWaitlist } from "./store.ts";
 
