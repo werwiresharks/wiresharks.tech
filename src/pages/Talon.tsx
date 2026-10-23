@@ -1,5 +1,5 @@
 import { PageHead } from "../components/PageHead";
-import { StaticOrb } from "../raptor/react/RaptorStage";
+import { TalonOrb } from "../components/TalonOrb";
 import { Reveal, Words } from "../components/Reveal";
 import { Stats } from "../components/Stats";
 import { Feature } from "../components/Feature";
@@ -56,7 +56,7 @@ export function Talon() {
         title="The open-weight security model."
         mark={
           <div className="talon-frame">
-            <StaticOrb />
+            <TalonOrb />
           </div>
         }
       >
@@ -229,7 +229,7 @@ export function Talon() {
       <Closing
         title="Open weights. December 25."
         text="talon-1 ships with its evaluations, raptor and Harness."
-        mark={<StaticOrb />}
+        mark={<TalonOrb />}
       />
     </>
   );

@@ -1901,6 +1901,56 @@ main:focus {
   transform: none;
   opacity: 1;
 }
+/* Talon-1's living particle core: draws in, then the rings orbit slowly. */
+.talon-orb {
+  display: block;
+  width: 100%;
+}
+.talon-orb-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: talon-core-in var(--dur-3) var(--ease-out) 240ms forwards;
+}
+@keyframes talon-core-in {
+  from {
+    opacity: 0;
+    transform: scale(0.84);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.talon-orb-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: talon-spin 72s linear infinite;
+}
+.talon-orb-ring:nth-child(even) {
+  animation-direction: reverse;
+}
+.talon-orb-ring:nth-child(3n + 1) {
+  animation-duration: 96s;
+}
+.talon-orb-ring:nth-child(3n + 2) {
+  animation-duration: 60s;
+}
+@keyframes talon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.talon-orb-boundary {
+  stroke-dasharray: 754;
+  stroke-dashoffset: 754;
+  animation: talon-draw 1.3s var(--ease-io) forwards;
+}
+@keyframes talon-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
 .page-head h1 {
   margin-top: 24px;
   max-width: 14ch;
@@ -2415,6 +2465,18 @@ main:focus {
   .mark-draw path {
     animation: none;
     fill-opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  .talon-orb-core {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .talon-orb-ring {
+    animation: none;
+  }
+  .talon-orb-boundary {
+    animation: none;
     stroke-dashoffset: 0;
   }
   *,
