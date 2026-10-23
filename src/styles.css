@@ -253,6 +253,9 @@ button {
   top: 12px;
   left: 12px;
   z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   background: var(--charcoal);
@@ -262,6 +265,10 @@ button {
 }
 .skip-link:focus {
   transform: none;
+}
+/* The skip link moves focus here; main is a focus target, not a control. */
+main:focus {
+  outline: none;
 }
 
 /* ---- Layout primitives ---- */
@@ -388,6 +395,20 @@ button {
 .reveal-words.in .word {
   opacity: 1;
   transform: none;
+}
+/* Keyboard focus can reach a block before it scrolls into view. Show it at once. */
+.reveal:focus-within,
+.reveal-words:focus-within .word {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  transition-duration: 0s;
+  transition-delay: 0s;
+}
+/* At 200% text a display word can be wider than a phone screen. Let it break. */
+.reveal-words .word {
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 .product h3.reveal,
 .product h3.reveal:not(.in) {
@@ -2058,6 +2079,17 @@ button {
     color: var(--fg);
   }
 }
+/* Touch screens: each link is at least 44 px tall. */
+@media (max-width: 767px), (pointer: coarse) {
+  .brand-link,
+  .text-link,
+  .footer-col a {
+    min-height: 44px;
+  }
+  .footer-col li {
+    padding: 0;
+  }
+}
 .footer-col a svg {
   color: var(--red);
 }
@@ -2888,6 +2920,8 @@ button {
   height: 5px;
 }
 .swarm-steps b {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-weight: 500;
   color: var(--fg);
 }

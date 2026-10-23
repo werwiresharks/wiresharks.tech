@@ -48,7 +48,7 @@ export default function App() {
       </a>
       <ScrollManager />
       <Header />
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/raptor" element={<Raptor />} />
