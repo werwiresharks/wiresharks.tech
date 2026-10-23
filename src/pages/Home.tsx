@@ -276,7 +276,7 @@ export function Home() {
       <div className="home-closing">
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
-          title="No cloud. Built not to refuse."
+          title="No cloud. No refusals."
           text="talon-1 weights, its evaluations, raptor and Harness ship together on December 25, 2026."
         />
       </div>
