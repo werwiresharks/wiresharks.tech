@@ -28,7 +28,7 @@ const stageStyle: CSSProperties = {
 type Submit = "idle" | "sending" | "added" | "duplicate" | "error";
 
 /**
- * The live gateway: a real Raptor session streamed from the session server and
+ * The live gateway: a real raptor session streamed from the session server and
  * rendered through the engine, with a screen-reader narration and a waitlist
  * sign-up. The visualization only reports the session; it decides nothing.
  */
@@ -63,10 +63,10 @@ export function LiveConsole() {
       <title>Live console | Wiresharks</title>
       <meta name="robots" content="noindex" />
       <p className="label">Live / Session</p>
-      <h1>Raptor, live.</h1>
+      <h1>raptor, live.</h1>
       <p className="page-lede">
-        A Raptor session streamed from the session server and drawn by the
-        engine. The engine reports the session; it makes no authorization
+        A raptor session, streamed from the session server and drawn by the
+        engine. The engine shows the session. It makes no authorization
         decisions.
       </p>
 

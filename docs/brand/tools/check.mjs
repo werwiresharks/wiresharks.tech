@@ -71,6 +71,9 @@ for (const p of texts) {
     ok(!/Raptor-1/.test(t.replace(/never Raptor-1|\| Raptor-1 \/ Raptor 1 \|/gi, "")), `retired name Raptor-1 in ${rel}`);
     ok(!/talos/i.test(t), `retired name Talos in ${rel}`);
     ok(!/Raptor Swarm|in development|is developing|does not choose for the owner/i.test(t), `superseded positioning copy in ${rel}`);
+    // Product names are lowercase. Rows of the Avoid table name the retired forms on purpose.
+    const prose = t.replace(/^\|[^|\n]*(?:raptor|talon)[^|\n]*\|.*$/gim, "");
+    ok(!/\bRaptor\b(?!-1)|\bTalon-1\b|talon-1\s*(?:®|™|&reg;|&trade;)/.test(prose), `capitalised or marked product name in ${rel}`);
   }
   if (extname(p) === ".html" || extname(p) === ".md") {
     if (!rel.startsWith("tools/")) for (const h of t.match(/#[0-9a-f]{6}\b/gi) ?? []) ok(allowHex.has(h.toLowerCase()) && !retired.includes(h.toLowerCase()), `unknown or retired hex ${h} in ${rel}`);
@@ -85,9 +88,21 @@ for (const p of texts) {
 for (const f of ["README.md", "BRAND-GUIDE.md", "FONTS.md", "brand-guide.html", "quick-reference.html", "tokens/tokens.json", "tokens/tokens.css", "templates/slide-template.html", "templates/social-card-template.html", "templates/document-template.html", "templates/copy-templates.md"]) ok(existsSync(join(BRAND, f)), `missing deliverable ${f}`);
 
 // 7b. Product sentences appear verbatim where writers copy them from.
-const sentences = ["Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.", "Talon-1 is the open-weight security model that powers Raptor.", "The Raptor Particle Engine visualizes agent authorization state. It never makes decisions.", "Harness is the infrastructure that runs and coordinates Raptor's work."];
+const sentences = ["raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.", "talon-1 is the open-weight security model that powers raptor.", "The raptor particle engine visualizes agent authorization state. It never makes decisions.", "Harness is the infrastructure that runs and coordinates raptor's work."];
 for (const f of ["BRAND-GUIDE.md", "templates/copy-templates.md", "brand-guide.html"]) for (const line of sentences) ok(read(join(BRAND, f)).includes(line), `${f} lacks product sentence: ${line}`);
 ok(tokens.source.snapshot === "2026-10-19" && manifest.snapshot === "2026-10-19", "snapshot date must be 2026-10-19");
+
+// 7c. The site follows the same rule: lowercase product names in copy, talon-1 unmarked, and ® only in the raptor® wordmark.
+const siteWalk = (d) => readdirSync(join(REPO, d)).flatMap((n) => { const p = join(d, n); return statSync(join(REPO, p)).isDirectory() ? siteWalk(p) : [p]; });
+const siteCopy = [...siteWalk("src/pages"), ...siteWalk("src/components"), "src/content.ts", "src/site.ts", "index.html", "scripts/og-image.html"].filter((f) => /\.(tsx?|html)$/.test(f) && !/\.test\.ts$/.test(f));
+const markHomes = new Set(["src/components/RaptorWordmark.tsx", "scripts/og-image.html"]);
+for (const f of siteCopy) {
+  const code = read(join(REPO, f)).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^import .*$/gm, "");
+  const names = [...code.matchAll(/(?<![<\w.])(?:Raptor|Talon-1|Talon)(?![\w(]|-1\b|-)/g)].map((m) => code.slice(Math.max(0, m.index - 30), m.index + 20).replace(/\s+/g, " "));
+  ok(names.length === 0, `capitalised product name in ${f}: ${names.join(" | ")}`);
+  ok(!/talon-1\s*(?:®|™|&reg;|&trade;)/i.test(code), `talon-1 carries a mark in ${f}`);
+  ok(markHomes.has(f) || !/®|&reg;/.test(code), `® outside the raptor® wordmark in ${f}`);
+}
 
 // 8. Independent reference cases catch broken contrast arithmetic.
 ok(Math.abs(contrast("#000000", "#ffffff") - 21) < 0.00001, "black/white reference must be 21:1");

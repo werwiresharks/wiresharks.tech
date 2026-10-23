@@ -1,6 +1,6 @@
 # Reusable copy
 
-Ratified copy for collateral. Use the names and sentences verbatim. Public pieces use the bold, present-tense register. Engineering pieces use the plain register with the same names.
+Ratified copy for collateral. Use the names and sentences verbatim. Product names are lowercase, also at the start of a sentence. The ® belongs to the raptor® wordmark only, and talon-1 carries no mark. Public pieces use the bold, present-tense register. Engineering pieces use the plain register with the same names.
 
 ## Tagline
 
@@ -8,22 +8,22 @@ The world's most dangerous AI.
 
 ## Company line
 
-Wiresharks builds autonomous cybersecurity AI: Raptor, the agent, and Talon-1, the open-weight model that powers it.
+Wiresharks builds autonomous cybersecurity AI: raptor, the agent, and talon-1, the open-weight model that powers it.
 
 ## Product sentences
 
-- Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.
-- Talon-1 is the open-weight security model that powers Raptor.
-- Harness is the infrastructure that runs and coordinates Raptor's work.
-- The Raptor Particle Engine visualizes agent authorization state. It never makes decisions.
+- raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.
+- talon-1 is the open-weight security model that powers raptor.
+- Harness is the infrastructure that runs and coordinates raptor's work.
+- The raptor particle engine visualizes agent authorization state. It never makes decisions.
 
 ## Social caption
 
-The world's most dangerous AI. Raptor, the agent. Talon-1, the model. Both ship December 25, 2026. wiresharks.tech
+The world's most dangerous AI. raptor, the agent. talon-1, the model. Both ship December 25, 2026. wiresharks.tech
 
 ## Document introduction
 
-Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. Talon-1 is the open-weight security model that powers Raptor. Raptor plans a task and splits it across parallel workers. Each worker tests on real systems. Raptor checks the result before anything lands.
+raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. talon-1 is the open-weight security model that powers raptor. raptor plans a task and splits it across parallel workers. Before a risky command runs, raptor shows the whole command for approval.
 
 ## Slide sequence
 
@@ -34,7 +34,7 @@ Raptor is the autonomous cybersecurity agent, built on Hermes and running on Har
 
 ## Naming
 
-Wiresharks, Raptor, Talon-1, Harness and the Raptor Particle Engine. Write Raptor, never Raptor-1. Talon-1 keeps its version. Talon-1 powers Raptor; Raptor runs on Harness.
+Wiresharks, raptor, talon-1, Harness and the raptor particle engine. Write raptor, never Raptor-1. talon-1 keeps its version and carries no mark. talon-1 powers raptor; raptor runs on Harness. The ® appears only in the raptor® wordmark.
 
 ## Publishing skeletons
 

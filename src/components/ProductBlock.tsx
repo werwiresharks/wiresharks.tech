@@ -24,7 +24,7 @@ export function ProductBlock({
   id: string;
   index: string;
   kind: string;
-  name: string;
+  name: ReactNode;
   summary: string;
   children: ReactNode;
   stats?: [string, string][];

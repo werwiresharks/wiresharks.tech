@@ -9,20 +9,20 @@ import { Console } from "../components/mock/Console";
 import { Registry } from "../components/mock/Registry";
 
 const PIPELINE = [
-  ["Foundation", "A strong open-weight base. Talon-1 builds on Qwen3.8-27B, with provenance and license verified."],
-  ["Remove refusals", "Remove the model's refusal behavior from the weights. Its knowledge and reasoning stay intact. The evaluations measure this."],
-  ["Specialize", "Cybersecurity post-training with QLoRA and rsLoRA on a vetted corpus. General coding and reasoning stay intact."],
-  ["Evaluate", "Benchmarked against the base, the version with refusals removed, and leading open-weight and frontier models."],
-  ["Quantize", "Hardware-specific builds for llama.cpp, vLLM and Apple Silicon. Offline after install."],
+  ["Foundation", "A strong open-weight base. talon-1 builds on Qwen3.8-27B. We check its provenance and its license."],
+  ["Remove refusals", "We remove the refusal behavior from the weights. Knowledge and reasoning stay the same. The evaluations measure this."],
+  ["Specialize", "Security post-training with QLoRA and rsLoRA on a vetted corpus. General coding and reasoning stay the same."],
+  ["Evaluate", "Benchmarks against the base, the base with refusals removed, and leading open-weight and frontier models."],
+  ["Quantize", "Builds for llama.cpp, vLLM and Apple Silicon. No network after install."],
 ];
 
 const DOMAINS = [
-  ["Vulnerability research", "Find, triage and explain weaknesses in real code."],
+  ["Vulnerability research", "Find, sort and explain weaknesses in real code."],
   ["Reverse engineering", "Analyze binaries, protocols and obfuscated code."],
-  ["Secure coding", "Write and remediate with the attacker in mind."],
-  ["SOC analysis", "Triage threat intelligence, build detections and respond to incidents."],
-  ["Authorized red teaming", "Plan and execute within an explicit scope."],
-  ["CTF", "Solve challenges from authorized competition environments."],
+  ["Secure coding", "Write and fix code with the attacker in mind."],
+  ["SOC analysis", "Sort threat intelligence, write detections and respond to incidents."],
+  ["Authorized red teaming", "Plan and run engagements inside an explicit scope."],
+  ["CTF", "Solve challenges from authorized competitions."],
 ];
 
 const STATS: [string, string][] = [
@@ -33,7 +33,7 @@ const STATS: [string, string][] = [
 
 const SPEC = [
   ["Foundation", "Qwen3.8-27B"],
-  ["Method", "Refusals removed, then security fine-tune"],
+  ["Method", "Refusals removed, then a security fine-tune"],
   ["Adapters", "QLoRA, rsLoRA"],
   ["Inference", "llama.cpp, vLLM, Apple Silicon"],
   ["Platforms", "macOS, Windows, Linux"],
@@ -44,25 +44,29 @@ const SPEC = [
 export function Talon() {
   return (
     <>
-      <title>Talon-1 | Wiresharks</title>
+      <title>talon-1 | Wiresharks</title>
       <link rel="canonical" href="https://wiresharks.tech/talon" />
       <PageHead
-        label="Model / Talon-1"
-        title="The world's most dangerous model."
+        label={
+          <>
+            Model / <span className="keep-case">talon-1</span>
+          </>
+        }
+        title="The open-weight security model."
         mark={
           <div className="talon-frame">
             <StaticOrb />
           </div>
         }
       >
-        Talon-1 is the open-weight security model that powers Raptor. It is fine-tuned for
-        offensive and defensive cybersecurity. After install, it runs on your machine.
+        talon-1 is the open-weight security model that powers raptor. It is fine-tuned for
+        offensive and defensive security work. After you install it, it runs on your machine.
       </PageHead>
 
       <Feature
         index="01"
         eyebrow="Refusals removed"
-        title="Nothing held back."
+        title="It does not refuse security work."
         panel={
           <Compare
             prompt="Write a working PoC for the deserialization bug in upload.py so we can confirm the fix before release."
@@ -77,8 +81,8 @@ export function Talon() {
         }
       >
         <p>
-          We find the model's refusal behavior in its weights and remove it. The model does not
-          refuse. Everything else it knows stays intact. The evaluations measure this.
+          We find the refusal behavior in the model's weights and remove it. The model does not
+          refuse. Everything else it knows stays the same. The evaluations measure this.
         </p>
         <p>Removing refusals adds no capability. Fine-tuning adds it.</p>
       </Feature>
@@ -107,12 +111,10 @@ export function Talon() {
         }
       >
         <p>
-          Quantized builds for llama.cpp, vLLM and Apple Silicon. macOS, Windows and Linux. After
-          install, no network is required.
+          Quantized builds for llama.cpp, vLLM and Apple Silicon run on macOS, Windows and Linux.
+          After install, talon-1 needs no network.
         </p>
-        <p>
-          Prompts, outputs and logs never leave your machine. There is no telemetry to turn off.
-        </p>
+        <p>Prompts, outputs and logs stay on your machine. There is no telemetry to turn off.</p>
       </Feature>
 
       <Feature
@@ -128,7 +130,7 @@ export function Talon() {
               { key: "sec", name: "Secure coding and remediation", meta: "patched/unpatched pairs" },
               { key: "soc", name: "SOC and incident response", meta: "threat intel · detections" },
               { key: "red", name: "Authorized red teaming", meta: "scoped engagements · CTF", active: true },
-              { key: "tools", name: "Tool-use reasoning traces", meta: "Raptor sessions" },
+              { key: "tools", name: "Tool-use reasoning traces", meta: "raptor sessions" },
             ]}
           />
         }
@@ -142,8 +144,8 @@ export function Talon() {
           ))}
         </ol>
         <p className="muted">
-          Every source has established training rights. Secrets are scanned out. Benchmark data
-          is held back so the evaluations mean something.
+          Every source has established training rights. We scan secrets out of the data. We hold
+          benchmark data back, so the evaluations stay fair.
         </p>
       </Feature>
 
@@ -154,7 +156,7 @@ export function Talon() {
               <span className="index">04</span> / Pipeline
             </Reveal>
             <Reveal as="h2" delay={60} words>
-              <span id="pipeline-title"><Words>Not trained from scratch. Sharpened.</Words></span>
+              <span id="pipeline-title"><Words>Five steps from base model to release.</Words></span>
             </Reveal>
           </header>
           <ol className="pipeline">
@@ -193,9 +195,9 @@ export function Talon() {
         }
       >
         <p>
-          Talon-1 ships with reproducible benchmarks. They compare Talon-1 with its base, the
-          version with refusals removed, and leading open-weight and frontier models. The
-          benchmark suite ships with the weights.
+          talon-1 ships with reproducible benchmarks. They compare talon-1 with its base, the base
+          with refusals removed, and leading open-weight and frontier models. The benchmark suite
+          ships with the weights.
         </p>
       </Feature>
 
@@ -206,7 +208,7 @@ export function Talon() {
               <span className="index">06</span> / Specification
             </Reveal>
             <Reveal as="h2" delay={60} words>
-              <span id="spec-title"><Words>Talon-1 at a glance.</Words></span>
+              <span id="spec-title"><Words>talon-1 at a glance.</Words></span>
             </Reveal>
           </div>
           <Reveal delay={120}>
@@ -225,7 +227,7 @@ export function Talon() {
 
       <Closing
         title="Open weights. December 25."
-        text="Talon-1 ships with its evaluations, Raptor and Harness."
+        text="talon-1 ships with its evaluations, raptor and Harness."
         mark={<StaticOrb />}
       />
     </>

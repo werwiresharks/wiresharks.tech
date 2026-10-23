@@ -3,10 +3,11 @@ import { ArrowUpRight } from "@phosphor-icons/react";
 import { CONTACT_EMAIL, CONTACT_HREF, GITHUB_HREF } from "../site";
 import { LogoMark } from "./LogoMark";
 import { Wordmark } from "./Wordmark";
+import { RaptorWordmark } from "./RaptorWordmark";
 
 const PRODUCTS = [
-  { to: "/raptor", label: "Raptor", note: "Agent" },
-  { to: "/talon", label: "Talon-1", note: "Model" },
+  { to: "/raptor", label: <RaptorWordmark />, note: "Agent" },
+  { to: "/talon", label: "talon-1", note: "Model" },
   { to: "/#platform", label: "Platform", note: "Architecture" },
   { to: "/#faq", label: "FAQ", note: "Answers" },
 ];
@@ -51,7 +52,7 @@ export function Footer() {
       <div className="wrap">
         <div className="footer-meta">
           <span>© {new Date().getFullYear()} Wiresharks</span>
-          <span>Raptor / Talon-1 / Built for authorized security work</span>
+          <span>raptor / talon-1 / For authorized security work</span>
         </div>
       </div>
       <p className="footer-mark" aria-hidden="true">

@@ -4,6 +4,7 @@ import { Countdown } from "../components/Countdown";
 import { Cta } from "../components/Cta";
 import { TalonIcon, RaptorIcon } from "../components/ProductIcons";
 import { Reveal, Words } from "../components/Reveal";
+import { RaptorWordmark } from "../components/RaptorWordmark";
 import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
 import { Platform } from "../components/Platform";
@@ -17,32 +18,32 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 
 const FAQ: [string, string][] = [
   [
-    "What is Raptor?",
-    "Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code. Each worker tests on real systems. Raptor checks the result. It runs Talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates Raptor's work.",
+    "What is raptor?",
+    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code. When a command needs your approval, raptor shows you the whole command first. It runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
   ],
   [
-    "What is Talon-1?",
-    "Talon-1 is the open-weight security model that powers Raptor. It is a 27B model, fine-tuned for offensive and defensive cybersecurity. It runs on your machine. It ships with its evaluations on December 25, 2026.",
+    "What is talon-1?",
+    "talon-1 is the open-weight security model that powers raptor. It is a 27B model, fine-tuned for offensive and defensive security work. It runs on your machine. It ships with its evaluations on December 25, 2026.",
   ],
   [
     "Does the model refuse security questions?",
-    "No. We remove the model's refusal behavior from its weights, so it does not refuse security work. Its knowledge and reasoning stay intact. The evaluations measure this.",
+    "No. We remove the refusal behavior from the model's weights, so it does not refuse security work. Its knowledge and reasoning stay the same. The evaluations measure this.",
   ],
   [
     "Does it need the cloud?",
-    "No. After install, Talon-1 runs offline. Prompts, outputs and logs stay on your machine.",
+    "No. After you install it, talon-1 runs offline. Prompts, outputs and logs stay on your machine.",
   ],
   [
     "What hardware does it need?",
-    "Quantized builds run on one workstation or laptop. Use Apple Silicon with 32 GB or more, or a CUDA GPU with 24 GB or more. Exact requirements ship with the release.",
+    "Quantized builds run on one workstation or laptop. Use Apple Silicon with 32 GB of memory or more, or a CUDA GPU with 24 GB or more. The release lists the exact requirements.",
   ],
 ];
 
 const PRINCIPLES: [string, string][] = [
-  ["Runs here. Stays here.", "Prompts, outputs and weights never leave your machine. After install, no network is needed. There is no telemetry to turn off."],
-  ["Answers what others won't.", "We remove the model's refusal behavior, then fine-tune it for real security work."],
-  ["Open weights.", "Talon-1, its evaluations, Raptor and Harness ship together. You run them. You inspect them."],
-  ["Proven, then patched.", "Raptor reproduces every finding before it reports it. A second model reviews every patch."],
+  ["Runs here. Stays here.", "Prompts, outputs and weights stay on your machine. After install, talon-1 needs no network. There is no telemetry to turn off."],
+  ["No refusals on security work.", "We remove the refusal behavior from the weights. Then we fine-tune the model for security work."],
+  ["Open weights.", "talon-1, its evaluations, raptor and Harness ship together. You run them. You inspect them."],
+  ["You approve what runs.", "raptor shows the whole command before you approve it. It records each decision on your machine."],
 ];
 
 export function Home() {
@@ -74,19 +75,22 @@ export function Home() {
             <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model that powers it.</p>
             <p className="hero-key label">
               <span>
-                <b>Raptor</b> Agent
+                <b>
+                  <RaptorWordmark />
+                </b>{" "}
+                Agent
               </span>
               <span>
-                <b>Talon-1</b> Model
+                <b className="keep-case">talon-1</b> Model
               </span>
             </p>
           </Reveal>
           <Reveal delay={180} className="hero-ctas">
             <Cta to="/raptor" icon={<RaptorIcon />}>
-              Meet Raptor
+              Meet raptor
             </Cta>
             <Cta to="/talon" variant="secondary" icon={<TalonIcon />}>
-              Explore Talon-1
+              Explore talon-1
             </Cta>
           </Reveal>
           {/* Phones stack the orb here, in flow, with the countdown beneath it. */}
@@ -112,8 +116,8 @@ export function Home() {
               <span id="products-title"><Words>An agent, and the model that powers it.</Words></span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              Raptor is the agent. It plans, acts and checks its own work. Talon-1 is the model that
-              powers Raptor. The two ship together.
+              raptor is the agent. It plans the work, does it and checks it. talon-1 is the model
+              that powers raptor. The two ship together.
             </Reveal>
           </header>
 
@@ -121,16 +125,16 @@ export function Home() {
             id="raptor"
             index="01.1"
             kind="Agent / Runs on Harness"
-            name="Raptor"
-            summary="The autonomous agent that runs Talon-1 by default."
+            name={<RaptorWordmark />}
+            summary="The autonomous agent. It runs talon-1 by default."
             specs={[
               ["Engines", "Hermes · Claude Code · Codex"],
-              ["Models", "Talon-1 (local), commercial APIs, private endpoints"],
-              ["Workers", "Each in its own copy of the code"],
-              ["Merges", "One at a time, always reviewed"],
+              ["Models", "talon-1 (local), commercial APIs, private endpoints"],
+              ["Workers", "Own copy of the code, resumable"],
+              ["Approvals", "The whole command, shown first"],
             ]}
             to="/raptor"
-            linkLabel="Meet Raptor"
+            linkLabel="Meet raptor"
             visual={
               <TaskGraph
                 journey
@@ -147,29 +151,29 @@ export function Home() {
             }
           >
             <p>
-              Raptor plans a task and splits it across parallel workers. Workers act with scoped
-              tools. Raptor verifies the result before anything lands.
+              raptor plans a task and splits it across parallel workers. Each worker uses only the
+              tools its scope allows. A finished worker can resume later with its full context.
             </p>
             <p>
-              By default, it runs Talon-1 on your machine. You can point it at any other model. You
-              choose the model and the engine separately for each task.
+              By default, raptor runs talon-1 on your machine. You can use any other model. You
+              choose the model and the engine for each task.
             </p>
           </ProductBlock>
 
           <div className="product-link" aria-hidden="true">
-            <span className="label">Raptor</span>
+            <span className="label keep-case">raptor</span>
             <i />
             <span className="label">powered by</span>
             <i />
-            <span className="label">Talon-1</span>
+            <span className="label keep-case">talon-1</span>
           </div>
 
           <ProductBlock
             id="talon"
             index="01.2"
             kind="Model / Open weights"
-            name="Talon-1"
-            summary="The open-weight model that powers Raptor."
+            name="talon-1"
+            summary="The open-weight model that powers raptor."
             stats={[
               ["27B", "Parameters"],
               ["128k", "Context"],
@@ -180,7 +184,7 @@ export function Home() {
               ["Weights", "Open"],
             ]}
             to="/talon"
-            linkLabel="Explore Talon-1"
+            linkLabel="Explore talon-1"
             flip
             visual={
               <div className="home-console">
@@ -204,12 +208,12 @@ export function Home() {
             }
           >
             <p>
-              Security work involves code, credentials and findings that must not leave the
-              building. Talon-1 runs offline on one workstation. Prompts, outputs and logs stay on
-              your machine.
+              Security work uses code, credentials and findings that must stay in your building.
+              talon-1 runs offline on one workstation. Prompts, outputs and logs stay on your
+              machine.
             </p>
             <p>
-              Talon-1 is fine-tuned for offensive and defensive cybersecurity. It covers
+              talon-1 is fine-tuned for offensive and defensive security work. It covers
               vulnerability research, reverse engineering, secure coding, SOC analysis and
               authorized red teaming.
             </p>
@@ -232,7 +236,7 @@ export function Home() {
               <span className="index">04</span> / Principles
             </Reveal>
             <Reveal as="h2" delay={60} words>
-              <span id="principles-title"><Words>Built for real security work.</Words></span>
+              <span id="principles-title"><Words>Built for authorized security work.</Words></span>
             </Reveal>
           </header>
           <ul className="principle-grid">
@@ -248,7 +252,7 @@ export function Home() {
             <div className="split-copy">
               <Reveal as="h3">One prompt. Two answers.</Reveal>
               <Reveal as="p" delay={60}>
-                One request, sent to Talon-1 and to a typical hosted model in an authorized lab.
+                One request, sent to talon-1 and to a typical hosted model in an authorized lab.
               </Reveal>
             </div>
             <Reveal className="split-visual" delay={120}>
@@ -273,7 +277,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="Talon-1 weights, evaluations, Raptor and Harness ship together on December 25, 2026."
+          text="talon-1 weights, its evaluations, raptor and Harness ship together on December 25, 2026."
         />
       </div>
     </div>

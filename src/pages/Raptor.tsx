@@ -1,5 +1,7 @@
 import { PageHead } from "../components/PageHead";
 import { RaptorMarkDrawn } from "../components/ProductIcons";
+import { RaptorWordmark } from "../components/RaptorWordmark";
+import { Shipped } from "../components/Shipped";
 import { Reveal, Words } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
@@ -9,14 +11,14 @@ import { TaskGraph } from "../components/mock/TaskGraph";
 import { REVIEW_STEPS } from "../content";
 
 const LAYERS = [
-  ["Experience", "Chat, files, diffs, tool traces, approvals, background jobs."],
-  ["Control plane", "Sessions, identity, normalized events, task graph, scheduler."],
-  ["Engines", "Hermes native, Claude Code, Codex."],
-  ["Inference", "Talon-1 local, commercial APIs, private endpoints."],
-  ["Orchestration", "Bounded parallel workers, recursive tasks, reviewers, schedules."],
-  ["Knowledge", "Context, evidence, working and durable memory, skills."],
-  ["Execution", "Scoped tools, containers, browser, terminal, MCP."],
-  ["Verification", "Tests, cross-model review, provenance, rollback."],
+  ["Experience", "Chat, files, diffs, tool traces, approvals and background jobs."],
+  ["Control plane", "Sessions, identity, normalized events, the task graph and the scheduler."],
+  ["Engines", "Hermes native, Claude Code and Codex."],
+  ["Inference", "talon-1 on your machine, commercial APIs and private endpoints."],
+  ["Orchestration", "Parallel workers with limits, nested tasks, lateral peers and schedules."],
+  ["Knowledge", "Context, cited evidence, working and durable memory, and skills."],
+  ["Execution", "Scoped tools, containers, browser, terminal and MCP."],
+  ["Verification", "Approval gates, a record of each decision, tests and provenance."],
 ];
 
 const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento", "Pi", "P-Stack", "OpenClaw", "LangGraph", "OpenHands", "Aider"];
@@ -24,18 +26,35 @@ const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento"
 export function Raptor() {
   return (
     <>
-      <title>Raptor | Wiresharks</title>
+      <title>raptor | Wiresharks</title>
       <link rel="canonical" href="https://wiresharks.tech/raptor" />
       <link rel="icon" href="/raptor.svg" type="image/svg+xml" />
-      <PageHead label="Agent / Raptor" title="The autonomous cybersecurity agent." mark={<RaptorMarkDrawn />}>
-        Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
-        works with any model. It plans the work and keeps its own memory and skills. Harness runs
-        and coordinates that work. Harness adds full support for Claude Code and Codex.
+      <PageHead
+        label={
+          <>
+            Agent / <span className="keep-case">raptor</span>
+          </>
+        }
+        title="The autonomous cybersecurity agent."
+        mark={
+          <div className="page-lockup">
+            <RaptorMarkDrawn />
+            <RaptorWordmark />
+          </div>
+        }
+      >
+        raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
+        works with any model. It plans the work and keeps its own memory and skills. Harness is the
+        infrastructure that runs and coordinates raptor's work. It adds support for Claude Code and
+        Codex.
       </PageHead>
 
+      <Shipped index="01" />
+
       <Feature
-        index="01"
+        index="02"
         eyebrow="Engines"
+        tone="soft"
         title="Three engines. One workspace."
         panel={
           <Registry
@@ -50,17 +69,16 @@ export function Raptor() {
         }
       >
         <p>
-          Each engine is a first-class adapter: authentication, models, start, resume, streaming,
-          tool calls, interruption, cancellation and recovery.
+          Each engine is a full adapter. It handles sign-in, models, start, resume, streaming, tool
+          calls, interrupts, cancellation and recovery.
         </p>
-        <p>You choose the model and the engine separately for each task.</p>
+        <p>You choose the model and the engine for each task.</p>
       </Feature>
 
       <Feature
-        index="02"
+        index="03"
         eyebrow="Orchestration"
         title="Parallel workers. Durable checkpoints."
-        tone="soft"
         flip
         panel={
           <TaskGraph
@@ -76,73 +94,70 @@ export function Raptor() {
         }
       >
         <p>
-          Raptor keeps a task graph with stable IDs, parents, budgets and checkpoints. Each
-          worker runs in its own copy of the code. Explicit limits set how many workers run at once
+          raptor keeps a task graph with stable IDs, parents, budgets and checkpoints. Each worker
+          runs in its own copy of the code. Limits that you set control how many workers run at once
           and what they cost.
         </p>
         <p>
-          When a worker stalls or runs out of context, a fresh worker continues from a structured
-          handoff. A single merge queue lands changes one at a time. Nothing merges unreviewed.
-        </p>
-      </Feature>
-
-      <Feature
-        index="03"
-        eyebrow="Knowledge"
-        title="Skills on demand. Memory that lasts."
-        panel={
-          <Registry
-            title="raptor / skills"
-            rows={[
-              { key: "sec-review", name: "Repository security review", meta: "v4 · 20 evals · active", active: true },
-              { key: "swarm", name: "Fan-out coverage", meta: "v2 · 12 evals" },
-              { key: "interrogate", name: "Cross-model review", meta: "v3 · 9 evals", active: true },
-              { key: "landing", name: "Merge queue, one at a time", meta: "v1 · 6 evals" },
-              { key: "memory", name: "Durable memory · 1,284 entries", meta: "provenance · confidence · expiry" },
-            ]}
-          />
-        }
-      >
-        <p>
-          The skill registry is versioned. Each skill has triggers, dependencies, a license and
-          evaluation scores. Skills load on demand, so the always-on context stays small.
-        </p>
-        <p>
-          Episodic history consolidates into durable, source-aware memory. Each memory has
-          provenance, confidence and revision history.
+          A finished worker can resume later with its history, tools and instructions. In a swarm, a
+          worker that finds missing work adds a peer, up to a fixed limit.
         </p>
       </Feature>
 
       <Feature
         index="04"
+        eyebrow="Knowledge"
+        title="Skills on demand. Memory that lasts."
+        tone="soft"
+        panel={
+          <Registry
+            title="raptor / skills"
+            rows={[
+              { key: "security-audit", name: "Source-code security audit", meta: "optional · Cloudflare · MIT", active: true },
+              { key: "rea", name: "Reverse engineering, 20 tools", meta: "MCP · approval gates" },
+              { key: "work-routing", name: "Suggests how to run a task", meta: "suggestion only" },
+              { key: "skill-fabric", name: "Cited evidence pages", meta: "opt-in · exact sources", active: true },
+              { key: "llm_query", name: "Model calls from kernel code", meta: "answers only return" },
+            ]}
+          />
+        }
+      >
+        <p>
+          Skills load when a task needs them, so the base context stays small. Each skill has
+          triggers, dependencies and a license.
+        </p>
+        <p>
+          Opt-in sessions write evidence pages that cite their exact sources. Code in the kernel can
+          call <code>llm_query</code> to read large logs and datasets. Only the answers come back
+          into context.
+        </p>
+      </Feature>
+
+      <Feature
+        index="05"
         eyebrow="Workflow"
         title="Authorized repository security review."
-        tone="soft"
         flip
         panel={
           <Console
             title="raptor / review"
             lines={[
-              "$ raptor review ./acme-api --scope auth,upload,deploy",
-              "mapping 1,912 files · 3 entrypoints · 41 external calls",
-              "spawning 4 workers (talon-1 · hermes/claude-code/codex)",
+              '$ raptor review ./acme-api --scope "src/**" --out report.md',
+              "scope  ./acme-api · read-only",
+              "map    1,912 files in scope",
+              "find   8 files at a time",
               "",
-              "finding #1  deploy.sh:41   CWE-78   exec with unsanitized $TAG",
-              "finding #2  upload.py:88   CWE-502  pickle.loads on request body",
-              "finding #3  auth.py:120    CWE-287  token compare not constant-time",
+              "high    deploy.ts:41   CWE-78   shell command built from a string",
+              "high    upload.py:88   CWE-502  pickle on untrusted data",
+              "medium  client.py:23   CWE-295  TLS verification disabled",
               "",
-              "verifying #1 .. reproduced in sandbox",
-              "verifying #2 .. reproduced in sandbox",
-              "verifying #3 .. not exploitable (rate-limited), downgraded",
-              "",
-              "patching in worktree review/acme-api-7f3",
-              "tests 212 passed · reviewer claude-opus: approve",
-              "report.md · patch.diff · rollback.sh written",
+              "report.md written · 3 findings",
+              "exit 1 · a high finding fails the run",
             ]}
           />
         }
       >
-        <p>The first workflow Raptor runs end to end.</p>
+        <p>The first workflow raptor runs end to end. It reads and reports. It does not patch, deploy or exploit.</p>
         <ol className="steps">
           {REVIEW_STEPS.map(([name, text]) => (
             <li key={name}>
@@ -157,7 +172,7 @@ export function Raptor() {
         <div className="wrap">
           <header className="section-head">
             <Reveal as="p" className="label">
-              <span className="index">05</span> / Architecture
+              <span className="index">06</span> / Architecture
             </Reveal>
             <Reveal as="h2" delay={60} words>
               <span id="arch-title"><Words>Eight layers. One system.</Words></span>
@@ -179,7 +194,7 @@ export function Raptor() {
         <div className="wrap lineage-layout">
           <div>
             <Reveal as="p" className="label">
-              <span className="index">06</span> / Lineage
+              <span className="index">07</span> / Lineage
             </Reveal>
             <Reveal as="h2" delay={60} words>
               <span id="lineage-title">
@@ -198,7 +213,7 @@ export function Raptor() {
       </section>
 
       <Closing
-        title="Raptor runs Talon-1 by default."
+        title="raptor runs talon-1 by default."
         text="Both ship together on December 25, 2026."
         mark={<RaptorMarkDrawn />}
       />

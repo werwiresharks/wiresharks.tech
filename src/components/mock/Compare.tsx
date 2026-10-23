@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { PanelBar } from "./PanelBar";
 import { useInView } from "../useInView";
 
-/** Side-by-side: the same prompt to Talon-1 and to a typical hosted model. */
+/** Side by side, the same prompt to talon-1 and to a typical hosted model. */
 export function Compare({
   prompt,
   answer,
@@ -15,7 +15,7 @@ export function Compare({
   const [ref, entrance] = useInView<HTMLDivElement>();
   const state = entrance === "still" ? "" : entrance === "play" ? " is-streaming in" : " is-streaming";
   return (
-    <div ref={ref} className={`panel compare${state}`} data-ui aria-label="Talon-1 compared with other models">
+    <div ref={ref} className={`panel compare${state}`} data-ui aria-label="talon-1 compared with other models">
       <PanelBar title="talon-1 / compare" />
       <div className="compare-prompt">
         <span className="tag">User</span>
@@ -23,7 +23,7 @@ export function Compare({
       </div>
       <div className="compare-grid">
         <div>
-          <span className="tag tag-ok">Talon-1</span>
+          <span className="tag tag-ok keep-case">talon-1</span>
           <ol>
             {answer.map((line, i) => (
               <li key={line} style={{ "--i": i } as CSSProperties}>

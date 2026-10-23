@@ -4,6 +4,7 @@ import { ArrowUpRight, List, X } from "@phosphor-icons/react";
 import { CONTACT_HREF, NAV } from "../site";
 import { LogoMark } from "./LogoMark";
 import { Wordmark } from "./Wordmark";
+import { RaptorWordmark } from "./RaptorWordmark";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -129,17 +130,11 @@ export function Header() {
           {open ? <X size={20} /> : <List size={20} />}
         </button>
         <nav id="navigation" ref={menu} className={open ? "nav open" : "nav"} aria-label="Main navigation">
-          {NAV.map((item) =>
-            item.to.includes("#") ? (
-              <Link key={item.to} to={item.to} onClick={() => setOpen(false)}>
-                {item.label}
-              </Link>
-            ) : (
-              <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
-                {item.label}
-              </NavLink>
-            ),
-          )}
+          {NAV.map((item) => (
+            <NavLink key={item.to} to={item.to} onClick={() => setOpen(false)}>
+              {item.wordmark ? <RaptorWordmark /> : item.label}
+            </NavLink>
+          ))}
           <a className="nav-cta" href={CONTACT_HREF} onClick={() => setOpen(false)}>
             Contact <ArrowUpRight size={13} weight="bold" />
           </a>

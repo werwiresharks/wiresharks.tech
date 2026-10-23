@@ -3,7 +3,7 @@ import { Countdown } from "./Countdown";
 import { Reveal, Words } from "./Reveal";
 
 /** Opening block for a product page: identifier, title, lede, release, and the product's mark. */
-export function PageHead({ label, title, mark, children }: { label: string; title: string; mark: ReactNode; children: ReactNode }) {
+export function PageHead({ label, title, mark, children }: { label: ReactNode; title: string; mark: ReactNode; children: ReactNode }) {
   return (
     <header className="page-head">
       <div className="wrap page-head-inner">

@@ -7,14 +7,14 @@ import type { Stage, SwarmLayout } from "./swarmLayout";
 
 const STEPS: [Stage, string, string][] = [
   ["split", "Split", "One task becomes smaller jobs. Each job goes to a specialized worker."],
-  ["execute", "Execute", "The workers run at the same time and share useful findings."],
+  ["execute", "Run", "The workers run at the same time. They share what they find."],
   ["combine", "Combine", "The results combine into one report."],
 ];
 
 const f = (v: number) => v.toFixed(2);
 
 /**
- * The Raptor Swarm. The figure pins under the header while scroll steps it
+ * The raptor swarm. The figure pins under the header while scroll steps it
  * through three stages: one task splits into jobs for specialized workers,
  * the workers run in parallel, and their results combine in one shared
  * report. Under reduced motion it shows the finished figure, unpinned.
@@ -170,15 +170,15 @@ export function Swarm() {
         <header className="section-head">
           <Reveal as="p" className="label swarm-label">
             <span><span className="index">02</span> / Swarm</span>
-            <span className="swarm-status">Included in Raptor</span>
+            <span className="swarm-status">In <span className="keep-case">raptor</span></span>
           </Reveal>
           <Reveal as="h2" delay={60} words>
-            <span id="swarm-title"><Words>One worker is powerful. A swarm is unstoppable.</Words></span>
+            <span id="swarm-title"><Words>One task. Many workers.</Words></span>
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
-            Raptor Swarm puts specialized workers on complex work. The workers divide a task and run
-            in parallel. They share what they find. Their results combine into one coordinated
-            report.
+            raptor splits a large task into jobs and gives each job to a specialized worker. The
+            workers run at the same time and share what they find. A worker that finds missing work
+            can add a peer. The results combine into one report.
           </Reveal>
         </header>
 

@@ -1,6 +1,6 @@
 # Wiresharks
 
-The wiresharks.tech website: Raptor, Talon-1, and the Raptor Particle Engine.
+The wiresharks.tech website: raptor, talon-1, and the raptor particle engine.
 React, TypeScript, Vite, and Three.js.
 
 ## Run locally
@@ -23,8 +23,8 @@ npm run preview
 
 ## Structure
 
-- `src/pages/` route pages (Home, Raptor, Talon-1).
-- `src/components/` page sections (Swarm, Platform, Faq, Closing, ProductBlock, Stats, Countdown, ...),
+- `src/pages/` route pages (Home, raptor, talon-1).
+- `src/components/` page sections (Swarm, Shipped, Platform, Faq, Closing, ProductBlock, Stats, Countdown, ...), the raptor® wordmark (RaptorWordmark),
   shared hooks (useInView, usePanelGlow), and `mock/` product panels (Console, Compare, Registry, TaskGraph).
 - `src/raptor/engine/` the Raptor Particle Engine:
   - `events.ts` typed event vocabulary.

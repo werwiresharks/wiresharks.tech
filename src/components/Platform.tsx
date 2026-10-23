@@ -5,7 +5,7 @@ const TIERS = [
   {
     index: "01",
     layer: "Model",
-    name: "Talon-1",
+    name: "talon-1",
     role: "Model intelligence",
     text: "Reasons over code, binaries, logs and findings. Runs on your machine. Prompts and outputs stay there.",
     facts: ["27B · open weights", "128k context", "No network after install"],
@@ -13,18 +13,18 @@ const TIERS = [
   {
     index: "02",
     layer: "Agent",
-    name: "Raptor",
+    name: "raptor",
     role: "Agent orchestration on Harness",
-    text: "Plans the task, delegates to parallel workers and routes each step to a model and an engine. Memory and skills persist between runs.",
-    facts: ["Hermes · Claude Code · Codex", "Bounded parallel workers, reviewers", "Durable memory, versioned skills"],
+    text: "Plans the task and gives the jobs to parallel workers. A finished worker resumes with its full context. Memory and skills persist between runs.",
+    facts: ["Hermes · Claude Code · Codex", "Parallel workers, lateral peers", "Durable memory, versioned skills"],
   },
   {
     index: "03",
     layer: "Environment",
     name: "Authorized scope",
-    role: "Execution and verification",
-    text: "Scoped tools, containers, browser and terminal inside an explicit boundary. Findings are reproduced, patched in isolation and reviewed.",
-    facts: ["Scoped tools · MCP", "Own copy of the code", "Tests, cross-model review, rollback"],
+    role: "Execution and approval",
+    text: "Scoped tools, containers, browser and terminal, inside a boundary you set. Before a risky command runs, raptor shows you the whole command.",
+    facts: ["Scoped tools · MCP", "Own copy of the code", "Approval record on your machine"],
   },
 ];
 
@@ -42,7 +42,7 @@ export function Platform() {
           </Reveal>
           <Reveal as="p" delay={120} className="section-lede">
             Three tiers, each with one job. The model reasons. The agent plans and acts. The
-            environment sets the boundary for every action.
+            environment sets the boundary for each action.
           </Reveal>
         </header>
 
@@ -70,7 +70,8 @@ export function Platform() {
             Authorized repository security review
           </Reveal>
           <Reveal as="p" delay={60} className="loop-lede">
-            The first workflow Raptor runs end to end.
+            The first workflow raptor runs end to end. It reads and reports. It does not patch,
+            deploy or exploit.
           </Reveal>
           <ol className="loop-steps">
             {REVIEW_STEPS.map(([name, text], i) => (
@@ -87,8 +88,8 @@ export function Platform() {
           <div className="evidence-head">
             <Reveal as="h3">Evidence, not claims.</Reveal>
             <Reveal as="p" delay={60}>
-              Every result ships with the weights, alongside the benchmark suite that produced
-              it.
+              The results ship with the weights. The benchmark suite that produced them ships
+              too.
             </Reveal>
           </div>
           <dl className="evidence-list">

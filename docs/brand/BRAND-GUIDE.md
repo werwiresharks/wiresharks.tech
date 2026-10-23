@@ -6,23 +6,31 @@ The Wiresharks brand as it ships on [wiresharks.tech](https://wiresharks.tech/).
 
 ## Names
 
-- **Wiresharks** is the company. One word, capital W.
-- **Raptor** is the autonomous agent and its runtime. Write Raptor, never Raptor-1.
-- **Talon-1** is the open-weight model. Talon is the model layer; the shipping model keeps its version.
-- **Harness** is the infrastructure that runs and coordinates Raptor's work.
-- **Hermes** is the upstream engine Raptor is built on.
-- **Raptor Particle Engine** is the particle orb. It draws the agent's authorization state. Its CSS prefix is `rpe-`.
+Product names are lowercase wherever they name the product: the wordmark, navigation, headings, buttons, labels, page titles, metadata and running text. They stay lowercase at the start of a sentence and inside uppercase mono labels. Other names keep their own casing. Rule adopted October 23, 2026.
+
+- **Wiresharks** is the company. One word, capital W. The logo sets it as WIRESHARKS.
+- **raptor** is the autonomous agent and its runtime. Write raptor, with a lowercase r, never Raptor-1.
+- **talon-1** is the open-weight model. talon is the model layer; the shipping model keeps its version. talon-1 never carries ®, ™ or any other mark.
+- **Harness** is the infrastructure that runs and coordinates raptor's work.
+- **Hermes** is the upstream engine raptor is built on.
+- **raptor particle engine** is the particle orb. It draws the agent's authorization state. Its CSS prefix is `rpe-`.
+
+## The raptor® wordmark
+
+The raptor® wordmark is the name in lowercase Geist with the registered mark. The name tracks at -0.045em. The ® is 0.34em, Geist 500, raised to the height of the t. The claw mark may stand before the name, as it does in the claw-tear reveal. In navigation, labels and the product heading the wordmark takes the weight of the text around it; standing alone it is Geist 600.
+
+The ® belongs to the wordmark only. Never write ® in running text, headings, buttons, page titles or metadata. On the site, the `RaptorWordmark` component draws it in the navigation, the home hero, the home product block, the claw-tear reveal, the raptor page mark and the footer. The social image draws it too. `tools/check.mjs` fails a ® anywhere else in the site source.
 
 ## Product sentences
 
 Use these verbatim. Each product has one.
 
-- Raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.
-- Talon-1 is the open-weight security model that powers Raptor.
-- Harness is the infrastructure that runs and coordinates Raptor's work.
-- The Raptor Particle Engine visualizes agent authorization state. It never makes decisions.
+- raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness.
+- talon-1 is the open-weight security model that powers raptor.
+- Harness is the infrastructure that runs and coordinates raptor's work.
+- The raptor particle engine visualizes agent authorization state. It never makes decisions.
 
-Talon-1 *powers* Raptor. Raptor *runs on* Harness. Never write "runs on Talon-1".
+talon-1 *powers* raptor. raptor *runs on* Harness. Never write "runs on talon-1".
 
 ## Voice
 
@@ -31,23 +39,26 @@ Two registers share one vocabulary.
 - **Public site.** Bold and confident. The tagline is "The world's most dangerous AI." Write in the present tense, as shipping. Never "planned", "coming", "will" or "the goal is".
 - **Repositories and internal docs.** Plain, precise and authorization-gated. Keep marketing lines out of engineering READMEs.
 
-Both registers use the same names and the same product sentences. Body and spec text follows ASD-STE100 habits: sentences of 20 words or fewer, active voice, present tense, one idea per sentence and one term per concept. Use "worker" for sub-units, "agent" only for Raptor, "your machine" for where Talon-1 runs, and "ship" for release.
+Both registers use the same names and the same product sentences. Body and spec text follows ASD-STE100 habits: sentences of 20 words or fewer, active voice, present tense, one idea per sentence and one term per concept. Use "worker" for sub-units, "agent" only for raptor, "your machine" for where talon-1 runs, and "ship" for release. Describe only work that is merged, and say "suggests" for routing, which only suggests.
 
 Keep the evidence honest. Do not invent customers, partners, certifications, benchmark scores or model specifications. Label illustrations as illustrative, as the site does.
 
 | Avoid | Use |
 |---|---|
 | Wire Sharks / WireSharks | Wiresharks |
-| Raptor-1 / Raptor 1 | Raptor |
-| Talon / Talon1 for the shipping model | Talon-1 |
-| Raptor runs on Talon-1 | Talon-1 powers Raptor |
+| Raptor-1 / Raptor 1 | raptor |
+| Raptor / RAPTOR as a name in text | raptor |
+| Talon-1 / Talon / Talon1 for the shipping model | talon-1 |
+| talon-1® / talon-1™ | talon-1 |
+| Raptor® in a sentence | raptor |
+| Raptor runs on Talon-1 | talon-1 powers raptor |
 | A benchmark-shaped chart without results | A labelled diagram with no invented scores |
 
 ## Marks
 
 The lockup is the WIRESHARKS wordmark plus one red node mark. The header sets the wordmark inline: WIRE in Geist 600, SHARKS in Geist 400, 20px on desktop and 19px on mobile, at -0.045em. The header mark uses viewBox `34 32 132 94` and ends in one red square node.
 
-Original web artwork is in `assets/logo/`: `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `wiresharks-logo.png` and the product claw `raptor.svg`. The square PNG is 512 × 512 on opaque white. Keep exact bytes. Use it on white. Do not remove its background, recolour, stretch it or add effects. The Raptor claw is a product mark, never the company mark. The favicon keeps its own asset colours, #181a1b and #d52b24; they are not palette values. The inline fragments in `assets/logo/` show the header mark as it renders and depend on site CSS.
+Original web artwork is in `assets/logo/`: `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `wiresharks-logo.png` and the product claw `raptor.svg`. The square PNG is 512 × 512 on opaque white. Keep exact bytes. Use it on white. Do not remove its background, recolour, stretch it or add effects. The raptor claw is a product mark, never the company mark. The raptor® wordmark is a product mark too; see above. The favicon keeps its own asset colours, #181a1b and #d52b24; they are not palette values. The inline fragments in `assets/logo/` show the header mark as it renders and depend on site CSS.
 
 Leave half the mark height clear on every side. Minimum widths are 16px for the icon and 96px for the lockup. The kit holds the web files. Ask the design owner for outlined, reversed and CMYK masters.
 
@@ -103,7 +114,7 @@ Fixed canvases use spacing steps of 8, 16, 24, 32, 48, 72 and 96px. Give each sl
 
 Motifs: the particle orb, the claw-tear reveal, the swarm split and combine, and the red strike line. Fine grids and instrument panels carry technical detail. Panels that show sample data carry an "Illustrative" tag.
 
-One easing, `cubic-bezier(0.16, 1, 0.3, 1)`, with `cubic-bezier(0.65, 0, 0.35, 1)` for in-out moves. Durations are 160, 320 and 700ms. Reveals run 800ms of opacity, 6px blur and 14px lift; display type enters word by word. Hover effects are gated to `(hover: hover)`. Reduced motion removes reveals and smooth scroll, and the Raptor Particle Engine holds its particles still. The printable kit and templates are static. Animated collateral needs a static form and must respect reduced motion.
+One easing, `cubic-bezier(0.16, 1, 0.3, 1)`, with `cubic-bezier(0.65, 0, 0.35, 1)` for in-out moves. Durations are 160, 320 and 700ms. Reveals run 700ms of opacity, 6px blur and 14px lift; phones and touch screens skip the blur. Display type enters word by word, and a short red strike draws under each section label. Hover effects are gated to `(hover: hover)` and never carry information. Reduced motion removes reveals and smooth scroll, and the raptor particle engine holds its particles still. Touch scrolling is never held or hijacked. The printable kit and templates are static. Animated collateral needs a static form and must respect reduced motion.
 
 ## Templates
 
@@ -111,4 +122,4 @@ One easing, `cubic-bezier(0.16, 1, 0.3, 1)`, with `cubic-bezier(0.65, 0, 0.35, 1
 
 ## Sources
 
-The [live site](https://wiresharks.tech/), the [Raptor page](https://wiresharks.tech/raptor), the [Talon-1 page](https://wiresharks.tech/talon), the website's `src/styles.css`, and the [Geist license](https://github.com/vercel/geist-font/blob/main/OFL.txt).
+The [live site](https://wiresharks.tech/), the [raptor page](https://wiresharks.tech/raptor), the [talon-1 page](https://wiresharks.tech/talon), the website's `src/styles.css`, and the [Geist license](https://github.com/vercel/geist-font/blob/main/OFL.txt).

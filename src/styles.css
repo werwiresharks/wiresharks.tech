@@ -353,18 +353,20 @@ button {
   filter: blur(6px);
   transform: translate3d(0, 14px, 0);
   transition:
-    opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 800ms cubic-bezier(0.16, 1, 0.3, 1);
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out),
+    filter var(--dur-3) var(--ease-out);
 }
 .reveal.in {
   opacity: 1;
   filter: none;
   transform: none;
 }
-@media (max-width: 600px) {
+/* Phones and touch screens skip the blur: animating filter on many blocks costs frames while scrolling. */
+@media (max-width: 767px), (pointer: coarse) {
+  .reveal,
   .reveal:not(.in) {
-    filter: blur(4px);
+    filter: none;
   }
 }
 /* Display type enters word by word: opacity and lift only, no blur at this size. */
@@ -857,7 +859,11 @@ button {
 }
 .hero-key b {
   margin-right: 6px;
+  font-family: var(--sans);
+  font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
   color: var(--fg);
 }
 .hero-ctas {
@@ -2619,10 +2625,10 @@ button {
   line-height: 0.9;
   letter-spacing: -0.06em;
 }
-.claw-under-mark {
-  flex: none;
+.claw-under-name .raptor-wordmark-mark {
   width: 0.78em;
   height: 0.78em;
+  margin-right: 0.12em;
   color: var(--fg);
 }
 .claw-under-code {
@@ -3009,5 +3015,233 @@ button {
   }
   .swarm-steps li > span:last-child {
     display: block;
+  }
+}
+
+/* ==========================================================================
+   Brand names
+   Product names stay lowercase, also inside uppercase labels. The ® belongs
+   to the raptor® wordmark only, never to running text.
+   ========================================================================== */
+.keep-case {
+  text-transform: none;
+}
+.label .keep-case {
+  letter-spacing: 0.02em;
+}
+.raptor-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  text-transform: none;
+}
+.raptor-wordmark-mark {
+  flex: none;
+  align-self: center;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.2em;
+}
+/* The mark sits at the height of the t, small enough to read as a mark rather than a letter. */
+.raptor-wordmark-reg {
+  margin-left: 0.12em;
+  font-size: 0.34em;
+  font-weight: 500;
+  letter-spacing: 0;
+  transform: translateY(-1.15em);
+}
+/* In navigation, labels and headings the wordmark takes the weight of its surroundings. */
+.nav .raptor-wordmark,
+.hero-key .raptor-wordmark,
+.footer-col .raptor-wordmark,
+.product h3 .raptor-wordmark {
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+.nav .raptor-wordmark-reg,
+.footer-col .raptor-wordmark-reg {
+  font-size: 0.5em;
+  transform: translateY(-0.8em);
+}
+
+/* raptor's page mark: the drawn claw above the wordmark, which arrives once the claws fill. */
+.page-lockup {
+  display: grid;
+  justify-items: center;
+  gap: clamp(20px, 2.4vw, 32px);
+}
+.page-lockup .mark-draw {
+  width: 70%;
+}
+.page-lockup .raptor-wordmark {
+  font-size: clamp(3rem, 5.4vw, 4.75rem);
+  animation: lockup-in var(--dur-3) var(--ease-out) 1300ms both;
+}
+@keyframes lockup-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+}
+@media (max-width: 1023px) {
+  .page-mark:has(.page-lockup) {
+    width: auto;
+  }
+  .page-lockup {
+    grid-auto-flow: column;
+    justify-items: start;
+    align-items: center;
+    gap: 14px;
+  }
+  .page-lockup .mark-draw {
+    width: clamp(48px, 12vw, 72px);
+  }
+  .page-lockup .raptor-wordmark {
+    font-size: clamp(2.25rem, 9vw, 3.25rem);
+    animation-delay: 900ms;
+  }
+}
+
+/* A short red strike draws under each section label as the section enters. */
+.section-head > .label.reveal {
+  position: relative;
+}
+.section-head > .label.reveal::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -11px;
+  width: 28px;
+  height: 1px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-3) var(--ease-out) 240ms;
+}
+.section-head > .label.reveal.in::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+   New in raptor: merged work, grouped by the job it does
+   ========================================================================== */
+.shipped-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+.shipped-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent);
+  border-radius: 4px;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.06em;
+  color: var(--ok);
+}
+.shipped-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--ok);
+}
+.shipped-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(28px, 3vw, 40px);
+}
+.shipped-group {
+  min-width: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-strong);
+}
+.shipped-group ul {
+  margin-top: 8px;
+}
+.shipped-group li {
+  position: relative;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+  transition-delay: calc(160ms + var(--i) * 70ms);
+}
+.shipped-group.in li {
+  opacity: 1;
+  transform: none;
+}
+.shipped-group li::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.shipped-group code {
+  display: inline-block;
+  max-width: 100%;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
+  font: var(--fs-micro) / 1.5 var(--mono);
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+.shipped-group b {
+  display: block;
+  margin-top: 12px;
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.shipped-group p {
+  margin-top: 6px;
+  font-size: var(--fs-small);
+  line-height: 1.55;
+  color: var(--muted);
+}
+@media (hover: hover) {
+  .shipped-group li:hover::after {
+    transform: scaleX(1);
+  }
+}
+@media (max-width: 1100px) {
+  .shipped-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 48px;
+  }
+}
+@media (max-width: 599px) {
+  .shipped-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-lockup .raptor-wordmark {
+    animation: none;
+  }
+  .shipped-group li {
+    opacity: 1;
+    transform: none;
+  }
+  .section-head > .label.reveal::after {
+    transform: none;
   }
 }
