@@ -178,7 +178,8 @@ const BODIES: {
  */
 export function parseEvent(raw: unknown): RaptorEvent | null {
   if (!isRecord(raw)) return null;
-  if (typeof raw.type !== "string" || !(raw.type in BODIES)) return null;
+  // Own keys only: `in` also finds Object.prototype members such as "constructor".
+  if (typeof raw.type !== "string" || !Object.hasOwn(BODIES, raw.type)) return null;
   if (!num(raw.seq) || !Number.isInteger(raw.seq) || raw.seq < 0) return null;
   if (raw.at !== undefined && !num(raw.at)) return null;
   if (raw.hydrate !== undefined && typeof raw.hydrate !== "boolean") return null;

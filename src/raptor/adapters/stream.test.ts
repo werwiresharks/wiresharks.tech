@@ -80,6 +80,15 @@ test("parseEvent rejects malformed, partial, and hostile input", () => {
   }
 });
 
+test("event types named after Object.prototype members are rejected before they reach the engine", () => {
+  for (const type of ["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf"]) {
+    const raw = JSON.parse(`{"type":${JSON.stringify(type)},"seq":1}`);
+    assert.doesNotThrow(() => parseEvent(raw), type);
+    assert.equal(parseEvent(raw), null, type);
+    assert.deepEqual(parseMessage(JSON.stringify(raw)), [], type);
+  }
+});
+
 test("parseEvent accepts an explicit parentId string", () => {
   const event = parseEvent({
     type: "agent.spawned",
