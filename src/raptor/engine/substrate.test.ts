@@ -254,7 +254,7 @@ test("row residents follow layout on the next frame and clipped rows disappear w
   assert.ok(s.substrate.snapshot().inFlight > 0, "layout following preserves particle flights");
 });
 
-test("returning rows follow their clipped slots while flights cross the viewport freely", () => {
+test("returning rows follow their clipped slots and departures clip until they leave the row", () => {
   const s = scene();
   s.send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
   for (const event of spawn("a")) s.send(event);
@@ -276,9 +276,16 @@ test("returning rows follow their clipped slots while flights cross the viewport
   for (let i = 0; i < CAPACITY; i++) {
     if (s.substrate.flightOf[i] < 0) continue;
     flights++;
-    assert.deepEqual([...s.field.clip.subarray(i * 4, i * 4 + 4)], [0, 0, 0, 0], "return flights retain no resident clip");
+    assert.deepEqual([...s.field.clip.subarray(i * 4, i * 4 + 4)], [20, 90, 360, 480], "departures still resting at the source retain its clip");
     assert.ok(Math.abs(s.field.position[i * 3] - before[i * 3] - 40 * 4 / 600) < 1e-6, "a returning row follows horizontal layout before departure");
     assert.ok(Math.abs(s.field.position[i * 3 + 1] - before[i * 3 + 1] + 70 * 4 / 600) < 1e-6, "a returning row follows vertical layout before departure");
   }
   assert.ok(flights > 0);
+  s.step(0.15);
+  s.write();
+  let moving = 0;
+  for (let i = 0; i < CAPACITY; i++) {
+    if (s.substrate.flightOf[i] >= 0 && s.field.clip[i * 4 + 2] === 0) moving++;
+  }
+  assert.ok(moving > 0, "moving return particles cross the viewport freely");
 });

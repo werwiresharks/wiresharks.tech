@@ -25,7 +25,7 @@ export type Frame = {
   x: number;
   y: number;
   radius: number;
-  /** Resident particles stay inside this viewport; flights can cross it. */
+  /** Particles resting at this anchor stay inside its viewport; moving flights can cross it. */
   clip?: { left: number; top: number; right: number; bottom: number };
 };
 
@@ -47,7 +47,7 @@ export type Lattice = {
   readonly accentMask: Uint8Array;
 };
 
-/** Typed arrays the renderer uploads: xyz, rgb and (alpha, size, local depth, seed). */
+/** Renderer buffers: xyz, rgb, (alpha, size, local depth, seed), and resting viewport bounds. */
 export type ParticleBuffers = {
   readonly position: Float32Array;
   readonly color: Float32Array;
@@ -752,6 +752,7 @@ export class Substrate {
         continue;
       }
       const f = this.flightOf[i];
+      let bounds: Frame["clip"];
       if (f < 0) {
         const body = this.bodies[slot]!;
         const visible = this.visibility(body, seed[i]);
@@ -760,25 +761,17 @@ export class Substrate {
           continue;
         }
         this.place(body, i, t, unit, width, height, sample, 0);
-        const bounds = body.frame.clip;
-        if (bounds) {
-          clip[i4] = bounds.left;
-          clip[i4 + 1] = height - bounds.bottom;
-          clip[i4 + 2] = bounds.right;
-          clip[i4 + 3] = height - bounds.top;
-        }
-        position[i3] = sample[0];
-        position[i3 + 1] = sample[1];
-        position[i3 + 2] = sample[2];
-        color[i3] = sample[5];
-        color[i3 + 1] = sample[6];
-        color[i3 + 2] = sample[7];
-        params[i4] = sample[3] * visible;
-        params[i4 + 1] = sample[4];
-        params[i4 + 2] = sample[8];
-        continue;
+        sample[3] *= visible;
+        bounds = body.frame.clip;
+      } else {
+        bounds = this.placeInFlight(this.flights[f]!, i, t, unit, width, height);
       }
-      this.placeInFlight(this.flights[f]!, i, t, unit, width, height);
+      if (bounds) {
+        clip[i4] = bounds.left;
+        clip[i4 + 1] = height - bounds.bottom;
+        clip[i4 + 2] = bounds.right;
+        clip[i4 + 3] = height - bounds.top;
+      }
       position[i3] = sample[0];
       position[i3 + 1] = sample[1];
       position[i3 + 2] = sample[2];
@@ -882,7 +875,7 @@ export class Substrate {
   }
 
   /** A particle in flight, into `sample[0..8]`: a curved route between its poses in both bodies. */
-  private placeInFlight(flight: Flight, i: number, t: number, unit: number, width: number, height: number) {
+  private placeInFlight(flight: Flight, i: number, t: number, unit: number, width: number, height: number): Frame["clip"] {
     const sample = this.sample;
     const from = this.bodies[flight.from];
     const to = this.bodies[flight.to]!;
@@ -896,12 +889,12 @@ export class Substrate {
       this.place(to, i, t, unit, width, height, sample, 0);
       sample[3] *= this.visibility(to, this.lattice.seed[i]);
       if (local < 1) sample[3] *= clamp(local * 4, 0, 1);
-      return;
+      return to.frame.clip;
     }
     if (local <= 0) {
       this.place(from, i, t, unit, width, height, sample, 0);
       sample[3] = Math.max(sample[3] * this.visibility(from, this.lattice.seed[i]), 0);
-      return;
+      return from.frame.clip;
     }
     this.place(from, i, t, unit, width, height, sample, 0);
     this.place(to, i, t, unit, width, height, sample, 9);
@@ -947,6 +940,7 @@ export class Substrate {
       const tone = sample[5 + k] * q + sample[14 + k] * u;
       sample[5 + k] = tint ? tone + (tint[k] - tone) * glow : tone;
     }
+    return undefined;
     sample[8] = sample[8] * q + sample[17] * u;
   }
 
