@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CaretDown, TreeStructure } from "@phosphor-icons/react";
 import { AppTabs, Composer, StatusBar } from "./AppChrome";
 import { MiniOrb } from "./MiniOrb";
-import { summarize, transfers } from "./sessionScript";
+import { elapsed, summarize, transfers } from "./sessionScript";
 import type { Beat, Subagent } from "./sessionScript";
 import { useBeats } from "./useBeats";
 import { play, stop } from "./ticker";
@@ -93,13 +93,8 @@ function useHolds(beats: Beat[]) {
   return holds;
 }
 
-/** Elapsed time since the agent started, counted in script time so every loop reads the same. */
 function Timer({ running, index, beats, agent }: { running: boolean; index: number; beats: Beat[]; agent: number }) {
-  let ms = 0;
-  for (let i = 0; i <= index; i++) if (beats[i].agents[agent] !== "queued") ms += beats[i].hold;
-  const seconds = Math.round((ms * 7) / 1000);
-  const text = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-  return <span className={`app-timer${running ? "" : " is-quiet"}`}>{ms ? text : ""}</span>;
+  return <span className={`app-timer${running ? "" : " is-quiet"}`}>{elapsed(beats, index, agent)}</span>;
 }
 
 type Flight = { a: DOMPoint; b: DOMPoint; start: number; seed: number };

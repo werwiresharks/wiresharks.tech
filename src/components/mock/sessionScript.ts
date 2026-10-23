@@ -37,6 +37,17 @@ export function transfers(previous: AgentState[], next: AgentState[]): Transfer[
   });
 }
 
+/** The agent's clock at the end of beat `index`, as "m:ss". Seven script seconds pass per real second. It runs while the agent works and stops when it is done. */
+export function elapsed(beats: Beat[], index: number, agent: number): string {
+  let ms = 0;
+  for (let i = 0; i <= index; i++) {
+    const state = beats[i].agents[agent];
+    if (state !== "queued" && state !== "done") ms += beats[i].hold;
+  }
+  const seconds = Math.round((ms * 7) / 1000);
+  return ms ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : "";
+}
+
 /** Build a script from compact rows: "q" queued, "w" working, "s" searching, "x" solving, "r" returning, "d" done. */
 export function script(rows: [hold: number, raptor: OrbState, agents: string][]): Beat[] {
   const codes: Record<string, AgentState> = { q: "queued", w: "working", s: "searching", x: "solving", r: "returning", d: "done" };
