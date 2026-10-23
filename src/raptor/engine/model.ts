@@ -60,7 +60,7 @@ export type Checkpoint = {
 
 export type RaptorModel = {
   seq: number;
-  /** Presentation semantics survive renderer attachment and skipped updates. */
+  /** Last real reset and whether the latest accepted event was hydrated. */
   sync: { resetSeq: number; hydrate: boolean };
   mode: "focus" | "conversation";
   agents: Record<string, AgentNode>;
