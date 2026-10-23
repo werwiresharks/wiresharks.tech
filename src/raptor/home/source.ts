@@ -176,8 +176,9 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
       if (key === "raptor") marks.push({ key: "coordinator", frame });
       if (key !== "raptor" && key !== "principles") continue;
       const selector = key === "raptor" ? "[data-home-worker]" : "[data-home-principle]";
+      // A worker keeps its key while others leave the roster, so its particles stay on its own row.
       const satellites = Array.from(root.querySelectorAll(selector), (slot, index) => ({
-        key: `${key === "raptor" ? "worker" : "principle"}-${index}`,
+        key: `${key === "raptor" ? "worker" : "principle"}-${(slot as HTMLElement).dataset?.homeWorker ?? index}`,
         frame: readFrame(slot, key === "raptor" ? 13 : mobile ? 7 : 9),
       }));
       const last = satellites.at(-1);
@@ -260,6 +261,8 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   root.querySelectorAll("section, .product, .session, .principle-grid").forEach((node) => resize.observe(node));
   const mutations = new MutationObserver(invalidate);
   root.querySelectorAll(".reveal").forEach((node) => mutations.observe(node, { attributes: true, attributeFilter: ["class"] }));
+  // The session panel keeps its size while workers leave its roster; their globe slots move, so re-measure.
+  root.querySelectorAll(".session[data-roster]").forEach((node) => mutations.observe(node, { attributes: true, attributeFilter: ["data-roster"] }));
   window.addEventListener("scroll", schedule, { passive: true });
   const onResize = () => {
     const next = { width: window.innerWidth, height: viewportHeight() };

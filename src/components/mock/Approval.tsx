@@ -25,13 +25,13 @@ export function Approval({
   title: string;
   prompt: string;
   reply: string;
+  /** One shell call, shown line by line as the card shows it. */
   command: string[];
   output: string[];
   cwd: string;
 }) {
   const [ref, beat] = useBeats<HTMLDivElement>(HOLDS, HELD);
   const held = beat === HELD || beat === PRESSED;
-  const more = command.length - 1;
 
   return (
     <div ref={ref} className="panel session approval" data-ui aria-label={`verity approval: ${title}`}>
@@ -66,8 +66,7 @@ export function Approval({
           <div className="approval-result" aria-hidden={held}>
             <p className="app-tool">
               <Check aria-hidden="true" />
-              Ran <code>{command[0]}</code>
-              {more > 0 && ` + ${more} commands`}
+              Ran 1 command
             </p>
             <pre>{output.join("\n")}</pre>
           </div>

@@ -12,7 +12,7 @@ export function AppTabs({ title, tab }: { title: string; tab: "busy" | "held" | 
     <div className="app-tabs">
       <span className="app-tab">
         <i data-tab={tab} aria-hidden="true" />
-        {title}
+        <span>{title}</span>
       </span>
       <Plus className="app-tab-add" aria-hidden="true" />
       <span className="panel-note">Illustrative</span>

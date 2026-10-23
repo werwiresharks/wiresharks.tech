@@ -111,6 +111,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     assert.ok(Math.hypot(before.mother.x - after.mother.x, before.mother.y - after.mother.y) < 0.02);
   }
   assert.ok(sample(hold).satellites.slice(0, 6).every((s) => s.mix === 1));
+  assert.equal(root.dataset.dock, "raptor", "the panel's own globes step aside while the stream docks on them");
   const heroExit = layout.width < 768 ? Math.max(1, slot[1] - 64 - 50) + layout.height * 0.4 : layout.height * 0.7;
   if (layout.width >= 1024) {
     assert.ok(sample(150).mother.radius > heroFrame(layout.width, layout.hero).radius * 0.75);
@@ -143,6 +144,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
   }
   assert.ok(sample(leave + 20).satellites.slice(0, 6).every((satellite) => satellite.mix === 1), "worker rows stay attached after the mother departs");
   assert.ok(sample(satelliteLeave + layout.height * 0.18).satellites.every((satellite) => satellite.mix === 0));
+  assert.equal(root.dataset.dock, undefined, "the panel's own globes return once the stream leaves");
   const forward = sample(leave + 70);
   sample(leave + 300);
   assert.deepEqual(sample(leave + 70), forward);

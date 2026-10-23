@@ -1166,9 +1166,12 @@ main:focus {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
+  color: var(--fg);
+}
+.app-tab span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--fg);
 }
 .app-tab i {
   flex: none;
@@ -1200,6 +1203,25 @@ main:focus {
   flex-direction: column;
   gap: 14px;
   padding: 18px 18px 14px;
+}
+/* The live thread and a hidden copy holding the full roster share one cell; the copy fixes the height. */
+.app-thread {
+  display: grid;
+}
+.app-thread > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.app-thread-ghost {
+  visibility: hidden;
+}
+.app-thread-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.app-thread-body > .app-stack {
+  margin-top: auto;
 }
 .app-user {
   padding: 8px 12px;
@@ -1247,17 +1269,10 @@ main:focus {
   height: 14px;
 }
 .app-stack-head b {
+  margin-right: auto;
   font-weight: 500;
   white-space: nowrap;
   color: var(--fg);
-}
-.app-stack-sum {
-  min-width: 0;
-  margin-right: auto;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-variant-numeric: tabular-nums;
 }
 .app-agents li {
   display: grid;
@@ -1266,10 +1281,10 @@ main:focus {
   align-items: center;
   padding: 7px 12px;
   border-top: 1px solid var(--line);
-  transition: opacity var(--dur-2) var(--ease-out);
 }
-.app-agents li[data-state="queued"] {
-  opacity: 0.55;
+/* A queued worker's globe rests dim; its text keeps full contrast. */
+.app-agents li[data-state="queued"] .app-agent-orb {
+  opacity: 0.45;
 }
 .app-agent-orb {
   display: block;
@@ -1301,9 +1316,6 @@ main:focus {
   font-size: var(--fs-micro);
   color: var(--muted);
 }
-.app-agents li[data-state="done"] .app-agent-text span {
-  color: var(--ok);
-}
 .app-timer {
   min-width: 3ch;
   text-align: right;
@@ -1311,9 +1323,6 @@ main:focus {
   font-size: var(--fs-micro);
   font-variant-numeric: tabular-nums;
   color: var(--muted);
-}
-.app-timer.is-quiet {
-  color: var(--muted-2);
 }
 .app-composer {
   position: relative;
@@ -1504,14 +1513,6 @@ main:focus {
   flex: none;
   width: 14px;
   height: 14px;
-  color: var(--ok);
-}
-.app-tool code {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--mono);
-  font-size: var(--fs-micro);
-  color: var(--fg-2);
 }
 .approval-result pre {
   margin-top: 8px;
@@ -1520,8 +1521,7 @@ main:focus {
 }
 @media (prefers-reduced-motion: reduce) {
   .approval-swap > *,
-  .approval-run,
-  .app-agents li {
+  .approval-run {
     transition: none;
   }
 }
@@ -2636,6 +2636,10 @@ main:focus {
   }
   .panel-note {
     display: none;
+  }
+  /* The product panels show sample sessions, so they keep their tag. */
+  .app-tabs .panel-note {
+    display: block;
   }
   .footer-inner {
     grid-template-columns: minmax(0, 1fr);

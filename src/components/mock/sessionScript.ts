@@ -14,19 +14,6 @@ export type Transfer = { agent: number; direction: "down" | "up" };
 
 const ACTIVE: AgentState[] = ["working", "searching", "solving"];
 
-/** The disclosure line above the list, e.g. "3 working · 2 searching · 1 returned". */
-export function summarize(states: AgentState[]): string {
-  const counts = new Map<string, number>();
-  for (const state of states) {
-    const word = state === "done" ? "returned" : state;
-    counts.set(word, (counts.get(word) ?? 0) + 1);
-  }
-  return ["working", "searching", "solving", "returning", "returned", "queued"]
-    .filter((word) => counts.has(word))
-    .map((word) => `${counts.get(word)} ${word}`)
-    .join(" · ");
-}
-
 /** The transfers a move from one beat to the next starts. */
 export function transfers(previous: AgentState[], next: AgentState[]): Transfer[] {
   return next.flatMap((state, agent): Transfer[] => {
@@ -37,7 +24,10 @@ export function transfers(previous: AgentState[], next: AgentState[]): Transfer[
   });
 }
 
-/** The agent's clock at the end of beat `index`, as "m:ss". Seven script seconds pass per real second. It runs while the agent works and stops when it is done. */
+/**
+ * The agent's clock at the end of beat `index`, formatted as the app does: "34s", then "1:05".
+ * Seven script seconds pass per real second. It runs while the agent works and stops when it is done.
+ */
 export function elapsed(beats: Beat[], index: number, agent: number): string {
   let ms = 0;
   for (let i = 0; i <= index; i++) {
@@ -45,7 +35,8 @@ export function elapsed(beats: Beat[], index: number, agent: number): string {
     if (state !== "queued" && state !== "done") ms += beats[i].hold;
   }
   const seconds = Math.round((ms * 7) / 1000);
-  return ms ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : "";
+  if (!ms) return "";
+  return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 /** Build a script from compact rows: "q" queued, "w" working, "s" searching, "x" solving, "r" returning, "d" done. */

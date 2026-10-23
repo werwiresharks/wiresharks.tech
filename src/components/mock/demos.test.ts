@@ -3,16 +3,12 @@ import assert from "node:assert/strict";
 import { REVIEW, REVIEW_AGENTS, TRIAGE, TRIAGE_AGENTS } from "./demos.ts";
 import { projectOrb, spherePoints } from "./orb.ts";
 import type { OrbState } from "./orb.ts";
-import { elapsed, script, summarize, transfers } from "./sessionScript.ts";
+import { elapsed, script, transfers } from "./sessionScript.ts";
 
 const DEMOS = [
   { name: "home review", beats: REVIEW, agents: REVIEW_AGENTS },
   { name: "raptor triage", beats: TRIAGE, agents: TRIAGE_AGENTS },
 ];
-
-test("the roster line counts each state once, finished agents as returned", () => {
-  assert.equal(summarize(["working", "done", "queued", "done", "searching"]), "1 working · 1 searching · 2 returned · 1 queued");
-});
 
 test("a started agent receives a brief and a returning agent sends its result", () => {
   assert.deepEqual(transfers(["queued", "working", "solving", "done"], ["working", "solving", "returning", "done"]), [
@@ -22,8 +18,8 @@ test("a started agent receives a brief and a returning agent sends its result", 
 });
 
 test("an agent's clock is blank while queued, runs while it works, and stops once it returns", () => {
-  const beats = script([[1000, "working", "q"], [1000, "working", "w"], [1000, "working", "r"], [5000, "idle", "d"]]);
-  assert.deepEqual([0, 1, 2, 3].map((i) => elapsed(beats, i, 0)), ["", "0:07", "0:14", "0:14"]);
+  const beats = script([[1000, "working", "q"], [5000, "working", "w"], [5000, "working", "r"], [5000, "idle", "d"]]);
+  assert.deepEqual([0, 1, 2, 3].map((i) => elapsed(beats, i, 0)), ["", "35s", "1:10", "1:10"]);
 });
 
 for (const { name, beats, agents } of DEMOS) {

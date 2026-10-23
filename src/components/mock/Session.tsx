@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CaretDown, TreeStructure } from "@phosphor-icons/react";
+import { CaretDown, TreeStructure, UsersThree } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 import { AppTabs, Composer, StatusBar } from "./AppChrome";
 import { MiniOrb } from "./MiniOrb";
-import { elapsed, summarize, transfers } from "./sessionScript";
+import { elapsed, transfers } from "./sessionScript";
 import type { Beat, Subagent } from "./sessionScript";
 import { useBeats } from "./useBeats";
 import { play, stop } from "./ticker";
@@ -12,15 +13,18 @@ const FLIGHT_MS = 900;
 /**
  * The raptor desktop session, as the app lays it out: the session tab, the
  * prompt, the live subagent roster above the composer, and the composer with
- * raptor's globe at its left. A script steps the agents through their work.
- * Particles carry each brief down to a subagent and each result back up.
- * With `journey`, the home page's particle engine docks into the composer
- * globe and the row globes.
+ * raptor's globe at its left. Like the app's roster, it lists only workers
+ * still queued or running, and it closes when the last one returns. A hidden
+ * copy of the full roster holds the panel's height, so the page never
+ * reflows. Particles carry each brief down to a worker and each result back
+ * up. With `journey`, the home page's particle engine docks into the
+ * composer globe and the row globes.
  */
 export function Session({
   title,
   prompt,
   reply,
+  result,
   agents,
   beats,
   still,
@@ -30,6 +34,7 @@ export function Session({
   title: string;
   prompt: string;
   reply: string;
+  result: string;
   agents: Subagent[];
   beats: Beat[];
   still: number;
@@ -41,48 +46,74 @@ export function Session({
   const beat = beats[index];
   const busy = beat.agents.some((state) => state !== "done");
   const flights = useFlights(beats, index);
-  const live = beat.agents.filter((state) => state !== "done").length;
+  const live = agents.map((agent, i) => ({ agent, i, state: beat.agents[i] })).filter(({ state }) => state !== "done");
+  const started = beat.agents.some((state) => state !== "queued");
 
   return (
-    <div ref={ref} className={`panel session${journey ? " home-graph" : ""}`} data-ui aria-label={`raptor session: ${title}`}>
+    <div
+      ref={ref}
+      className={`panel session${journey ? " home-graph" : ""}`}
+      data-ui
+      data-roster={journey ? live.map(({ i }) => i).join(" ") : undefined}
+      aria-label={`raptor session: ${title}`}
+    >
       <AppTabs title={title} tab={busy ? "busy" : "idle"} />
       <div className="app-chat">
-        <p className="app-user">{prompt}</p>
-        <p className="app-reply">{reply}</p>
-        <div className="app-stack">
-          <div className="app-stack-head">
-            <TreeStructure aria-hidden="true" />
-            <b>{agents.length} Subagents</b>
-            <span className="app-stack-sum" aria-live="off">{summarize(beat.agents)}</span>
-            <CaretDown aria-hidden="true" />
+        <div className="app-thread">
+          <div className="app-thread-ghost" aria-hidden="true">
+            <Thread prompt={prompt} reply={reply}>
+              <p className="app-tool">
+                <UsersThree />
+                Delegating
+              </p>
+              <Roster count={agents.length}>
+                {agents.map((agent) => (
+                  <li key={agent.name}>
+                    <span className="app-agent-orb" />
+                    <span className="app-agent-text">
+                      <b>{agent.name}</b>
+                      <span>{agent.task}</span>
+                    </span>
+                  </li>
+                ))}
+              </Roster>
+            </Thread>
           </div>
-          <ol className="app-agents">
-            {agents.map((agent, i) => {
-              const state = beat.agents[i];
-              return (
-                <li key={agent.name} data-state={state}>
-                  <span className="app-agent-orb" data-home-worker={journey ? i : undefined}>
-                    <MiniOrb state={state === "queued" ? "idle" : state} size={30} yieldToJourney={journey} />
-                  </span>
-                  <span className="app-agent-text">
-                    <b>
-                      {agent.name}
-                      <i>{state === "done" ? "returned" : state}</i>
-                    </b>
-                    <span>{agent.activity[state] ?? agent.task}</span>
-                  </span>
-                  <Timer running={state !== "queued" && state !== "done"} index={index} beats={beats} agent={i} />
-                </li>
-              );
-            })}
-          </ol>
+          <Thread prompt={prompt} reply={reply}>
+            {started && (
+              <p className="app-tool">
+                <UsersThree aria-hidden="true" />
+                {live.length ? "Delegating" : "Delegated"} {agents.length} tasks
+              </p>
+            )}
+            {!live.length && <p className="app-reply">{result}</p>}
+            {live.length > 0 && (
+              <Roster count={live.length}>
+                {live.map(({ agent, i, state }) => (
+                  <li key={agent.name} data-state={state} data-agent={i}>
+                    <span className="app-agent-orb" data-home-worker={journey ? i : undefined}>
+                      <MiniOrb state={state === "queued" ? "idle" : state} size={30} yieldToJourney={journey} />
+                    </span>
+                    <span className="app-agent-text">
+                      <b>
+                        {agent.name}
+                        <i>{state}</i>
+                      </b>
+                      <span>{agent.activity[state] ?? agent.task}</span>
+                    </span>
+                    <span className="app-timer">{elapsed(beats, index, i)}</span>
+                  </li>
+                ))}
+              </Roster>
+            )}
+          </Thread>
         </div>
         <Composer raptor={beat.raptor} busy={busy} journey={journey} />
         <canvas className="app-flights" ref={flights} aria-hidden="true" />
       </div>
       <StatusBar cwd={cwd} />
       <p className="sr-only">
-        {live ? `${live} of ${agents.length} subagents running.` : `All ${agents.length} subagents returned.`}
+        {live.length ? `${live.length} of ${agents.length} workers running.` : `All ${agents.length} workers returned. ${result}`}
       </p>
     </div>
   );
@@ -93,8 +124,30 @@ function useHolds(beats: Beat[]) {
   return holds;
 }
 
-function Timer({ running, index, beats, agent }: { running: boolean; index: number; beats: Beat[]; agent: number }) {
-  return <span className={`app-timer${running ? "" : " is-quiet"}`}>{elapsed(beats, index, agent)}</span>;
+function Thread({ prompt, reply, children }: { prompt: string; reply: string; children: ReactNode }) {
+  return (
+    <div className="app-thread-body">
+      <p className="app-user">{prompt}</p>
+      <p className="app-reply">{reply}</p>
+      {children}
+    </div>
+  );
+}
+
+/** The app's composer status section: "N Subagents" over its rows. */
+function Roster({ count, children }: { count: number; children: ReactNode }) {
+  return (
+    <div className="app-stack">
+      <div className="app-stack-head">
+        <TreeStructure aria-hidden="true" />
+        <b>
+          {count} Subagent{count === 1 ? "" : "s"}
+        </b>
+        <CaretDown aria-hidden="true" />
+      </div>
+      <ol className="app-agents">{children}</ol>
+    </div>
+  );
 }
 
 type Flight = { a: DOMPoint; b: DOMPoint; start: number; seed: number };
@@ -145,8 +198,18 @@ function useFlights(beats: Beat[], index: number) {
       }
       if (!state.list.length) stop(draw.current);
     };
+    // Turning on reduced motion mid-flight drops the particles already in the air.
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const still = () => {
+      if (!motion.matches) return;
+      flights.current.list = [];
+      stop(draw.current);
+      ctx.clearRect(0, 0, node.width, node.height);
+    };
+    motion.addEventListener("change", still);
     return () => {
       resize.disconnect();
+      motion.removeEventListener("change", still);
       stop(draw.current);
     };
   }, []);
@@ -168,7 +231,7 @@ function useFlights(beats: Beat[], index: number) {
     const raptor = centre(".app-composer-orb");
     const now = performance.now();
     moves.forEach((move, n) => {
-      const row = centre(`.app-agents li:nth-child(${move.agent + 1}) .app-agent-orb`);
+      const row = centre(`.app-agents li[data-agent="${move.agent}"] .app-agent-orb`);
       if (!raptor || !row) return;
       const [a, b] = move.direction === "down" ? [raptor, row] : [row, raptor];
       state.list.push({ a, b, start: now + n * 140, seed: move.agent * 7 + n });

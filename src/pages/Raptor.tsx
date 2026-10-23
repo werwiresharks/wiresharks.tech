@@ -67,6 +67,7 @@ export function Raptor() {
             title="Alert triage · prod-web"
             prompt="Triage last night's alerts on prod-web. Build a timeline with sources."
             reply="Four parts. Each one runs as its own worker."
+            result="timeline.md is ready. Each event cites its source."
             agents={TRIAGE_AGENTS}
             beats={TRIAGE}
             still={2}

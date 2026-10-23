@@ -142,6 +142,7 @@ export function Home() {
                 title="Security review · acme/api"
                 prompt="Review acme/api for security defects. Read only. Report each finding with evidence."
                 reply="Six parts. Each one runs as its own worker."
+                result="Review done. report.md lists 3 findings, each with its evidence."
                 agents={REVIEW_AGENTS}
                 beats={REVIEW}
                 still={2}
