@@ -79,7 +79,7 @@ const MOVE_ORDER = [1, 0, 2, 1, 2, 0];
 const TURNS = [0, 1, 0, -1];
 
 // Composing: a tilted great-circle ribbon whose waves travel along it.
-const RIBBON = basis(0.58, 0.74, 0.34);
+const RIBBON = basis(0.62, 0.78, 0.1);
 
 // Shaping: a superellipsoid breathing between sphere and rounded cube, tilted to show a corner.
 const SHAPE_TILT_X = 0.52;
@@ -168,7 +168,7 @@ export function writePose(
       z = dz * k * r;
       if (shell === 0) {
         const scan = Math.cos(Math.atan2(dx, dz) - (t * SCAN_SPEED + SCAN_PHASE));
-        energy = Math.pow(Math.max(0, scan), 22);
+        energy = Math.pow(Math.max(0, scan), 9);
       } else alpha = 0.7;
       break;
     }

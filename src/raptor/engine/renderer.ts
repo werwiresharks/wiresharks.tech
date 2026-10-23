@@ -596,7 +596,7 @@ export class RaptorRenderer implements RaptorView {
     this.system.position.set(0, 0, 0);
     this.system.scale.setScalar(1);
     substrate.setAnchors(this.options.substrate!.anchors());
-    substrate.step(dt, performance.now() / 1000, this.reduced);
+    substrate.step(dt, this.reduced);
     // The root globe leans toward the pointer while it is large, as the site's hero does.
     const root = this.options.substrate!.anchors().primary;
     const response = still ? 1 : 1 - Math.exp(-dt * 3);

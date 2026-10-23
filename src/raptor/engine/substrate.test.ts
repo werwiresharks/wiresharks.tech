@@ -22,10 +22,10 @@ const ANCHORS: AnchorSet = {
 /** An engine feeding a substrate the way the renderer does: one sync per accepted event. */
 function scene(options: { hydrateFrom?: Unsequenced[] } = {}) {
   const field = new ParticleField(CAPACITY);
-  const substrate = new Substrate(field.lattice, CAPACITY);
+  let wall = 0;
+  const substrate = new Substrate(field.lattice, CAPACITY, () => wall);
   const engine = new RaptorEngine();
   let seq = 0;
-  let wall = 0;
   const presence: string[][] = [];
   substrate.onPresence = (ids) => presence.push([...ids]);
   substrate.setAnchors(ANCHORS);
@@ -42,15 +42,18 @@ function scene(options: { hydrateFrom?: Unsequenced[] } = {}) {
   const step = (seconds: number, still = false) => {
     for (let t = 0; t < seconds; t += 1 / 60) {
       wall += 1 / 60;
-      substrate.step(1 / 60, wall, still);
+      substrate.step(still ? 0 : 1 / 60, still);
     }
   };
+  const idle = (seconds: number) => {
+    wall += seconds;
+  };
   const write = (still = false) => {
-    substrate.step(0, wall, still);
+    substrate.step(0, still);
     substrate.write(field, 800, 600, 4);
     return Float32Array.from(field.position);
   };
-  return { field, substrate, engine, send, step, write, presence };
+  return { field, substrate, engine, send, step, write, presence, idle };
 }
 
 function assertConserved(substrate: Substrate) {
@@ -184,7 +187,7 @@ test("an activity change morphs the same particles without a jump", () => {
 });
 
 test("reduced motion holds every particle still, and a transfer is a still route that lands", () => {
-  const { substrate, send, step, write } = scene();
+  const { substrate, send, step, write, idle } = scene();
   send({ type: "agent.spawned", agentId: "root", parentId: null, label: "Raptor" });
   for (const event of spawn("a")) send(event);
   step(4);
@@ -193,7 +196,10 @@ test("reduced motion holds every particle still, and a transfer is a still route
   step(0.5, true);
   const b = write(true);
   assert.deepEqual(a, b, "nothing moves between still frames");
+  // A still frame can be long ago; the route still shows for its full hold from the moment it was sent.
+  idle(30);
   send({ type: "transfer", transferId: "r1", kind: "result", fromAgentId: "a", toAgentId: "root", disposition: "delivered" });
+  step(0.5, true);
   assert.ok(substrate.snapshot().inFlight > 0, "the route is drawn");
   assert.notEqual(substrate.nextStillChange(), null);
   step(2, true);

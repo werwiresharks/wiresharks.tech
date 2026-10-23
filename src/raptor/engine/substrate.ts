@@ -150,21 +150,25 @@ export class Substrate {
   private slots = new Map<string, number>();
   private flights: (Flight | null)[] = [];
   private time = 0;
-  private wall = 0;
+  /** Real seconds, for still (reduced-motion) route markers that land on their own. */
+  private readonly clock: () => number;
   private still = false;
   private synced = false;
   private lastTransferSeq = 0;
   private tones: Record<Tone, ToneStyle> = SURFACES.light.tones;
   private glow: [number, number, number] = COLORS.red;
   private ink: [number, number, number] = COLORS.graphite;
+  /** Light dots on a dark ground read thinner, so small globes there get a little more alpha and size. */
+  private darkLift = 0;
   private anchors: AnchorSet = {};
   private presenceKey = "";
   private scratch = new Float32Array(5);
   private sample = new Float64Array(18);
   onPresence: ((ids: readonly string[]) => void) | null = null;
 
-  constructor(lattice: Lattice, capacity: number) {
+  constructor(lattice: Lattice, capacity: number, clock: () => number = () => performance.now() / 1000) {
     this.lattice = lattice;
+    this.clock = clock;
     this.capacity = capacity;
     this.active = capacity;
     this.owner = new Int16Array(capacity).fill(-1);
@@ -176,6 +180,7 @@ export class Substrate {
     this.tones = SURFACES[surface].tones;
     this.glow = surface === "dark" ? [1, 0.36, 0.3] : COLORS.red;
     this.ink = this.tones.idle.base;
+    this.darkLift = surface === "dark" ? 1 : 0;
   }
 
   /** Particles beyond `count` are hidden (load shedding); ownership is kept for when they return. */
@@ -343,7 +348,7 @@ export class Substrate {
       spread: clamp(0.25 + take * 0.004, 0.25, 0.9),
       members,
       bend: kind === "result" ? 0.6 : kind === "peer" ? 0.8 : 1,
-      landAt: this.wall + STILL_HOLD,
+      landAt: this.clock() + STILL_HOLD,
     };
     this.flights[slot] = flight;
     // Nearest particles leave first, so the train streams out of the facing side.
@@ -364,11 +369,11 @@ export class Substrate {
   // Time: springs toward anchors, morphs, spin, and landing flights.
 
   /**
-   * Advance by `dt` seconds of animation. `wall` is real seconds, which still
-   * (reduced-motion) frames use to land their route markers.
+   * Advance by `dt` seconds of animation. Still (reduced-motion) frames
+   * advance no animation time; their route markers land by the clock.
    */
-  step(dt: number, wall: number, still: boolean) {
-    this.wall = wall;
+  step(dt: number, still: boolean) {
+    const wall = this.clock();
     if (still !== this.still) {
       this.still = still;
       if (still) for (const body of this.bodies) if (body) this.morph(body, body.pose, true);
@@ -664,8 +669,9 @@ export class Substrate {
     out[o + 1] = (height / 2 - body.frame.y) * unit + localY * radius;
     out[o + 2] = localZ * radius;
     energy = clamp(energy, 0, 1);
-    out[o + 3] = clamp(body.alpha * alpha * (1 - 0.3 * twinkle) * (1 + 0.5 * energy), 0, 1);
-    const size = Math.max(0.5, Math.min(1, body.frame.radius / 160));
+    const lift = this.darkLift * small;
+    out[o + 3] = clamp(body.alpha * alpha * (1 - 0.3 * twinkle) * (1 + 0.5 * energy) * (1 + 0.35 * lift), 0, 1);
+    const size = Math.max(0.5 + 0.12 * lift, Math.min(1, body.frame.radius / 160));
     out[o + 4] = size * (1 + 0.45 * energy) * (1 + 0.25 * (twinkle - 0.5 * small));
     const tone = this.lattice.accentMask[i] ? body.accent : body.base;
     const glow = energy * 0.9;
