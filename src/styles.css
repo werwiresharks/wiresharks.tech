@@ -3235,6 +3235,13 @@ main:focus {
   transform-origin: left;
   transition: transform var(--dur-2) var(--ease-out);
 }
+/* A command named in running text. */
+p > code {
+  font-family: var(--mono);
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+}
 .shipped-group code {
   display: inline-block;
   max-width: 100%;

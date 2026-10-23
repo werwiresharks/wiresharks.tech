@@ -19,7 +19,7 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is raptor?",
-    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. Each worker gets its own copy of the code. When a command needs your approval, raptor shows you the whole command first. It runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
+    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. A worker can run in its own copy of the code. When a command needs your approval, raptor shows you the whole command first. It runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
   ],
   [
     "What is talon-1?",
@@ -27,7 +27,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "Does the model refuse security questions?",
-    "No. We remove the refusal behavior from the model's weights, so it does not refuse security work. Its knowledge and reasoning stay the same. The evaluations measure this.",
+    "We remove the refusal behavior from the model's weights. The release evaluations measure how often it still refuses, and whether its knowledge and reasoning change.",
   ],
   [
     "Does it need the cloud?",
@@ -130,7 +130,7 @@ export function Home() {
             specs={[
               ["Engines", "Hermes · Claude Code · Codex"],
               ["Models", "talon-1 (local), commercial APIs, private endpoints"],
-              ["Workers", "Own copy of the code, resumable"],
+              ["Workers", "Resumable, optional own copy of the code"],
               ["Approvals", "The whole command, shown first"],
             ]}
             to="/raptor"

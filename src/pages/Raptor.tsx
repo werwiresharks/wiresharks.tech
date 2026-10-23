@@ -94,8 +94,8 @@ export function Raptor() {
         }
       >
         <p>
-          raptor keeps a task graph with stable IDs, parents, budgets and checkpoints. Each worker
-          runs in its own copy of the code. Limits that you set control how many workers run at once
+          raptor keeps a task graph with stable IDs, parents, budgets and checkpoints. A worker can run in
+          its own copy of the code. Limits that you set control how many workers run at once
           and what they cost.
         </p>
         <p>
@@ -142,7 +142,7 @@ export function Raptor() {
           <Console
             title="raptor / review"
             lines={[
-              '$ raptor review ./acme-api --scope "src/**" --out report.md',
+              '$ node agent/main.ts review ./acme-api --scope "src/**" --out report.md',
               "scope  ./acme-api · read-only",
               "map    1,912 files in scope",
               "find   8 files at a time",
@@ -157,7 +157,11 @@ export function Raptor() {
           />
         }
       >
-        <p>The first workflow raptor runs end to end. It reads and reports. It does not patch, deploy or exploit.</p>
+        <p>
+          The first end-to-end workflow. Its source is open in this site's repository, and{" "}
+          <code>node agent/main.ts review</code> runs it. It reads and reports. It does not patch,
+          deploy or exploit.
+        </p>
         <ol className="steps">
           {REVIEW_STEPS.map(([name, text]) => (
             <li key={name}>

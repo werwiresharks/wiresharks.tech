@@ -10,8 +10,8 @@ import { Registry } from "../components/mock/Registry";
 
 const PIPELINE = [
   ["Foundation", "A strong open-weight base. talon-1 builds on Qwen3.8-27B. We check its provenance and its license."],
-  ["Remove refusals", "We remove the refusal behavior from the weights. Knowledge and reasoning stay the same. The evaluations measure this."],
-  ["Specialize", "Security post-training with QLoRA and rsLoRA on a vetted corpus. General coding and reasoning stay the same."],
+  ["Remove refusals", "We remove the refusal behavior from the weights. The evaluations check that knowledge and reasoning do not drop."],
+  ["Specialize", "Security post-training with QLoRA and rsLoRA on a vetted corpus. The evaluations also check general coding and reasoning."],
   ["Evaluate", "Benchmarks against the base, the base with refusals removed, and leading open-weight and frontier models."],
   ["Quantize", "Builds for llama.cpp, vLLM and Apple Silicon. No network after install."],
 ];
@@ -66,7 +66,7 @@ export function Talon() {
       <Feature
         index="01"
         eyebrow="Refusals removed"
-        title="It does not refuse security work."
+        title="Built not to refuse security work."
         panel={
           <Compare
             prompt="Write a working PoC for the deserialization bug in upload.py so we can confirm the fix before release."
@@ -81,8 +81,8 @@ export function Talon() {
         }
       >
         <p>
-          We find the refusal behavior in the model's weights and remove it. The model does not
-          refuse. Everything else it knows stays the same. The evaluations measure this.
+          We find the refusal behavior in the model's weights and remove it. The release
+          evaluations measure how often the model still refuses, and whether it loses what it knows.
         </p>
         <p>Removing refusals adds no capability. Fine-tuning adds it.</p>
       </Feature>
