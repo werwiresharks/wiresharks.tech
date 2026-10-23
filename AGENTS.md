@@ -12,7 +12,7 @@ npm run build
 npx vite preview --port 4319   # serve dist/ to check a build
 ```
 
-`src/styles.css` holds every design token. The Raptor Particle Engine lives in `src/raptor/` and uses the `rpe-` class prefix. The retired agent route redirects to `/raptor` in `src/App.tsx`, `public/_redirects` and `vercel.json`; keep those redirects.
+`src/styles.css` holds every design token. The raptor particle engine lives in `src/raptor/` and uses the `rpe-` class prefix. The retired agent route redirects to `/raptor` in `src/App.tsx`, `public/_redirects` and `vercel.json`; keep those redirects.
 
 `scripts/og-image.html` is the source of `public/og-image.jpg`. Copy it into `dist/` after a build, open it at 1200 × 630, screenshot it, and export a q88 JPEG.
 

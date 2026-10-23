@@ -13,7 +13,7 @@ export function useEngine() {
 export function useIdleEngine() {
   const [engine] = useState(() => {
     const engine = new RaptorEngine();
-    engine.ingest({ type: "agent.spawned", seq: 1, agentId: "raptor", parentId: null, label: "Raptor" });
+    engine.ingest({ type: "agent.spawned", seq: 1, agentId: "raptor", parentId: null, label: "raptor" });
     return engine;
   });
   return engine;

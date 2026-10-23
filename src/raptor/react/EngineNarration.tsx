@@ -28,7 +28,7 @@ export function useEngineNarration(engine: RaptorEngine, max = 12) {
  */
 export function EngineNarration({
   engine,
-  label = "Raptor activity",
+  label = "raptor activity",
 }: {
   engine: RaptorEngine;
   label?: string;

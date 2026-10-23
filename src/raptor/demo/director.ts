@@ -124,7 +124,7 @@ export class DemoDirector implements RaptorEventSource {
     this.timers.forEach((handle) => this.scheduler.clear(handle));
     this.timers.clear();
     this.emit({ type: "session.reset" });
-    this.emit({ type: "agent.spawned", agentId: this.id("raptor"), parentId: null, label: "Raptor" });
+    this.emit({ type: "agent.spawned", agentId: this.id("raptor"), parentId: null, label: "raptor" });
     this.emit({ type: "checkpoint.created", checkpointId: this.id("cp") });
   }
 
@@ -182,7 +182,7 @@ export class DemoDirector implements RaptorEventSource {
           type: "agent.handoff",
           fromAgentId: root.id,
           toAgentId,
-          label: `Raptor · generation ${root.generation + 1}`,
+          label: `raptor · generation ${root.generation + 1}`,
         });
         this.say("runtime", `Context handed to generation ${root.generation + 1}. Lineage preserved.`);
         return;
