@@ -8,7 +8,7 @@ import { COLORS, SURFACES } from "./palette.ts";
 import type { Surface } from "./palette.ts";
 import { ParticleField } from "./particles.ts";
 import { Substrate } from "./substrate.ts";
-import type { AnchorSet } from "./substrate.ts";
+import type { AnchorSet, Frame } from "./substrate.ts";
 import { FrameGovernor, detectQuality } from "./quality.ts";
 import {
   MAX_CUTS,
@@ -36,9 +36,14 @@ export type RendererOptions = {
   /**
    * The chat substrate: one population shared by every agent, drawn at anchors
    * the host measures. `anchors` is read every frame; `onPresence` reports which
-   * agents still have a globe (a finished one keeps it until its particles leave).
+   * agents still have a globe (a finished one keeps it until its particles leave);
+   * `onPrimary` reports the root globe's frame when its target changes or it settles there.
    */
-  substrate?: { anchors: () => AnchorSet; onPresence?: (agentIds: readonly string[]) => void };
+  substrate?: {
+    anchors: () => AnchorSet;
+    onPresence?: (agentIds: readonly string[]) => void;
+    onPrimary?: (frame: Frame, settled: boolean) => void;
+  };
   /** Marks cut through the page that the particles part around, in document pixels. Read each frame of the home journey. */
   cuts?: () => readonly Cut[];
   frame: (width: number, height: number) => Framing;
@@ -176,6 +181,7 @@ export class RaptorRenderer implements RaptorView {
     if (options.substrate) {
       this.substrate = new Substrate(this.field.lattice, this.field.capacity);
       this.substrate.onPresence = options.substrate.onPresence ?? null;
+      this.substrate.onPrimary = options.substrate.onPrimary ?? null;
     }
     const points = new THREE.Points(this.geometry, this.particleMaterial);
     points.frustumCulled = false;
@@ -714,7 +720,7 @@ export class RaptorRenderer implements RaptorView {
     if (this.disposed) return;
     this.disposed = true;
     window.clearTimeout(this.stillWake);
-    if (this.substrate) this.substrate.onPresence = null;
+    if (this.substrate) this.substrate.onPresence = this.substrate.onPrimary = null;
     this.stop();
     this.observers.forEach((observer) => observer.disconnect());
     this.cleanups.forEach((cleanup) => cleanup());

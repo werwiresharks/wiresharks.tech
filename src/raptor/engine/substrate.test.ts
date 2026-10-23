@@ -289,3 +289,22 @@ test("returning rows follow their clipped slots and departures clip until they l
   }
   assert.ok(moving > 0, "moving return particles cross the viewport freely");
 });
+
+test("the root reports where it is when its place changes and when it settles there, not every frame", () => {
+  const { substrate, send, step } = scene();
+  const reports: { x: number; settled: boolean }[] = [];
+  substrate.onPrimary = (frame, settled) => reports.push({ x: Math.round(frame.x), settled });
+  send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  step(0.5);
+  assert.deepEqual(reports, [{ x: 120, settled: true }]);
+
+  // The empty chat's hero gives way to the composer's dock: one report as the move starts, one on arrival.
+  substrate.setAnchors({ ...ANCHORS, primary: { x: 40, y: 580, radius: 22 } });
+  step(1 / 60);
+  assert.equal(reports.length, 2);
+  assert.equal(reports[1]!.settled, false);
+  assert.ok(reports[1]!.x > 40, "the move starts from where the root was drawn");
+  step(4);
+  assert.deepEqual(reports.at(-1), { x: 40, settled: true });
+  assert.equal(reports.length, 3);
+});

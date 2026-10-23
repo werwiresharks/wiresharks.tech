@@ -201,6 +201,13 @@ export class Substrate {
   private scratch = new Float32Array(5);
   private sample = new Float64Array(18);
   onPresence: ((ids: readonly string[]) => void) | null = null;
+  private primaryKey = "";
+  /**
+   * The root globe's drawn frame, and whether it rests at its anchor. Called
+   * when the root's target changes or it settles there, not every frame, so a
+   * host can reserve room for the move between two places and release it.
+   */
+  onPrimary: ((frame: Frame, settled: boolean) => void) | null = null;
 
   constructor(lattice: Lattice, capacity: number, clock: () => number = () => performance.now() / 1000) {
     this.lattice = lattice;
@@ -585,6 +592,19 @@ export class Substrate {
     }
     this.allocate();
     this.releaseEmptyBodies();
+    this.reportPrimary();
+  }
+
+  private reportPrimary() {
+    const target = this.anchors.primary;
+    const slot = [...this.slots.values()].find((s) => this.bodies[s]!.root && this.bodies[s]!.phase === "resident");
+    if (!this.onPrimary || !target || slot === undefined) return;
+    const frame = this.bodies[slot]!.frame;
+    const settled = Math.abs(frame.x - target.x) < 0.5 && Math.abs(frame.y - target.y) < 0.5 && Math.abs(frame.radius - target.radius) < 0.5;
+    const key = `${settled} ${Math.round(target.x)} ${Math.round(target.y)} ${Math.round(target.radius)}`;
+    if (key === this.primaryKey) return;
+    this.primaryKey = key;
+    this.onPrimary({ x: frame.x, y: frame.y, radius: frame.radius }, settled);
   }
 
   /** The earliest wall-clock second a still frame changes by itself, if any. */
