@@ -115,6 +115,8 @@ export class RaptorRenderer implements RaptorView {
   private reduced: boolean;
   private needsRender = true;
   private disposed = false;
+  /** Between webglcontextlost and webglcontextrestored nothing can be drawn, so no frame may run. */
+  private lost = false;
   private observers: { disconnect(): void }[] = [];
   private cleanups: (() => void)[] = [];
 
@@ -272,11 +274,20 @@ export class RaptorRenderer implements RaptorView {
     this.cleanups.push(() => document.removeEventListener("visibilitychange", onVisibility));
     const onLost = (event: Event) => {
       event.preventDefault();
+      this.lost = true;
       this.stop();
       this.options.onFailure?.();
     };
+    const onRestored = () => {
+      this.lost = false;
+      this.requestPresentation();
+    };
     canvas.addEventListener("webglcontextlost", onLost);
-    this.cleanups.push(() => canvas.removeEventListener("webglcontextlost", onLost));
+    canvas.addEventListener("webglcontextrestored", onRestored);
+    this.cleanups.push(() => {
+      canvas.removeEventListener("webglcontextlost", onLost);
+      canvas.removeEventListener("webglcontextrestored", onRestored);
+    });
     if (this.options.interactive) {
       // Listen on the window, not the stage: the stage is pointer-events: none
       // so the decorative canvas can never intercept clicks on content above it.
@@ -452,7 +463,7 @@ export class RaptorRenderer implements RaptorView {
   }
 
   private start() {
-    if (this.disposed || this.frameHandle) return;
+    if (this.disposed || this.lost || this.frameHandle) return;
     if (!this.animating && !this.needsRender) return;
     this.last = performance.now();
     this.frameHandle = requestAnimationFrame(this.tick);
