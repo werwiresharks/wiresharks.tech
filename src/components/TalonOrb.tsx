@@ -35,7 +35,7 @@ export function TalonOrb() {
       className="talon-orb"
       viewBox="0 0 300 300"
       role="img"
-      aria-label="Talon-1, drawn as an orbiting core of particles inside a red boundary"
+      aria-label="talon-1, drawn as an orbiting core of particles inside a red boundary"
     >
       <g className="talon-orb-core" fill="var(--ink)">
         {rings}
