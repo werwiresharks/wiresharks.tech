@@ -41,7 +41,7 @@ const FAQ: [string, string][] = [
 
 const PRINCIPLES: [string, string][] = [
   ["Runs here. Stays here.", "Prompts, outputs and weights stay on your machine. After install, talon-1 needs no network. There is no telemetry to turn off."],
-  ["No refusals on security work.", "We remove the refusal behavior from the weights. Then we fine-tune the model for security work."],
+  ["Built not to refuse security work.", "We remove the refusal behavior from the weights. Then we fine-tune the model for security work."],
   ["Open weights.", "talon-1, its evaluations, raptor and Harness ship together. You run them. You inspect them."],
   ["You approve what runs.", "raptor shows the whole command before you approve it. It records each decision on your machine."],
 ];
@@ -276,7 +276,7 @@ export function Home() {
       <div className="home-closing">
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
-          title="No cloud. No refusals."
+          title="No cloud. Built not to refuse."
           text="talon-1 weights, its evaluations, raptor and Harness ship together on December 25, 2026."
         />
       </div>
