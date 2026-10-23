@@ -20,7 +20,7 @@ import { HomeJourney } from "../raptor/react/HomeJourney";
 const FAQ: [string, string][] = [
   [
     "What is raptor?",
-    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. A worker can run in its own copy of the code. Its approval system is verity. When a command needs your approval, verity shows you the whole command first. It runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
+    "raptor is the autonomous cybersecurity agent, built on Hermes and running on Harness. It plans a task and splits the work across parallel workers. A worker can run in its own copy of the code. Its approval system is verity. When a command needs your approval, verity shows you the whole command first. raptor runs talon-1 on your machine, or any model you choose. Harness is the infrastructure that runs and coordinates raptor's work.",
   ],
   [
     "What is talon-1?",
