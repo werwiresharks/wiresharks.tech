@@ -257,7 +257,7 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
   const invalidate = () => { dirty = true; schedule(); };
   const resize = new ResizeObserver(invalidate);
   resize.observe(root);
-  root.querySelectorAll("section, .product, .graph, .principle-grid").forEach((node) => resize.observe(node));
+  root.querySelectorAll("section, .product, .session, .principle-grid").forEach((node) => resize.observe(node));
   const mutations = new MutationObserver(invalidate);
   root.querySelectorAll(".reveal").forEach((node) => mutations.observe(node, { attributes: true, attributeFilter: ["class"] }));
   window.addEventListener("scroll", schedule, { passive: true });
@@ -278,10 +278,18 @@ export function createHomeSource(root: HTMLElement, onChange: () => void) {
     get active() { return geometry.flow !== undefined || window.scrollY < quietStart || window.scrollY > quietEnd; },
     sample() {
       if (dirty) measure();
-      return sampleHomeFrame(geometry, window.scrollY, pose);
+      const frame = sampleHomeFrame(geometry, window.scrollY, pose);
+      // The session panel's own small globes step aside only while the stream's particles sit in their place.
+      const docked = frame.satellites.some((satellite) => satellite.key.startsWith("worker-") && satellite.mix > 0.5);
+      if (docked !== (root.dataset.dock === "raptor")) {
+        if (docked) root.dataset.dock = "raptor";
+        else delete root.dataset.dock;
+      }
+      return frame;
     },
     dispose() {
       disposed = true;
+      delete root.dataset.dock;
       cancelAnimationFrame(pending);
       resize.disconnect();
       mutations.disconnect();

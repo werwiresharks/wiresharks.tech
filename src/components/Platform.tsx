@@ -1,4 +1,3 @@
-import { RELEASE_ARTIFACTS, REVIEW_STEPS } from "../content";
 import { Reveal, Words } from "./Reveal";
 import { withRaptorReg } from "./RaptorWordmark";
 
@@ -29,7 +28,7 @@ const TIERS = [
   },
 ];
 
-/** "From model to autonomous execution": the stack, the loop, and what ships. */
+/** "From model to autonomous execution": the three tiers of the stack. */
 export function Platform() {
   return (
     <section className="platform section" id="platform" aria-labelledby="platform-title">
@@ -65,46 +64,6 @@ export function Platform() {
             </Reveal>
           ))}
         </ol>
-
-        <div className="loop">
-          <Reveal as="h3" className="loop-title">
-            Authorized repository security review
-          </Reveal>
-          <Reveal as="p" delay={60} className="loop-lede">
-            The first workflow raptor runs end to end. It reads and reports. It does not patch,
-            deploy or exploit.
-          </Reveal>
-          <ol className="loop-steps">
-            {REVIEW_STEPS.map(([name, text], i) => (
-              <Reveal as="li" key={name} delay={i * 50}>
-                <span className="label">{String(i + 1).padStart(2, "0")}</span>
-                <b>{name}</b>
-                <span>{text}</span>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-
-        <div className="evidence">
-          <div className="evidence-head">
-            <Reveal as="h3">Evidence, not claims.</Reveal>
-            <Reveal as="p" delay={60}>
-              The results ship with the weights. The benchmark suite that produced them ships
-              too.
-            </Reveal>
-          </div>
-          <dl className="evidence-list">
-            {RELEASE_ARTIFACTS.map(([name, text], i) => (
-              <Reveal key={name} delay={i * 60}>
-                <dt>
-                  {name}
-                  <span className="label">Dec 25</span>
-                </dt>
-                <dd>{text}</dd>
-              </Reveal>
-            ))}
-          </dl>
-        </div>
       </div>
     </section>
   );

@@ -11,7 +11,8 @@ import { Platform } from "../components/Platform";
 import { ProductBlock } from "../components/ProductBlock";
 import { Swarm } from "../components/Swarm";
 import { Console } from "../components/mock/Console";
-import { TaskGraph } from "../components/mock/TaskGraph";
+import { Session } from "../components/mock/Session";
+import { REVIEW, REVIEW_AGENTS } from "../components/mock/demos";
 import { Compare } from "../components/mock/Compare";
 import { StaticOrb } from "../raptor/react/RaptorStage";
 import { HomeJourney } from "../raptor/react/HomeJourney";
@@ -116,8 +117,8 @@ export function Home() {
               <span id="products-title"><Words>An agent, and the model that powers it.</Words></span>
             </Reveal>
             <Reveal as="p" delay={120} className="section-lede">
-              raptor is the agent. It plans the work, does it and checks it. talon-1 is the model
-              that powers raptor. The two ship together.
+              raptor plans the work, does it and checks it. talon-1 is the model that powers
+              raptor.
             </Reveal>
           </header>
 
@@ -136,27 +137,21 @@ export function Home() {
             to="/raptor"
             linkLabel="Meet raptor"
             visual={
-              <TaskGraph
+              <Session
                 journey
-                root={{ name: "Security review · acme/api", model: "talon-1" }}
-                workers={[
-                  { name: "Map attack surface", model: "talon-1", engine: "hermes", state: "done" },
-                  { name: "Auth and session handling", model: "talon-1", engine: "hermes", state: "done" },
-                  { name: "Deserialization paths", model: "talon-1", engine: "claude-code", state: "running" },
-                  { name: "Dependency audit", model: "talon-1", engine: "codex", state: "running" },
-                  { name: "Verify finding #3", model: "claude-opus", engine: "hermes", state: "review" },
-                  { name: "Draft report", model: "talon-1", engine: "hermes", state: "queued" },
-                ]}
+                title="Security review · acme/api"
+                prompt="Review acme/api for security defects. Read only. Report each finding with evidence."
+                reply="Six parts. Each one runs as its own worker."
+                agents={REVIEW_AGENTS}
+                beats={REVIEW}
+                still={2}
+                cwd="acme-api"
               />
             }
           >
             <p>
               raptor plans a task and splits it across parallel workers. Each worker uses only the
               tools its scope allows. A finished worker can resume later with its full context.
-            </p>
-            <p>
-              By default, raptor runs talon-1 on your machine. You can use any other model. You
-              choose the model and the engine for each task.
             </p>
           </ProductBlock>
 

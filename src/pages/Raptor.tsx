@@ -1,26 +1,14 @@
 import { PageHead } from "../components/PageHead";
 import { RaptorMarkDrawn } from "../components/ProductIcons";
 import { RaptorReg, RaptorWordmark } from "../components/RaptorWordmark";
-import { Reveal, Words } from "../components/Reveal";
 import { Feature } from "../components/Feature";
 import { Closing } from "../components/Closing";
+import { Approval } from "../components/mock/Approval";
 import { Console } from "../components/mock/Console";
 import { Registry } from "../components/mock/Registry";
-import { TaskGraph } from "../components/mock/TaskGraph";
+import { Session } from "../components/mock/Session";
+import { TRIAGE, TRIAGE_AGENTS } from "../components/mock/demos";
 import { REVIEW_STEPS } from "../content";
-
-const LAYERS = [
-  ["Experience", "Chat, files, diffs, tool traces, approvals and background jobs."],
-  ["Control plane", "Sessions, identity, normalized events, the task graph and the scheduler."],
-  ["Engines", "Hermes native, Claude Code and Codex."],
-  ["Inference", "talon-1 on your machine, commercial APIs and private endpoints."],
-  ["Orchestration", "Parallel workers with limits, nested tasks, lateral peers and schedules."],
-  ["Knowledge", "Context, cited evidence, working and durable memory, and skills."],
-  ["Execution", "Scoped tools, containers, browser, terminal and MCP."],
-  ["Verification", "Approval gates, a record of each decision, tests and provenance."],
-];
-
-const LINEAGE = ["Hermes", "Claude Code", "Codex", "T3 Code", "Prime", "Memento", "Pi", "P-Stack", "OpenClaw", "LangGraph", "OpenHands", "Aider"];
 
 export function Raptor() {
   return (
@@ -43,9 +31,7 @@ export function Raptor() {
         }
       >
         raptor<RaptorReg /> is the autonomous cybersecurity agent, built on Hermes and running on Harness. It
-        works with any model. It plans the work and keeps its own memory and skills. Harness is the
-        infrastructure that runs and coordinates raptor's work. It adds support for Claude Code and
-        Codex.
+        works with any model. It plans the work and keeps its own memory and skills.
       </PageHead>
 
       <Feature
@@ -60,7 +46,6 @@ export function Raptor() {
               { key: "hermes", name: "Hermes native runtime", meta: "providers · gateway · sessions · MCP", active: true },
               { key: "claude", name: "Claude Code", meta: "skills · hooks · streaming events" },
               { key: "codex", name: "Codex", meta: "app-server · turns · diffs" },
-              { key: "model", name: "talon-1 (local)", meta: "27B · Q4_K_M · metal", active: true },
             ]}
           />
         }
@@ -75,37 +60,64 @@ export function Raptor() {
       <Feature
         index="02"
         eyebrow="Orchestration"
-        title="Parallel workers. Durable checkpoints."
+        title="Parallel workers. One view."
         flip
         panel={
-          <TaskGraph
-            root={{ name: "Migrate auth to passkeys", model: "talon-1" }}
-            workers={[
-              { name: "Design spike", model: "claude-opus", engine: "claude-code", state: "done" },
-              { name: "Server: WebAuthn ceremony", model: "talon-1", engine: "hermes", state: "running" },
-              { name: "Client: registration flow", model: "talon-1", engine: "codex", state: "running" },
-              { name: "Tests and fixtures", model: "talon-1", engine: "hermes", state: "running" },
-              { name: "Independent review", model: "gpt", engine: "codex", state: "queued" },
-            ]}
+          <Session
+            title="Alert triage · prod-web"
+            prompt="Triage last night's alerts on prod-web. Build a timeline with sources."
+            reply="Four parts. Each one runs as its own worker."
+            agents={TRIAGE_AGENTS}
+            beats={TRIAGE}
+            still={2}
+            cwd="ir-2026-10"
           />
         }
       >
         <p>
-          raptor keeps a task graph with stable IDs, parents, budgets and checkpoints. A worker can run in
-          its own copy of the code. Limits that you set control how many workers run at once
-          and what they cost.
+          raptor splits a task across parallel workers. Each worker shows its goal and its latest
+          step above the composer. Its result returns to raptor when it finishes.
         </p>
         <p>
-          A finished worker can resume later with its history, tools and instructions. In a swarm, a
-          worker that finds missing work adds a peer, up to a fixed limit.
+          A worker can run in its own copy of the code. Limits that you set control how many
+          workers run at once and what they cost.
         </p>
       </Feature>
 
       <Feature
         index="03"
+        eyebrow="Approvals"
+        tone="soft"
+        title="The whole command, before it runs."
+        panel={
+          <Approval
+            title="Verify upload fix"
+            prompt="Check that the upload fix holds. Run the tests in the sandbox."
+            reply="This needs a shell command. Review it first."
+            command={[
+              "cd ~/work/acme-api",
+              "git switch fix/upload-json",
+              'docker run --rm --network none -v "$PWD":/src -w /src acme-api:test \\',
+              "  python -m pytest tests/test_upload.py -q",
+              "pip-audit -r requirements.txt",
+            ]}
+            output={["5 passed in 1.84s", "No known vulnerabilities found"]}
+            cwd="acme-api"
+          />
+        }
+      >
+        <p>
+          When a command needs your approval, raptor stops and shows the whole command before it
+          runs.
+        </p>
+        <p>You run it, reject it, or allow it for the session. Each decision stays on your machine.</p>
+      </Feature>
+
+      <Feature
+        index="04"
         eyebrow="Knowledge"
         title="Skills on demand. Memory that lasts."
-        tone="soft"
+        flip
         panel={
           <Registry
             title="raptor / skills"
@@ -114,7 +126,6 @@ export function Raptor() {
               { key: "rea", name: "Reverse engineering, 20 tools", meta: "MCP · approval gates" },
               { key: "work-routing", name: "Suggests how to run a task", meta: "suggestion only" },
               { key: "skill-fabric", name: "Cited evidence pages", meta: "opt-in · exact sources", active: true },
-              { key: "llm_query", name: "Model calls from kernel code", meta: "answers only return" },
             ]}
           />
         }
@@ -123,18 +134,14 @@ export function Raptor() {
           Skills load when a task needs them, so the base context stays small. Each skill has
           triggers, dependencies and a license.
         </p>
-        <p>
-          Opt-in sessions write evidence pages that cite their exact sources. Code in the kernel can
-          call <code>llm_query</code> to read large logs and datasets. Only the answers come back
-          into context.
-        </p>
+        <p>Opt-in sessions write evidence pages that cite their exact sources.</p>
       </Feature>
 
       <Feature
-        index="04"
+        index="05"
         eyebrow="Workflow"
         title="Authorized repository security review."
-        flip
+        tone="soft"
         panel={
           <Console
             title="raptor / review"
@@ -168,50 +175,6 @@ export function Raptor() {
           ))}
         </ol>
       </Feature>
-
-      <section className="section tone-dark" aria-labelledby="arch-title">
-        <div className="wrap">
-          <header className="section-head">
-            <Reveal as="p" className="label">
-              <span className="index">05</span> / Architecture
-            </Reveal>
-            <Reveal as="h2" delay={60} words>
-              <span id="arch-title"><Words>Eight layers. One system.</Words></span>
-            </Reveal>
-          </header>
-          <ol className="layers">
-            {LAYERS.map(([name, text], i) => (
-              <Reveal as="li" key={name} delay={i * 40}>
-                <span className="label">L{i + 1}</span>
-                <h3>{name}</h3>
-                <p>{text}</p>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section className="section section-compact" aria-labelledby="lineage-title">
-        <div className="wrap lineage-layout">
-          <div>
-            <Reveal as="p" className="label">
-              <span className="index">06</span> / Lineage
-            </Reveal>
-            <Reveal as="h2" delay={60} words>
-              <span id="lineage-title">
-                <Words>Informed by the field.</Words>
-              </span>
-            </Reveal>
-          </div>
-          <ul className="lineage">
-            {LINEAGE.map((name, i) => (
-              <Reveal as="li" key={name} delay={120 + i * 30}>
-                {name}
-              </Reveal>
-            ))}
-          </ul>
-        </div>
-      </section>
 
       <Closing
         title="raptor runs talon-1 by default."

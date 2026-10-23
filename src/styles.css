@@ -1125,88 +1125,393 @@ main:focus {
   color: var(--muted);
 }
 
-.graph-root {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--line);
-}
-.graph-root b,
-.graph-workers b,
 .registry b {
   font-weight: 500;
 }
-.graph-root .mono,
-.graph-workers .mono,
 .registry .mono {
   font-size: 0.75rem;
   color: var(--muted);
 }
-.graph-workers li {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+
+/* --------------------------------------------------------------------------
+   The raptor desktop window: tab strip, chat, subagent roster, composer and
+   status bar, laid out as the app lays them out, in the site's palette.
+   -------------------------------------------------------------------------- */
+.session {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--sans);
+  font-size: var(--fs-small);
+}
+.app-tabs {
+  display: flex;
+  align-items: stretch;
   gap: 14px;
-  align-items: center;
-  padding: 12px 20px;
+  padding: 0 14px 0 0;
   border-bottom: 1px solid var(--line);
+  background: var(--panel-bar);
 }
-.graph-workers li:last-child {
-  border-bottom: 0;
+.app-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 14px 9px;
+  border-bottom: 2px solid var(--fg);
+  margin-bottom: -1px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fg);
 }
-.graph-workers i {
-  position: relative;
-  width: 7px;
-  height: 7px;
-  border-radius: 1px; /* square LED, matching the brand motif */
+.app-tab i {
+  flex: none;
+  width: 6px;
+  height: 6px;
   background: var(--line-strong);
 }
-.graph-workers .state-done i {
-  background: var(--ok);
-}
-.graph-workers .state-running i {
+.app-tab i[data-tab="busy"] {
   background: var(--run);
 }
-/* A pulse ring radiates from a running worker. */
-.graph-workers .state-running i::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--run);
-  animation: led-pulse 1.8s var(--ease-out) infinite;
-}
-@keyframes led-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  70%,
-  100% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-}
-.graph-workers .state-review i {
+.app-tab i[data-tab="held"] {
   background: var(--review);
 }
-.graph-workers .graph-state {
-  min-width: 68px;
-  text-align: right;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.app-tab-add {
+  flex: none;
+  align-self: center;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+.app-tabs .panel-note {
+  align-self: center;
+  flex: none;
+}
+.app-chat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 18px 14px;
+}
+.app-user {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+  color: var(--fg);
+}
+.app-reply {
+  color: var(--fg-2);
+}
+.app-flights {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  color: var(--fg-2);
+}
+.mini-orb {
+  display: block;
+  color: var(--ink);
+}
+
+/* The live roster sits on the composer, as the app's status stack does. */
+.app-stack {
+  margin-bottom: -15px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: color-mix(in srgb, var(--fg) 2%, transparent);
+}
+.app-stack-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
   font-size: var(--fs-micro);
   color: var(--muted);
 }
-.graph-workers .state-done .graph-state {
+.app-stack-head svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.app-stack-head b {
+  font-weight: 500;
+  color: var(--fg);
+}
+.app-stack-sum {
+  min-width: 0;
+  margin-right: auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.app-agents li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.app-agents li[data-state="queued"] {
+  opacity: 0.55;
+}
+.app-agent-orb {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+.app-agent-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.35;
+}
+.app-agent-text > * {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.app-agent-text b {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--fg);
+}
+.app-agent-text span {
+  font-size: var(--fs-micro);
+  color: var(--muted);
+}
+.app-agents li[data-state="done"] .app-agent-text span {
   color: var(--ok);
 }
-.graph-workers .state-running .graph-state {
-  color: var(--run);
+.app-timer {
+  min-width: 3ch;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
-.graph-workers .state-review .graph-state {
-  color: var(--review);
+.app-timer.is-quiet {
+  color: var(--muted-2);
+}
+.app-composer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel-bg);
+}
+.app-composer-orb {
+  flex: none;
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+.app-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+.app-placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+.app-pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-micro);
+  color: var(--fg-2);
+}
+.app-pill svg {
+  width: 10px;
+  height: 10px;
+  color: var(--muted);
+}
+.app-pill-quiet {
+  color: var(--muted);
+}
+.app-send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--fg);
+  color: var(--bg);
+}
+.app-send svg {
+  width: 12px;
+  height: 12px;
+}
+.app-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 14px;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-micro);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.app-statusbar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-statusbar svg {
+  width: 12px;
+  height: 12px;
+}
+.app-statusbar-end {
+  margin-left: auto;
+}
+
+/* Command approval: the card and the run result share one grid cell, so the swap never moves the composer. */
+.approval-swap {
+  display: grid;
+}
+.approval-swap > * {
+  grid-area: 1 / 1;
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+.approval-result {
+  align-self: start;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.approval-swap.is-done .approval-card {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.approval-swap.is-done .approval-result {
+  opacity: 1;
+  transform: none;
+}
+.approval-card {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--panel-bg);
+}
+.approval-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 0;
+  font-size: var(--fs-small);
+  color: var(--fg-2);
+}
+.approval-head svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+.approval-card pre,
+.approval-result pre {
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+}
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 12px;
+  font-size: var(--fs-micro);
+}
+.approval-actions > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+.approval-actions svg {
+  width: 12px;
+  height: 12px;
+}
+.approval-reject {
+  color: var(--muted);
+}
+.approval-always {
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  color: var(--fg);
+}
+.approval-run {
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 500;
+  transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+  box-shadow: 0 0 0 0 transparent;
+}
+.approval-run.is-pressed {
+  transform: scale(0.95);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--fg) 14%, transparent);
+}
+.app-tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-tool svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ok);
+}
+.app-tool code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  color: var(--fg-2);
+}
+.approval-result pre {
+  margin-top: 8px;
+  border-left: 1px solid var(--line-strong);
+  color: var(--fg-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .approval-swap > *,
+  .approval-run,
+  .app-agents li {
+    transition: none;
+  }
 }
 .registry li {
   display: grid;
@@ -1412,83 +1717,6 @@ main:focus {
   font-family: var(--mono);
   font-size: 0.75rem;
   color: var(--fg-2);
-}
-
-.loop {
-  margin-top: clamp(80px, 9vw, 128px);
-}
-.loop-title {
-  font-size: clamp(1.375rem, 2vw, 1.75rem);
-  letter-spacing: -0.03em;
-}
-.loop-lede {
-  margin-top: 8px;
-  color: var(--muted);
-}
-.loop-steps {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 24px 16px;
-  margin-top: 40px;
-}
-.loop-steps li {
-  display: grid;
-  align-content: start;
-  gap: 6px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line-strong);
-}
-.loop-steps li:first-child {
-  border-top-color: var(--red);
-}
-.loop-steps b {
-  margin-top: 10px;
-  font-size: 1rem;
-  font-weight: 500;
-}
-.loop-steps li > span:last-child {
-  font-size: var(--fs-small);
-  line-height: 1.5;
-  color: var(--muted);
-}
-
-.evidence {
-  display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-  gap: clamp(32px, 6vw, 96px);
-  margin-top: clamp(80px, 9vw, 128px);
-  padding-top: 48px;
-  border-top: 1px solid var(--line);
-}
-.evidence-head h3 {
-  font-size: clamp(1.375rem, 2vw, 1.75rem);
-  letter-spacing: -0.03em;
-}
-.evidence-head p {
-  margin-top: 12px;
-  max-width: 38ch;
-  color: var(--muted);
-}
-.evidence-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 32px;
-}
-.evidence-list > div {
-  padding: 20px 0;
-  border-top: 1px solid var(--line);
-}
-.evidence-list dt {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  font-weight: 500;
-}
-.evidence-list dd {
-  margin-top: 6px;
-  font-size: var(--fs-small);
-  line-height: 1.55;
-  color: var(--muted);
 }
 
 /* ==========================================================================
@@ -1978,42 +2206,32 @@ main:focus {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 32px 24px;
 }
-.pipeline li,
-.layers li {
+.pipeline li {
   padding-top: 20px;
   border-top: 1px solid var(--line-strong);
 }
 .pipeline li:first-child {
   border-top-color: var(--red);
 }
-.pipeline h3,
-.layers h3 {
+.pipeline h3 {
   margin-top: 24px;
   font-size: var(--fs-h3);
   letter-spacing: -0.03em;
 }
-.pipeline p,
-.layers p {
+.pipeline p {
   margin-top: 10px;
   font-size: var(--fs-small);
   line-height: 1.6;
   color: var(--muted);
 }
-.layers {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 48px 24px;
-}
 
-.spec-layout,
-.lineage-layout {
+.spec-layout {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   gap: clamp(40px, 6vw, 96px);
   align-items: start;
 }
-.spec-layout h2,
-.lineage-layout h2 {
+.spec-layout h2 {
   margin-top: 20px;
   font-size: var(--fs-h2);
   line-height: 1.04;
@@ -2048,22 +2266,6 @@ main:focus {
 }
 .spec-list dd {
   font-size: 0.9375rem;
-}
-.lineage-layout {
-  align-items: center;
-}
-.lineage {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.lineage li {
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  color: var(--fg-2);
 }
 
 /* ==========================================================================
@@ -2175,13 +2377,9 @@ main:focus {
    Responsive
    ========================================================================== */
 @media (max-width: 1100px) {
-  .loop-steps {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
   .pipeline {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .layers,
   .principle-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2202,12 +2400,10 @@ main:focus {
   .product.is-flipped,
   .split,
   .split.is-flipped,
-  .evidence,
   .faq-layout,
   .closing-inner,
   .page-head-inner,
-  .spec-layout,
-  .lineage-layout {
+  .spec-layout {
     grid-template-columns: minmax(0, 1fr);
   }
   .closing-mark {
@@ -2371,12 +2567,7 @@ main:focus {
   .product-link {
     gap: 10px;
   }
-  .loop-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .evidence-list,
-  .pipeline,
-  .layers {
+  .pipeline {
     grid-template-columns: minmax(0, 1fr);
   }
   .principle-grid {
@@ -2386,8 +2577,7 @@ main:focus {
   .principle-grid h3 {
     margin-top: 16px;
   }
-  .pipeline h3,
-  .layers h3 {
+  .pipeline h3 {
     margin-top: 14px;
   }
   .faq-list {
@@ -2406,11 +2596,12 @@ main:focus {
     border-left: 0;
     border-top: 1px solid var(--line);
   }
-  .graph-workers li {
-    grid-template-columns: 8px minmax(0, 1fr) auto;
-    padding-inline: 16px;
+  .app-chat {
+    padding: 14px 12px 12px;
   }
-  .graph-workers li > .mono:nth-child(3) {
+  .app-pill-quiet,
+  .app-icon-quiet,
+  .app-statusbar-end {
     display: none;
   }
   .registry li {
@@ -2565,31 +2756,16 @@ main:focus {
   width: 72px;
   height: 72px;
 }
-.home-graph-dock {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 104px;
-  border-bottom: 1px solid var(--line);
-}
-.home-graph-dock i { display: block; width: 68px; height: 68px; }
-.home-page:not([data-journey="ready"]) :is(.home-graph-dock i, .home-local-landing) {
+.home-page:not([data-journey="ready"]) .home-local-landing {
   border: 1px solid var(--bronze-deep);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--bronze-deep) 35%, transparent), transparent 70%);
 }
-.home-graph .graph-workers li { grid-template-columns: 24px minmax(0, 1fr) auto auto; }
-.home-graph .graph-workers i {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  border: 1px solid color-mix(in srgb, var(--bronze-deep) 35%, transparent);
-  background: radial-gradient(circle at 35% 30%, var(--bronze-deep), transparent 70%);
-  box-shadow: none;
+.mini-orb[data-yield] {
+  transition: opacity var(--dur-2) var(--ease-out);
 }
-.home-page[data-journey="ready"] .home-graph .graph-workers i {
-  background: transparent;
-  border-color: transparent;
+.home-page[data-journey="ready"][data-dock="raptor"] .mini-orb[data-yield] {
+  opacity: 0;
 }
 .principle-number { display: flex; align-items: center; gap: 14px; min-height: 24px; }
 .principle-number i {
@@ -2654,9 +2830,6 @@ main:focus {
   .home-console .console pre { padding-top: 82px; }
   /* Phone: centre 39px from the 42px bar's bottom edge and from the inner right edge. */
   .home-local-landing { width: 44px; height: 44px; top: 59px; right: 18px; }
-  .home-graph-dock { height: 76px; }
-  .home-graph-dock i { width: 44px; height: 44px; }
-  .home-graph .graph-workers li { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; }
   .home-closing .closing-inner { padding-top: 56px; }
   .home-closing .home-section-landing { width: 40px; height: 40px; }
 }
@@ -3245,7 +3418,6 @@ main:focus {
 .section-head > .label.reveal.in::after {
   transform: scaleX(1);
 }
-
 
 /* A command named in running text. */
 p > code {

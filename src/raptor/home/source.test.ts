@@ -60,7 +60,7 @@ for (const layout of layouts) test(`source geometry remains continuous and attac
     t.after(() => previous ? Object.defineProperty(globalThis, key, previous) : Reflect.deleteProperty(globalThis, key));
   }
   const nodes = new Map();
-  const root = { querySelector: (selector: string) => nodes.get(selector), querySelectorAll: (selector: string) => selector === "[data-home-worker]" ? workers : [],
+  const root = { dataset: {} as DOMStringMap, querySelector: (selector: string) => nodes.get(selector), querySelectorAll: (selector: string) => selector === "[data-home-worker]" ? workers : [],
     addEventListener() {}, removeEventListener() {} };
   const node = (rect: number[], panel?: string) => ({
     parentElement: root,
@@ -191,7 +191,7 @@ function releaseSource(t: TestContext, layout: ReleaseLayout) {
     Object.defineProperty(globalThis, key, { configurable: true, value });
     t.after(() => previous ? Object.defineProperty(globalThis, key, previous) : Reflect.deleteProperty(globalThis, key));
   }
-  const root = { querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
+  const root = { dataset: {} as DOMStringMap, querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
   const node = (rect: number[], children: unknown[] = []) => ({
     parentElement: root,
     children,
@@ -294,7 +294,7 @@ test("a phone toolbar sliding in or out mid-scroll leaves the journey plan where
     t.after(() => previous ? Object.defineProperty(globalThis, key, previous) : Reflect.deleteProperty(globalThis, key));
   }
   const nodes = new Map<string, unknown>();
-  const root = { querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
+  const root = { dataset: {} as DOMStringMap, querySelector: (selector: string) => nodes.get(selector), querySelectorAll: () => [], addEventListener() {}, removeEventListener() {} };
   const node = (rect: number[]) => ({
     parentElement: root,
     getBoundingClientRect: () => ({ left: rect[0], top: rect[1] - viewport.scrollY, width: rect[2], height: rect[3], bottom: rect[1] + rect[3] - viewport.scrollY }),

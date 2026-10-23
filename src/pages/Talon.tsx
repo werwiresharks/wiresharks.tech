@@ -17,15 +17,6 @@ const PIPELINE = [
   ["Quantize", "Builds for llama.cpp, vLLM and Apple Silicon. No network after install."],
 ];
 
-const DOMAINS = [
-  ["Vulnerability research", "Find, sort and explain weaknesses in real code."],
-  ["Reverse engineering", "Analyze binaries, protocols and obfuscated code."],
-  ["Secure coding", "Write and fix code with the attacker in mind."],
-  ["SOC analysis", "Sort threat intelligence, write detections and respond to incidents."],
-  ["Authorized red teaming", "Plan and run engagements inside an explicit scope."],
-  ["CTF", "Solve challenges from authorized competitions."],
-];
-
 const STATS: [string, string][] = [
   ["27B", "Parameters"],
   ["128k", "Context"],
@@ -136,14 +127,10 @@ export function Talon() {
           />
         }
       >
-        <ol className="steps">
-          {DOMAINS.map(([name, text]) => (
-            <li key={name}>
-              <b>{name}</b>
-              <span>{text}</span>
-            </li>
-          ))}
-        </ol>
+        <p>
+          talon-1 trains on six security disciplines, from vulnerability research to authorized red
+          teaming and CTF.
+        </p>
         <p className="muted">
           Every source has established training rights. We scan secrets out of the data. We hold
           benchmark data back, so the evaluations stay fair.
