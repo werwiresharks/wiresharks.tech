@@ -6,10 +6,10 @@ import { ParticleField } from "./particles.ts";
 import { Substrate } from "./substrate.ts";
 
 const CAPACITY = 2400;
-function scene(attached = true) {
+function scene(attached = true, capacity = CAPACITY) {
   const engine = new RaptorEngine();
-  const field = new ParticleField(CAPACITY);
-  const substrate = new Substrate(field.lattice, CAPACITY);
+  const field = new ParticleField(capacity);
+  const substrate = new Substrate(field.lattice, capacity);
   substrate.setAnchors({ primary: { x: 400, y: 500, radius: 42 }, overflow: { x: 400, y: 200, radius: 18 } });
   let seq = 0;
   const attach = () => engine.attach({ update: (_layout, model) => substrate.sync(model), dispose() {} });
@@ -25,7 +25,7 @@ function scene(attached = true) {
   };
   const conserved = () => {
     const snap = substrate.snapshot();
-    assert.equal(snap.inFlight + snap.unowned + snap.bodies.reduce((n, b) => n + b.resident, 0), CAPACITY);
+    assert.equal(snap.inFlight + snap.unowned + snap.bodies.reduce((n, b) => n + b.resident, 0), capacity);
   };
   return { engine, field, substrate, attach, send, spawn, step, conserved };
 }
@@ -36,9 +36,9 @@ test("a real reset clears every old body and flight before a new session is popu
   s.spawn("child");
   assert.ok(s.substrate.snapshot().inFlight > 0);
   s.send({ type: "session.reset" });
-  assert.deepEqual(s.substrate.snapshot(), { bodies: [], inFlight: 0, unowned: CAPACITY });
+  assert.deepEqual(s.substrate.snapshot(), { bodies: [], inFlight: 0, unowned: CAPACITY, pending: 0, resolved: 0 });
   s.spawn("next", null);
-  assert.deepEqual(s.substrate.snapshot(), { bodies: [{ agentId: "next", phase: "resident", resident: CAPACITY }], inFlight: 0, unowned: 0 });
+  assert.deepEqual(s.substrate.snapshot(), { bodies: [{ agentId: "next", phase: "resident", resident: CAPACITY }], inFlight: 0, unowned: 0, pending: 0, resolved: 0 });
   s.step(5);
   s.conserved();
 });
@@ -201,7 +201,7 @@ test("hydrated reintegration settles an unfinished birth immediately", () => {
   s.spawn("child");
   s.step(0.4);
   s.send({ type: "agent.reintegrated", agentId: "child", hydrate: true });
-  assert.deepEqual(s.substrate.snapshot(), { bodies: [{ agentId: "root", phase: "resident", resident: CAPACITY }], inFlight: 0, unowned: 0 });
+  assert.deepEqual(s.substrate.snapshot(), { bodies: [{ agentId: "root", phase: "resident", resident: CAPACITY }], inFlight: 0, unowned: 0, pending: 0, resolved: 0 });
 });
 
 test("hydrated action history accepts predecessors and matching decisions without regression", () => {
@@ -231,4 +231,73 @@ test("hydrated action history accepts predecessors and matching decisions withou
   assert.equal(s.engine.ingest({ type: "authorization.resolved", actionId: "rejected", decision: "approved", authority: "policy", hydrate: true, seq }).accepted, false);
   assert.equal(s.engine.ingest({ type: "authorization.resolved", actionId: "rejected", decision: "rejected", authority: "someone else", hydrate: true, seq }).accepted, false);
   assert.equal(s.engine.ingest({ type: "action.failed", actionId: "completed", hydrate: true, seq }).accepted, false);
+});
+
+for (const [capacity, children] of [[2400, 16], [2400, 24], [13000, 24]]) test(`root briefs and steers reach ${children} settled children at capacity ${capacity}`, () => {
+  const s = scene(true, capacity);
+  s.spawn("root", null);
+  for (let i = 0; i < children; i++) {
+    s.spawn(`c${i}`);
+    s.step(0.3);
+  }
+  s.step(20);
+  for (let i = 0; i < 8; i++) {
+    s.send({ type: "transfer", transferId: `brief-${i}`, kind: "brief", fromAgentId: "root", toAgentId: `c${i}`, disposition: "delivered" });
+    s.send({ type: "transfer", transferId: `steer-${i}`, kind: "steer", fromAgentId: "root", toAgentId: `c${i}`, disposition: "queued", bytes: 400 });
+  }
+  for (let frame = 0; frame < 60 * 30; frame++) {
+    s.step(1 / 60);
+    if (frame % 30 === 0) s.conserved();
+  }
+  const snap = s.substrate.snapshot();
+  assert.equal(snap.pending, 0, "every accepted root transfer left the queue");
+  assert.equal(snap.resolved, 0, "and each one left as a flight");
+  assert.equal(snap.inFlight, 0);
+  assert.ok(snap.bodies.every(b => b.resident > 0));
+  s.conserved();
+});
+
+test("a request waiting for particles holds back only later requests on its own route", () => {
+  const s = scene();
+  s.spawn("root", null);
+  for (let i = 0; i < 14; i++) s.spawn(`c${i}`);
+  s.step(20);
+  // Children that formed early hold more than the final cohort; one brief rebalances them, the next spends root slack.
+  for (let i = 0; i < 2; i++) {
+    s.send({ type: "transfer", transferId: `warm-${i}`, kind: "brief", fromAgentId: "root", toAgentId: "c13", disposition: "delivered" });
+    s.step(5);
+  }
+  assert.equal(s.substrate.snapshot().pending, 0);
+  s.send({ type: "transfer", transferId: "big", kind: "brief", fromAgentId: "root", toAgentId: "c0", disposition: "delivered", bytes: 1e6 });
+  assert.equal(s.substrate.snapshot().pending, 1, "the full packet waits for particles");
+  s.send({ type: "transfer", transferId: "later", kind: "brief", fromAgentId: "root", toAgentId: "c0", disposition: "delivered" });
+  assert.equal(s.substrate.snapshot().pending, 2, "a later brief to the same child keeps its place behind it");
+  const flying = s.substrate.snapshot().inFlight;
+  s.send({ type: "transfer", transferId: "steer", kind: "steer", fromAgentId: "root", toAgentId: "c1", disposition: "queued" });
+  assert.equal(s.substrate.snapshot().inFlight, flying + 48, "a steer to another child leaves at once");
+  s.step(20);
+  assert.equal(s.substrate.snapshot().pending, 0);
+  s.conserved();
+});
+
+test("an accepted transfer whose destination finishes before it can fly is resolved, not dropped", () => {
+  const s = scene();
+  s.spawn("root", null);
+  for (let i = 0; i < 14; i++) s.spawn(`c${i}`);
+  s.step(20);
+  for (let i = 0; i < 2; i++) {
+    s.send({ type: "transfer", transferId: `warm-${i}`, kind: "brief", fromAgentId: "root", toAgentId: "c13", disposition: "delivered" });
+    s.step(5);
+  }
+  s.send({ type: "transfer", transferId: "late", kind: "brief", fromAgentId: "root", toAgentId: "c0", disposition: "delivered", bytes: 1e6 });
+  assert.equal(s.substrate.snapshot().pending, 1, "the full packet waits for particles");
+  s.send({ type: "agent.reintegrated", agentId: "c0" });
+  for (let frame = 0; frame < 60 * 10; frame++) {
+    s.step(1 / 60);
+    s.conserved();
+  }
+  const snap = s.substrate.snapshot();
+  assert.equal(snap.resolved, 1, "the transfer is accounted for without a flight");
+  assert.equal(snap.pending, 0);
+  assert.ok(!snap.bodies.some(b => b.agentId === "c0"), "the finished child's globe is not held open for it");
 });

@@ -54,6 +54,10 @@ export type SubstrateSnapshot = {
   bodies: { agentId: string; phase: BodyPhase; resident: number }[];
   inFlight: number;
   unowned: number;
+  /** Births, transfers and returns still waiting for particles. */
+  pending: number;
+  /** Accepted transfers that ended without a flight because an end had gone, since the last reset. */
+  resolved: number;
 };
 
 type FlightKind = TransferKind | "spawn" | "return" | "handoff" | "balance";
@@ -120,6 +124,7 @@ const SPRING = 9;
 const DENSITY = 0.9;
 const STILL_HOLD = 1.6;
 const PACKET = 48;
+const MAX_PACKET = 160;
 
 const clamp = (n: number, lo: number, hi: number) => (n < lo ? lo : n > hi ? hi : n);
 const fract = (n: number) => n - Math.floor(n);
@@ -142,7 +147,7 @@ const TONE_OF: Record<AgentState, Tone> = {
 /** Particles a packet carries: denser for larger payloads, never a throughput meter. */
 export function packetCount(bytes: number | null) {
   if (bytes === null) return PACKET;
-  return clamp(Math.round(24 + 14 * Math.log2(1 + bytes / 512)), 24, 160);
+  return clamp(Math.round(24 + 14 * Math.log2(1 + bytes / 512)), 24, MAX_PACKET);
 }
 
 export class Substrate {
@@ -165,6 +170,7 @@ export class Substrate {
   private resetSeq = 0;
   private queuedTransferSeq = 0;
   private pending: Allocation[] = [];
+  private resolved = 0;
   private tones: Record<Tone, ToneStyle> = SURFACES.light.tones;
   private glow: [number, number, number] = COLORS.red;
   private ink: [number, number, number] = COLORS.graphite;
@@ -215,6 +221,7 @@ export class Substrate {
       this.flightOf.fill(-1);
       this.queuedTransferSeq = 0;
       this.pending = [];
+      this.resolved = 0;
     }
     const hydrating = !this.synced || model.sync.hydrate;
     this.synced = true;
@@ -256,8 +263,8 @@ export class Substrate {
       if (hydrating) continue;
       const from = this.slots.get(transfer.from);
       const to = this.slots.get(transfer.to);
-      if (from === undefined || to === undefined) continue;
-      this.pending.push({ from, to, kind: transfer.kind, count: packetCount(transfer.bytes), instant: false });
+      if (from === undefined || to === undefined) this.resolved++;
+      else this.pending.push({ from, to, kind: transfer.kind, count: packetCount(transfer.bytes), instant: false });
     }
     this.allocate();
     if (hydrating) this.releaseEmptyBodies();
@@ -265,7 +272,7 @@ export class Substrate {
   }
 
   private settleReturn(from: number, to: number) {
-    this.pending = this.pending.filter(a => a.from !== from && a.to !== from);
+    this.pending = this.pending.filter(a => (a.from !== from && a.to !== from) || this.resolve(a));
     for (let f = 0; f < this.flights.length; f++) {
       const flight = this.flights[f];
       if (!flight || (flight.from !== from && flight.to !== from)) continue;
@@ -378,15 +385,21 @@ export class Substrate {
     body.morphAt = this.time;
   }
 
+  /** Children at their target leave the root its floor plus one full packet, so the root can always send. */
   private childTarget() {
     const children = this.bodies.filter(b => b && !b.root && b.phase === "resident").length;
-    return Math.min(clamp(Math.round(this.capacity * 0.03), 120, 420), Math.floor(this.capacity * 0.7 / Math.max(1, children)));
+    const shared = Math.max(0, this.capacity - this.rootFloor() - MAX_PACKET);
+    return Math.min(clamp(Math.round(this.capacity * 0.03), 120, 420), Math.floor(shared / Math.max(1, children)));
+  }
+
+  private rootFloor() {
+    return Math.round(this.capacity * 0.3);
   }
 
   private floor(slot: number) {
     const body = this.bodies[slot]!;
     if (body.phase === "returning") return 0;
-    return body.root ? Math.round(this.capacity * 0.3) : Math.min(24, Math.floor(this.childTarget() / 2));
+    return body.root ? this.rootFloor() : Math.min(24, Math.floor(this.childTarget() / 2));
   }
 
   private held(slot: number, residentOnly = false) {
@@ -412,27 +425,43 @@ export class Substrate {
   }
 
   private allocate() {
-    const blocked = new Set<number>();
+    // A waiting request holds back later ones on its route, so a steer never overtakes its brief,
+    // and a body's return leaves after everything it still has to send.
+    const routes = new Set<string>();
+    const busy = new Set<number>();
+    const wait = (from: number, route: string) => {
+      routes.add(route);
+      busy.add(from);
+      return true;
+    };
     this.pending = this.pending.filter(request => {
       const { from, to, kind, instant } = request;
-      if (!this.bodies[from] || !this.bodies[to]) return false;
-      if (blocked.has(from)) return true;
-      const returning = kind === "return" || kind === "handoff";
-      const count = returning ? Infinity : Math.min(request.count,
-        this.bodies[from]!.root ? request.count : Math.max(1, this.childTarget() - this.floor(from)));
-      if (!returning && this.held(from, true) - this.floor(from) < count) {
-        this.replenish(from, count, instant);
-        if (this.held(from, true) - this.floor(from) < count) {
-          blocked.add(from);
-          return true;
-        }
+      const source = this.bodies[from];
+      const target = this.bodies[to];
+      if (!source || !target) return this.resolve(request);
+      if (kind === "return" || kind === "handoff") {
+        if (busy.has(from)) return true;
+        // Late inbound returns are handled on landing.
+        this.send(from, to, kind, Infinity, instant);
+        return false;
       }
-      // A request is consumed only after a cohort is assigned. Late inbound returns are handled on landing.
-      const assigned = this.send(from, to, kind, count, instant);
-      if (assigned > 0 || returning) return false;
-      blocked.add(from);
-      return true;
+      if (target.phase !== "resident") return this.resolve(request);
+      const route = `${from}>${to}`;
+      if (routes.has(route)) return wait(from, route);
+      const count = source.root ? request.count : Math.min(request.count, Math.max(1, this.childTarget() - this.floor(from)));
+      if (this.held(from, true) - this.floor(from) < count) {
+        this.replenish(from, count, instant);
+        if (this.held(from, true) - this.floor(from) < count) return wait(from, route);
+      }
+      // A request is consumed only after a cohort is assigned.
+      return this.send(from, to, kind, count, instant) > 0 ? false : wait(from, route);
     });
+  }
+
+  /** Ends a request that can no longer fly. An accepted transfer is counted, never silently dropped. */
+  private resolve(request: Allocation) {
+    if (request.kind !== "spawn" && request.kind !== "return" && request.kind !== "handoff" && request.kind !== "balance") this.resolved++;
+    return false;
   }
 
   /** Starts a flight of up to `count` particles; `instant` reassigns them in place. */
@@ -646,6 +675,8 @@ export class Substrate {
       })),
       inFlight,
       unowned,
+      pending: this.pending.length,
+      resolved: this.resolved,
     };
   }
 
