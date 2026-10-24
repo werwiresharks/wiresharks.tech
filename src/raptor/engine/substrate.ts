@@ -85,6 +85,8 @@ type Body = {
   frame: Frame;
   velocity: Frame;
   placed: boolean;
+  /** Its frame stands in at its parent's: it has no place on screen of its own. */
+  standIn: boolean;
   /** 0–1: drawn only while it has somewhere to be drawn. */
   presence: number;
   weights: Float64Array;
@@ -377,6 +379,7 @@ export class Substrate {
       frame: parent ? { ...parent.frame, radius: parent.frame.radius * 0.3 } : { x: 0, y: 0, radius: 0 },
       velocity: { x: 0, y: 0, radius: 0 },
       placed: false,
+      standIn: false,
       presence: 0,
       weights: new Float64Array(POSE_COUNT),
       from: new Float64Array(POSE_COUNT),
@@ -632,11 +635,13 @@ export class Substrate {
     const target = this.targetFrame(body);
     const shown = target ? 1 : 0;
     body.presence = !body.root || this.still || !body.placed ? shown : body.presence + (shown - body.presence) * (1 - Math.exp(-6 * dt));
-    // A resident row with no place on screen draws nothing (presence 0) and stands where its parent
-    // is now, so trains to and from it start and end on the current layout. A returning row holds
-    // its place until its last particle has left.
-    const place = target ?? (body.root || body.phase === "returning" ? null : this.parentFrame(body));
+    // A row with no place on screen draws nothing (presence 0) and stands where its parent is now, so
+    // trains to and from it start and end on the current layout. A returning row that was drawn holds
+    // that place until its last particle has left.
+    const standIn = !target && !body.root && (body.phase !== "returning" || body.standIn);
+    const place = target ?? (standIn ? this.parentFrame(body) : null);
     if (place) {
+      body.standIn = standIn;
       body.frame.clip = place.clip;
       if (!body.root || !body.placed || this.still) {
         Object.assign(body.frame, place);

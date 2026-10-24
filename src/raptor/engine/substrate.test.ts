@@ -387,3 +387,32 @@ test("a row with no place on screen sends and receives from where its parent is 
     assert.ok(leftmost > 300, `${shownFirst ? "a scrolled-out" : "a never-shown"} row's result appears at x=${leftmost.toFixed(1)}, far from the dock at x=400`);
   }
 });
+
+test("a returning row that was never drawn sends its particles home from where its parent is now", () => {
+  const { field, substrate, send, step } = scene();
+  const unit = 4 / 600;
+  const frame = () => {
+    step(1 / 60);
+    substrate.write(field, 800, 600, 4);
+  };
+  substrate.setAnchors({ primary: { x: 120, y: 560, radius: 24 }, agents: { a: null } });
+  send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  send({ type: "agent.spawned", agentId: "a", parentId: "root", label: "a" });
+  send({ type: "agent.state", agentId: "a", state: "running" });
+  for (let k = 0; k < 240; k++) frame();
+
+  // The child rejoins, then the window widens and the dock moves right while its particles fly home.
+  send({ type: "agent.reintegrated", agentId: "a" });
+  substrate.setAnchors({ primary: { x: 400, y: 560, radius: 24 }, agents: { a: null } });
+  let leftmost = Infinity;
+  for (let k = 0; k < 70; k++) {
+    frame();
+    // By three quarters of a second the root's docking spring has carried it past x=350.
+    if (k < 45) continue;
+    for (let i = 0; i < CAPACITY; i++) {
+      if (substrate.flightOf[i]! >= 0 && field.params[i * 4]! > 0.05) leftmost = Math.min(leftmost, field.position[i * 3]! / unit + 400);
+    }
+  }
+  assert.ok(leftmost < Infinity, "its particles flew home");
+  assert.ok(leftmost > 250, `return particles start at x=${leftmost.toFixed(1)}, where the dock used to be`);
+});
