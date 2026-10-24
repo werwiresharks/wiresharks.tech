@@ -326,3 +326,34 @@ test("the root reports arriving only once it has stopped, not while it passes th
   assert.ok(Math.abs(reports[arrival]!.x - 96) < 0.5);
   assert.deepEqual(reports.slice(arrival + 1), [], "no report follows the arrival without another move");
 });
+
+test("a particle in flight eases into its destination's depth instead of snapping to it on landing", () => {
+  const { field, substrate, send, step } = scene();
+  const frame = () => {
+    step(1 / 60);
+    substrate.write(field, 800, 600, 4);
+  };
+  send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  send({ type: "agent.spawned", agentId: "a", parentId: "root", label: "a" });
+  send({ type: "agent.state", agentId: "a", state: "running" });
+  for (let k = 0; k < 240; k++) frame();
+  send({ type: "transfer", transferId: "r", kind: "result", fromAgentId: "a", toAgentId: "root", disposition: "delivered", bytes: 4000 });
+  frame();
+  const depth = (i: number) => field.params[i * 4 + 2]!;
+  const before = Array.from({ length: CAPACITY }, (_, i) => ({ depth: depth(i), flying: substrate.flightOf[i]! >= 0 }));
+  let flown = 0;
+  let worst = 0;
+  for (let k = 0; k < 300; k++) {
+    frame();
+    for (let i = 0; i < CAPACITY; i++) {
+      if (before[i]!.flying && field.params[i * 4]! > 0.02) {
+        flown++;
+        worst = Math.max(worst, Math.abs(depth(i) - before[i]!.depth));
+      }
+      before[i] = { depth: depth(i), flying: substrate.flightOf[i]! >= 0 };
+    }
+  }
+  assert.ok(flown > 0, "the result flew");
+  assert.ok(worst < 0.1, `a visible particle's depth jumped by ${worst.toFixed(3)} in one frame`);
+});
+

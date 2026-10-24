@@ -964,8 +964,8 @@ export class Substrate {
       const tone = sample[5 + k] * q + sample[14 + k] * u;
       sample[5 + k] = tint ? tone + (tint[k] - tone) * glow : tone;
     }
-    return undefined;
     sample[8] = sample[8] * q + sample[17] * u;
+    return undefined;
   }
 
   /** Colour a train takes in the air: results and peer messages glow red, briefs and steers stay ink. */
