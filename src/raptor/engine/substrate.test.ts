@@ -416,3 +416,32 @@ test("a returning row that was never drawn sends its particles home from where i
   assert.ok(leftmost < Infinity, "its particles flew home");
   assert.ok(leftmost > 250, `return particles start at x=${leftmost.toFixed(1)}, where the dock used to be`);
 });
+
+test("a row that rejoins before it is ever drawn sends its particles home from where its parent is now", () => {
+  const { field, substrate, send, step } = scene();
+  const unit = 4 / 600;
+  const frame = () => {
+    step(1 / 60);
+    substrate.write(field, 800, 600, 4);
+  };
+  substrate.setAnchors({ primary: { x: 120, y: 560, radius: 24 }, agents: { a: null } });
+  send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  for (let k = 0; k < 240; k++) frame();
+
+  // A short-lived child starts and rejoins between two animation frames, then the dock moves right.
+  send({ type: "agent.spawned", agentId: "a", parentId: "root", label: "a" });
+  send({ type: "agent.state", agentId: "a", state: "running" });
+  send({ type: "agent.reintegrated", agentId: "a" });
+  substrate.setAnchors({ primary: { x: 400, y: 560, radius: 24 }, agents: { a: null } });
+  let leftmost = Infinity;
+  for (let k = 0; k < 180; k++) {
+    frame();
+    // By three quarters of a second the root's docking spring has carried it past x=350.
+    if (k < 45) continue;
+    for (let i = 0; i < CAPACITY; i++) {
+      if (substrate.flightOf[i]! >= 0 && field.params[i * 4]! > 0.05) leftmost = Math.min(leftmost, field.position[i * 3]! / unit + 400);
+    }
+  }
+  assert.ok(leftmost < Infinity, "its particles flew");
+  assert.ok(leftmost > 250, `its particles fly at x=${leftmost.toFixed(1)}, where the dock used to be`);
+});

@@ -379,7 +379,7 @@ export class Substrate {
       frame: parent ? { ...parent.frame, radius: parent.frame.radius * 0.3 } : { x: 0, y: 0, radius: 0 },
       velocity: { x: 0, y: 0, radius: 0 },
       placed: false,
-      standIn: false,
+      standIn: !root,
       presence: 0,
       weights: new Float64Array(POSE_COUNT),
       from: new Float64Array(POSE_COUNT),
