@@ -618,6 +618,11 @@ export class Substrate {
     return next;
   }
 
+  private parentFrame(body: Body): Frame | null {
+    const slot = body.parentId === null ? undefined : this.slots.get(body.parentId);
+    return slot === undefined ? null : this.bodies[slot]!.frame;
+  }
+
   private targetFrame(body: Body): Frame | null {
     if (body.root) return this.anchors.primary ?? null;
     return this.anchors.agents?.[body.id] ?? this.anchors.overflow ?? null;
@@ -627,19 +632,23 @@ export class Substrate {
     const target = this.targetFrame(body);
     const shown = target ? 1 : 0;
     body.presence = !body.root || this.still || !body.placed ? shown : body.presence + (shown - body.presence) * (1 - Math.exp(-6 * dt));
-    if (target) {
-      body.frame.clip = target.clip;
+    // A resident row with no place on screen draws nothing (presence 0) and stands where its parent
+    // is now, so trains to and from it start and end on the current layout. A returning row holds
+    // its place until its last particle has left.
+    const place = target ?? (body.root || body.phase === "returning" ? null : this.parentFrame(body));
+    if (place) {
+      body.frame.clip = place.clip;
       if (!body.root || !body.placed || this.still) {
-        Object.assign(body.frame, target);
+        Object.assign(body.frame, place);
         body.velocity.x = body.velocity.y = body.velocity.radius = 0;
         body.placed = true;
       } else {
         const omega = ROOT_SPRING;
         const decay = Math.exp(-omega * dt);
         for (const axis of ["x", "y", "radius"] as const) {
-          const e = body.frame[axis] - target[axis];
+          const e = body.frame[axis] - place[axis];
           const b = body.velocity[axis] + omega * e;
-          body.frame[axis] = target[axis] + (e + b * dt) * decay;
+          body.frame[axis] = place[axis] + (e + b * dt) * decay;
           body.velocity[axis] = (body.velocity[axis] - omega * b * dt) * decay;
         }
       }

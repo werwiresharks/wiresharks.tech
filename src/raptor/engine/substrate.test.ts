@@ -357,3 +357,33 @@ test("a particle in flight eases into its destination's depth instead of snappin
   assert.ok(worst < 0.1, `a visible particle's depth jumped by ${worst.toFixed(3)} in one frame`);
 });
 
+test("a row with no place on screen sends and receives from where its parent is now", () => {
+  for (const shownFirst of [false, true]) {
+    const { field, substrate, send, step } = scene();
+    const unit = 4 / 600;
+    const frame = () => {
+      step(1 / 60);
+      substrate.write(field, 800, 600, 4);
+    };
+    const row = { x: 120, y: 480, radius: 18 };
+    substrate.setAnchors({ primary: { x: 120, y: 560, radius: 24 }, agents: { a: shownFirst ? row : null } });
+    send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+    send({ type: "agent.spawned", agentId: "a", parentId: "root", label: "a" });
+    send({ type: "agent.state", agentId: "a", state: "running" });
+    for (let k = 0; k < 240; k++) frame();
+
+    // The row scrolls out of the list (or never had room), then the window widens and the dock moves right.
+    substrate.setAnchors({ primary: { x: 400, y: 560, radius: 24 }, agents: { a: null } });
+    for (let k = 0; k < 240; k++) frame();
+    send({ type: "transfer", transferId: `r${shownFirst}`, kind: "result", fromAgentId: "a", toAgentId: "root", disposition: "delivered", bytes: 4000 });
+    let leftmost = Infinity;
+    for (let k = 0; k < 30; k++) {
+      frame();
+      for (let i = 0; i < CAPACITY; i++) {
+        if (substrate.flightOf[i]! >= 0 && field.params[i * 4]! >= 0.05) leftmost = Math.min(leftmost, field.position[i * 3]! / unit + 400);
+      }
+    }
+    assert.ok(leftmost < Infinity, "the result flew");
+    assert.ok(leftmost > 300, `${shownFirst ? "a scrolled-out" : "a never-shown"} row's result appears at x=${leftmost.toFixed(1)}, far from the dock at x=400`);
+  }
+});
