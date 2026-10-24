@@ -308,3 +308,21 @@ test("the root reports where it is when its place changes and when it settles th
   assert.deepEqual(reports.at(-1), { x: 40, settled: true });
   assert.equal(reports.length, 3);
 });
+
+test("the root reports arriving only once it has stopped, not while it passes through its place", () => {
+  const { substrate, send, step } = scene();
+  const reports: { x: number; settled: boolean }[] = [];
+  substrate.onPrimary = (frame, settled) => reports.push({ x: frame.x, settled });
+  send({ type: "agent.spawned", agentId: "root", parentId: null, label: "raptor" });
+  step(0.5);
+  substrate.setAnchors({ ...ANCHORS, primary: { x: 40, y: 560, radius: 24 } });
+  for (let frame = 0; frame < 12; frame++) step(1 / 60);
+
+  // The layout moves the dock onto the globe's path while it is still flying there with momentum.
+  substrate.setAnchors({ ...ANCHORS, primary: { x: 96, y: 560, radius: 24 } });
+  for (let frame = 0; frame < 240; frame++) step(1 / 60);
+  const arrival = reports.findIndex((report, i) => i > 1 && report.settled);
+  assert.ok(arrival > 1, "the root arrives at its new place");
+  assert.ok(Math.abs(reports[arrival]!.x - 96) < 0.5);
+  assert.deepEqual(reports.slice(arrival + 1), [], "no report follows the arrival without another move");
+});

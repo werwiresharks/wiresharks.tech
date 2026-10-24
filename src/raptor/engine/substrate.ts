@@ -599,8 +599,12 @@ export class Substrate {
     const target = this.anchors.primary;
     const slot = [...this.slots.values()].find((s) => this.bodies[s]!.root && this.bodies[s]!.phase === "resident");
     if (!this.onPrimary || !target || slot === undefined) return;
-    const frame = this.bodies[slot]!.frame;
-    const settled = Math.abs(frame.x - target.x) < 0.5 && Math.abs(frame.y - target.y) < 0.5 && Math.abs(frame.radius - target.radius) < 0.5;
+    const { frame, velocity } = this.bodies[slot]!;
+    // Near its place is not arrived: a root passing through with momentum still overshoots. The
+    // critically damped spring travels at most about |velocity| / ROOT_SPRING further.
+    const settled = (["x", "y", "radius"] as const).every(
+      (axis) => Math.abs(frame[axis] - target[axis]) + Math.abs(velocity[axis]) / ROOT_SPRING < 0.5,
+    );
     const key = `${settled} ${Math.round(target.x)} ${Math.round(target.y)} ${Math.round(target.radius)}`;
     if (key === this.primaryKey) return;
     this.primaryKey = key;
