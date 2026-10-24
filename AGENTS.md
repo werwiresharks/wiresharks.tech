@@ -23,6 +23,7 @@ The brand kit is in `docs/brand/` and documents the live `src/styles.css`. The c
 - Product names are lowercase wherever they name the product, also at the start of a sentence and inside uppercase labels (wrap them in `keep-case`). The agent is raptor, never Raptor-1. The model is talon-1. Wiresharks, Harness, Hermes and other names keep their own casing.
 - raptor carries ®: in the wordmark, in headings, FAQ questions, buttons and product names, and at its first mention on a page. Later running text, command lines (`$ raptor …`), panel titles and metadata write plain "raptor". Render the mark only through `src/components/RaptorWordmark.tsx` (`RaptorWordmark`, `RaptorReg`, `withRaptorReg`; `Words` marks headings itself).
 - talon-1 never carries ®, ™ or any other mark.
+- The WIRESHARKS wordmark always carries its red square at the top right (`src/components/Wordmark.tsx`, `.wordmark i`). The fin-wire LogoMark keeps its own red node. Both appear wherever the lockup appears, here and in every Wiresharks product.
 - Copy follows ASD-STE100 and describes only merged raptor work. Routing only suggests. `docs/brand/tools/check.mjs` enforces the casing and mark rules on the site source.
 
 ```sh

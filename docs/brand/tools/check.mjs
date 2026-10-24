@@ -92,6 +92,10 @@ const sentences = ["raptor is the autonomous cybersecurity agent, built on Herme
 for (const f of ["BRAND-GUIDE.md", "templates/copy-templates.md", "brand-guide.html"]) for (const line of sentences) ok(read(join(BRAND, f)).includes(line), `${f} lacks product sentence: ${line}`);
 ok(tokens.source.snapshot === "2026-10-19" && manifest.snapshot === "2026-10-19", "snapshot date must be 2026-10-19");
 
+// 7b. The WIRESHARKS wordmark keeps its red square at the top right, on the site and in the social image.
+ok(/<i aria-hidden="true" \/>/.test(read(join(REPO, "src/components/Wordmark.tsx"))), "Wordmark.tsx lost its red square");
+ok(/\.wordmark i \{[^}]*background: var\(--red\)/.test(read(join(REPO, "src/styles.css"))), "styles.css lost the wordmark's red square");
+ok(/WIRE<span>SHARKS<\/span><i><\/i>/.test(read(join(REPO, "scripts/og-image.html"))), "og-image.html lost the wordmark's red square");
 // 7c. The site follows the same rule: lowercase product names in copy, talon-1 unmarked, and ® written only in RaptorWordmark.tsx (which renders it for the wordmark, headings, questions, buttons and first mentions).
 const siteWalk = (d) => readdirSync(join(REPO, d)).flatMap((n) => { const p = join(d, n); return statSync(join(REPO, p)).isDirectory() ? siteWalk(p) : [p]; });
 const siteCopy = [...siteWalk("src/pages"), ...siteWalk("src/components"), "src/content.ts", "src/site.ts", "index.html", "scripts/og-image.html"].filter((f) => /\.(tsx?|html)$/.test(f) && !/\.test\.ts$/.test(f));

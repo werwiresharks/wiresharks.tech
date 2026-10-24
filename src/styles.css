@@ -526,6 +526,15 @@ main:focus {
 .wordmark > span {
   font-weight: 400;
 }
+/* The red square at the wordmark's top right. Sized in em so it scales with the lettering. */
+.wordmark i {
+  align-self: flex-start;
+  flex: none;
+  width: 0.25em;
+  height: 0.25em;
+  margin: 0.2em 0 0 0.25em;
+  background: var(--red);
+}
 .nav {
   display: flex;
   align-items: center;
