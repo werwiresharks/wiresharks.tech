@@ -8,7 +8,6 @@ import { RaptorWordmark } from "./RaptorWordmark";
 const PRODUCTS = [
   { to: "/raptor", label: <RaptorWordmark />, note: "Agent" },
   { to: "/talon", label: "talon-1", note: "Model" },
-  { to: "/#platform", label: "Platform", note: "Architecture" },
   { to: "/#faq", label: "FAQ", note: "Answers" },
 ];
 

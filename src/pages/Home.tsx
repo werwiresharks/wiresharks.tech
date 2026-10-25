@@ -7,7 +7,6 @@ import { Reveal, Words } from "../components/Reveal";
 import { RaptorReg, RaptorWordmark } from "../components/RaptorWordmark";
 import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
-import { Platform } from "../components/Platform";
 import { ProductBlock } from "../components/ProductBlock";
 import { Console } from "../components/mock/Console";
 import { Session } from "../components/mock/Session";
@@ -216,17 +215,12 @@ export function Home() {
         </div>
       </section>
 
-      <div className="home-platform">
-        <span className="home-section-landing" data-home-stop="platform" aria-hidden="true" />
-        <Platform />
-      </div>
-
       <section className="principles section tone-soft" id="principles" aria-labelledby="principles-title">
         <div className="wrap">
           <header className="section-head">
             <span className="home-landing" data-home-stop="principles" aria-hidden="true" />
             <Reveal as="p" className="label">
-              <span className="index">03</span> / Principles
+              <span className="index">02</span> / Principles
             </Reveal>
             <Reveal as="h2" delay={60} words>
               <span id="principles-title"><Words>Built for authorized security work.</Words></span>
