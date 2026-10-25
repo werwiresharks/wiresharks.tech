@@ -16,6 +16,9 @@ export function HomeJourney() {
     let failed = false;
     let load = 0;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Phones get the clean static orb, not the full-viewport particle journey:
+    // the claw-cut wordmark is cramped and reads as broken at phone width.
+    const phone = window.matchMedia("(max-width: 767px)");
     const fallback = () => {
       failed = true;
       root.dataset.journey = "fallback";
@@ -27,7 +30,7 @@ export function HomeJourney() {
     };
     const sync = () => {
       const generation = ++load;
-      if (motion.matches) {
+      if (motion.matches || phone.matches) {
         root.dataset.journey = "static";
         renderer?.dispose();
         renderer = null;
@@ -54,10 +57,12 @@ export function HomeJourney() {
     };
     sync();
     motion.addEventListener("change", sync);
+    phone.addEventListener("change", sync);
     return () => {
       cancelled = true;
       load++;
       motion.removeEventListener("change", sync);
+      phone.removeEventListener("change", sync);
       source?.dispose();
       renderer?.dispose();
       delete root.dataset.journey;

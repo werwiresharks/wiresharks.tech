@@ -35,7 +35,7 @@ export function Platform() {
       <div className="wrap">
         <header className="section-head">
           <Reveal as="p" className="label">
-            <span className="index">03</span> / Platform
+            <span className="index">02</span> / Platform
           </Reveal>
           <Reveal as="h2" delay={60} words>
             <span id="platform-title"><Words>From model to autonomous execution.</Words></span>

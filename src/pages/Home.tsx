@@ -9,7 +9,6 @@ import { Faq } from "../components/Faq";
 import { Closing } from "../components/Closing";
 import { Platform } from "../components/Platform";
 import { ProductBlock } from "../components/ProductBlock";
-import { Swarm } from "../components/Swarm";
 import { Console } from "../components/mock/Console";
 import { Session } from "../components/mock/Session";
 import { REVIEW, REVIEW_AGENTS } from "../components/mock/demos";
@@ -217,8 +216,6 @@ export function Home() {
         </div>
       </section>
 
-      <Swarm />
-
       <div className="home-platform">
         <span className="home-section-landing" data-home-stop="platform" aria-hidden="true" />
         <Platform />
@@ -229,7 +226,7 @@ export function Home() {
           <header className="section-head">
             <span className="home-landing" data-home-stop="principles" aria-hidden="true" />
             <Reveal as="p" className="label">
-              <span className="index">04</span> / Principles
+              <span className="index">03</span> / Principles
             </Reveal>
             <Reveal as="h2" delay={60} words>
               <span id="principles-title"><Words>Built for authorized security work.</Words></span>
