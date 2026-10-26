@@ -29,36 +29,56 @@ export type SessionServerOptions = {
   waitlist?: WaitlistStore;
 };
 
+export type SessionServer = Server & {
+  /** Stop accepting requests, end live streams, and let in-flight writes finish. */
+  shutdown(callback?: (error?: Error) => void): void;
+};
+
 const MAX_BODY_BYTES = 4096;
+
+class RequestBodyError extends Error {
+  readonly status: 400 | 413;
+
+  constructor(status: 400 | 413, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
 
 /** Read a capped JSON request body, or reject oversize/invalid input. */
 function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let size = 0;
+    let tooLarge = false;
     req.on("data", (chunk: Buffer) => {
+      if (tooLarge) return;
       size += chunk.length;
       if (size > MAX_BODY_BYTES) {
-        reject(new Error("too large"));
-        req.destroy();
+        tooLarge = true;
+        chunks.length = 0;
+        // Keep draining without buffering. Destroying the request here also
+        // destroys the socket before the client can receive our JSON 413.
+        reject(new RequestBodyError(413, "body too large"));
         return;
       }
       chunks.push(chunk);
     });
     req.on("end", () => {
+      if (tooLarge) return;
       try {
         const text = Buffer.concat(chunks).toString("utf8") || "{}";
         const value = JSON.parse(text);
         if (typeof value !== "object" || value === null || Array.isArray(value)) {
-          reject(new Error("not an object"));
+          reject(new RequestBodyError(400, "invalid request body"));
           return;
         }
         resolve(value as Record<string, unknown>);
       } catch {
-        reject(new Error("invalid json"));
+        reject(new RequestBodyError(400, "invalid request body"));
       }
     });
-    req.on("error", reject);
+    req.on("error", () => reject(new RequestBodyError(400, "invalid request body")));
   });
 }
 
@@ -75,10 +95,14 @@ function parseLastEventId(req: IncomingMessage, url: URL): number | null {
   return Number.isInteger(value) && value >= 0 ? value : null;
 }
 
-export function createSessionServer(options: SessionServerOptions): Server {
+export function createSessionServer(options: SessionServerOptions): SessionServer {
   const { log } = options;
   const origin = options.origin ?? "*";
   const heartbeatMs = options.heartbeatMs ?? 15000;
+  const streams = new Set<() => void>();
+  const requests = new Set<Promise<void>>();
+  let stopping = false;
+  let shutdown: Promise<void> | null = null;
 
   const cors = (res: ServerResponse) => {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -89,9 +113,20 @@ export function createSessionServer(options: SessionServerOptions): Server {
     res.writeHead(status, { "Content-Type": "application/json" }).end(JSON.stringify(body));
   };
 
-  return createServer((req, res) => {
+  const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     cors(res);
+    res.on("finish", () => {
+      // A response that was active when close() ran becomes idle only now.
+      // Do not wait for its keep-alive timeout after a graceful shutdown.
+      if (stopping) server.closeIdleConnections();
+    });
+
+    if (stopping) {
+      res.setHeader("Connection", "close");
+      sendJson(res, 503, { error: "server shutting down" });
+      return;
+    }
 
     if (req.method === "OPTIONS") {
       res.writeHead(204, {
@@ -107,7 +142,7 @@ export function createSessionServer(options: SessionServerOptions): Server {
         sendJson(res, 404, { error: "waitlist not enabled" });
         return;
       }
-      readJsonBody(req)
+      const pending = readJsonBody(req)
         .then(async (body) => {
           const email = typeof body.email === "string" ? body.email.trim() : "";
           const source = typeof body.source === "string" ? body.source.slice(0, 64) : undefined;
@@ -118,10 +153,16 @@ export function createSessionServer(options: SessionServerOptions): Server {
           const result = await options.waitlist!.add(email, source);
           sendJson(res, result === "added" ? 201 : 200, { status: result });
         })
-        .catch((err: Error) => {
-          const tooLarge = err.message === "too large";
-          sendJson(res, tooLarge ? 413 : 400, { error: tooLarge ? "body too large" : "invalid request body" });
+        .catch((error: unknown) => {
+          if (error instanceof RequestBodyError) {
+            sendJson(res, error.status, { error: error.message });
+          } else {
+            sendJson(res, 500, { error: "could not save waitlist entry" });
+          }
         });
+      requests.add(pending);
+      const settled = () => { requests.delete(pending); };
+      pending.then(settled, settled);
       return;
     }
 
@@ -158,7 +199,13 @@ export function createSessionServer(options: SessionServerOptions): Server {
       const close = () => {
         clearInterval(heartbeat);
         unsubscribe();
+        streams.delete(end);
       };
+      const end = () => {
+        close();
+        res.end();
+      };
+      streams.add(end);
       req.on("close", close);
       res.on("close", close);
       return;
@@ -172,5 +219,25 @@ export function createSessionServer(options: SessionServerOptions): Server {
     }
 
     res.writeHead(404, { "Content-Type": "text/plain" }).end("Not Found");
+  });
+
+  return Object.assign(server, {
+    shutdown(callback?: (error?: Error) => void) {
+      if (!shutdown) {
+        stopping = true;
+        const closed = new Promise<void>((resolve, reject) => {
+          server.close((error) => error ? reject(error) : resolve());
+        });
+        // server.close() alone waits forever on active SSE responses. End them
+        // gracefully without aborting waitlist writes already in progress.
+        for (const end of streams) end();
+        shutdown = closed.then(async () => {
+          // A disconnected client's accepted write can outlive its socket.
+          // Repeated shutdown calls must all wait for these requests as well.
+          await Promise.allSettled(requests);
+        });
+      }
+      shutdown.then(() => callback?.(), (error: Error) => callback?.(error));
+    },
   });
 }

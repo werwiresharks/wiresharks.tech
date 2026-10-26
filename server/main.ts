@@ -26,7 +26,7 @@ server.listen(port, () => {
 
 const shutdown = () => {
   stopScenario();
-  server.close(() => process.exit(0));
+  server.shutdown(() => process.exit(0));
 };
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

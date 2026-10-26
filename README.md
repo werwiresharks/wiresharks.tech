@@ -63,7 +63,11 @@ events; it makes no authorization decisions.
 
 It also serves the site waitlist: `POST /waitlist {email}` persists to an
 append-only JSONL file (`server/store.ts`), deduplicating by normalized email,
-with no database.
+with no database. Within one server process, writes are serialized and an
+entry counts only after its append succeeds; failed reads or writes can be
+retried. Run only one writer per waitlist file. Invalid request bodies return
+`400`, bodies over 4096 bytes return `413`, and storage failures return `500`
+without exposing filesystem details.
 
 ```sh
 npm run server            # serve on http://localhost:8787
@@ -72,6 +76,11 @@ npm run typecheck:server  # type-check server/ with Node types
 
 Environment: `PORT` (default 8787), `CORS_ORIGIN` (default `*`),
 `WAITLIST_FILE` (default `./.data/waitlist.jsonl`).
+
+`SIGINT` and `SIGTERM` stop the scenario and call the server's `shutdown()`:
+it stops accepting requests, ends live SSE streams, and lets in-flight waitlist
+writes finish before exit. Embedded callers should also use `shutdown()`;
+Node's plain `server.close()` waits for live SSE clients to disconnect.
 
 Connect from the app with `createEventSourceSource("http://localhost:8787/events")`
 and feed it to an engine via `useEngineSource` or `RaptorStage`'s `source` prop.

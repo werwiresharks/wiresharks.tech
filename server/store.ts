@@ -44,12 +44,20 @@ export function createMemoryWaitlist(): WaitlistStore {
 
 /**
  * Append-only JSONL store with an in-memory dedup index loaded once on first
- * use. Concurrent adds of the same email in one process are serialized through
- * the index, so a duplicate is never appended twice.
+ * use. Operations in one process are serialized so a duplicate is never
+ * appended twice and the index only includes successful writes.
  */
 export function createFileWaitlist(path: string): WaitlistStore {
   const seen = new Set<string>();
   let loaded: Promise<void> | null = null;
+  let pending = Promise.resolve();
+
+  const serialize = <T>(operation: () => Promise<T>): Promise<T> => {
+    const result = pending.then(operation);
+    // A failed operation must not block later requests from retrying.
+    pending = result.then(() => {}, () => {});
+    return result;
+  };
 
   const load = () => {
     if (!loaded) {
@@ -66,28 +74,36 @@ export function createFileWaitlist(path: string): WaitlistStore {
             }
           }
         })
-        .catch(() => {
-          // No file yet: an empty index is correct.
+        .catch((error: NodeJS.ErrnoException) => {
+          // Only a missing file means an empty index. Retry other read failures
+          // next time instead of accepting entries against an incomplete index.
+          if (error.code === "ENOENT") return;
+          loaded = null;
+          throw error;
         });
     }
     return loaded;
   };
 
   return {
-    async add(email, source) {
-      await load();
-      const key = normalizeEmail(email);
-      if (seen.has(key)) return "duplicate";
-      seen.add(key);
-      const entry: WaitlistEntry = { email: key, at: new Date().toISOString() };
-      if (source) entry.source = source;
-      await mkdir(dirname(path), { recursive: true });
-      await appendFile(path, JSON.stringify(entry) + "\n", "utf8");
-      return "added";
+    add(email, source) {
+      return serialize(async () => {
+        await load();
+        const key = normalizeEmail(email);
+        if (seen.has(key)) return "duplicate";
+        const entry: WaitlistEntry = { email: key, at: new Date().toISOString() };
+        if (source) entry.source = source;
+        await mkdir(dirname(path), { recursive: true });
+        await appendFile(path, JSON.stringify(entry) + "\n", "utf8");
+        seen.add(key);
+        return "added";
+      });
     },
-    async count() {
-      await load();
-      return seen.size;
+    count() {
+      return serialize(async () => {
+        await load();
+        return seen.size;
+      });
     },
   };
 }
