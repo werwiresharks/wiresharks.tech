@@ -2047,6 +2047,73 @@ main:focus {
 /* ==========================================================================
    Product pages
    ========================================================================== */
+.live-console {
+  padding-block: clamp(64px, 8vw, 112px);
+}
+.live-console h1 {
+  margin-top: 16px;
+  font-size: var(--fs-h1);
+  font-weight: var(--w-display);
+  line-height: 1.05;
+  letter-spacing: var(--tr-display);
+}
+.live-console-status {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.live-console-stage {
+  position: relative;
+  height: clamp(240px, 52vh, 520px);
+  margin-block: 24px;
+}
+.live-console-stage > .rpe-stage {
+  position: absolute;
+  inset: 0;
+}
+.live-console-stage .rpe-static {
+  top: 50%;
+  left: 50%;
+  width: min(100%, 520px);
+}
+.waitlist {
+  margin-top: 40px;
+  max-width: 28rem;
+}
+.waitlist-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.waitlist-row input {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+.waitlist-row input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.waitlist-row .cta {
+  flex: none;
+}
+.waitlist-row .cta[aria-disabled="true"] {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+.waitlist-status {
+  min-height: 3em;
+  margin-top: 12px;
+  color: var(--fg-2);
+  font-size: var(--fs-small);
+}
 .page-head {
   --bg: var(--soft);
   position: relative;

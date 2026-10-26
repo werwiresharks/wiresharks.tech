@@ -2,6 +2,8 @@ import type { RaptorEvent } from "../engine/events.ts";
 import type { RaptorEventSource } from "./source.ts";
 import { parseMessage } from "./wire.ts";
 
+export type ConnectionStatus = "connecting" | "connected" | "reconnecting";
+
 /**
  * A {@link RaptorEventSource} over the browser `EventSource` (Server-Sent
  * Events). `EventSource` owns reconnection and resends `Last-Event-ID`, so the
@@ -14,6 +16,7 @@ import { parseMessage } from "./wire.ts";
 export function createEventSourceSource(
   url: string,
   eventName = "raptor",
+  onStatus?: (status: ConnectionStatus) => void,
 ): RaptorEventSource & { close(): void } {
   const listeners = new Set<(event: RaptorEvent) => void>();
   let es: EventSource | null = null;
@@ -29,12 +32,20 @@ export function createEventSourceSource(
 
   const open = () => {
     if (es) return;
+    onStatus?.("connecting");
     es = new EventSource(url);
     es.addEventListener(eventName, onMessage);
+    es.addEventListener("open", onOpen);
+    es.addEventListener("error", onError);
   };
+
+  const onOpen = () => onStatus?.("connected");
+  const onError = () => onStatus?.("reconnecting");
 
   const teardown = () => {
     es?.removeEventListener(eventName, onMessage);
+    es?.removeEventListener("open", onOpen);
+    es?.removeEventListener("error", onError);
     es?.close();
     es = null;
   };
