@@ -74,7 +74,12 @@ export function Header() {
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)");
-    const close = () => setOpen(false);
+    const close = () => {
+      if (!desktop.matches && menu.current?.contains(document.activeElement)) {
+        toggle.current?.focus();
+      }
+      setOpen(false);
+    };
     desktop.addEventListener("change", close);
     return () => desktop.removeEventListener("change", close);
   }, []);

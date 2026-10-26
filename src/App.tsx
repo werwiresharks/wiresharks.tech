@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -26,13 +26,25 @@ function NotFound() {
 /** Top of page on route change; to the target section for `/#anchor` links. */
 function ScrollManager() {
   const { pathname, hash } = useLocation();
+  const previousPath = useRef(pathname);
   useEffect(() => {
+    // A route replaces the page content; give keyboard users its new starting point.
+    if (previousPath.current !== pathname) {
+      document.getElementById("main")?.focus({ preventScroll: true });
+      previousPath.current = pathname;
+    }
     if (!hash) {
       window.scrollTo({ top: 0, behavior: "instant" });
       return;
     }
     const id = window.requestAnimationFrame(() => {
-      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
+      let target = hash.slice(1);
+      try {
+        target = decodeURIComponent(target);
+      } catch {
+        // A malformed fragment must not interrupt navigation.
+      }
+      document.getElementById(target)?.scrollIntoView();
     });
     return () => window.cancelAnimationFrame(id);
   }, [pathname, hash]);
