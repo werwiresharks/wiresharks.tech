@@ -3394,8 +3394,10 @@ main:focus {
 }
 
 /* raptor's page mark: the drawn claw above the wordmark, which arrives once the claws fill. */
-.page-lockup {
+.page-mark > .page-lockup {
   display: grid;
+}
+.page-lockup {
   justify-items: center;
   gap: clamp(20px, 2.4vw, 32px);
 }
