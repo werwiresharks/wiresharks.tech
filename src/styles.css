@@ -1099,12 +1099,21 @@ main:focus {
   font-size: var(--fs-mono);
   line-height: 1.75;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  /* break-word, not anywhere (round 9): anywhere let depicted commands
+     split inside tokens at phone width ("--offline" broke as "--" /
+     "offline"); break-word moves a token to the next line whole and
+     still breaks one that is longer than the line itself. */
+  overflow-wrap: break-word;
   color: var(--fg-2);
 }
 .console .cmd {
   color: var(--fg);
   font-weight: 500;
+}
+/* Command tokens never split (round 9): breaks only at the spaces
+   between tokens — see the tokenizer in mock/Console.tsx. */
+.console .tok {
+  white-space: nowrap;
 }
 .console .prompt {
   color: var(--red-text);
@@ -1572,7 +1581,8 @@ main:focus {
   font-size: var(--fs-micro);
   line-height: 1.7;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  /* Same token-integrity rule as .console pre (round 9). */
+  overflow-wrap: break-word;
   color: var(--fg);
 }
 .approval-actions {
@@ -2525,7 +2535,8 @@ main:focus {
   color: var(--fg-2);
 }
 .console-log li {
-  overflow-wrap: anywhere;
+  /* Same token-integrity rule as .console pre (round 9). */
+  overflow-wrap: break-word;
 }
 .console-field-label {
   display: block;
@@ -2575,19 +2586,16 @@ main:focus {
   box-shadow: none;
 }
 @media (max-width: 767px) {
-  /* Data first on phone: the rail (status, log, waitlist) precedes the
-     stage, so the live facts open the page. */
-  .console-rail {
-    order: -1;
-  }
-  /* The console head compresses on phone: the lede's sentence is the
-     status panel's own content once the session is live, and the fold
-     belongs to the data. */
+  /* DOM order stands on phone (round 9): an earlier pass moved the rail
+     above the stage ("data first") and hid the lede. The round-8 council
+     read the result as the page demoting its own subject — status, log
+     and the waitlist form all preceded the engine canvas — and the lede
+     is a ratified verbatim sentence that appears nowhere else on the
+     surface, so hiding it deleted the authorization disclaimer at
+     exactly the narrowest width. The head still compresses: tighter top
+     padding and headline margin, nothing removed. */
   .console-page {
     padding-top: calc(var(--header-height) + 24px);
-  }
-  .console-page .page-lede {
-    display: none;
   }
   .console-page h1 {
     margin-top: 8px;
@@ -2964,10 +2972,18 @@ main:focus {
   .split-visual {
     padding: 10px;
   }
-  .panel-note {
-    display: none;
+  /* Every mock panel keeps its Illustrative tag at phone width too
+     (§3: mock panels stay badged, at every width). On a PanelBar the
+     note drops to its own line under the title, aligned past the dot
+     (the bar wraps, above); inside app tabs it keeps its stacked
+     row. (Round-8 fix: a display:none here silently unbadged every
+     Registry and Compare panel on phone while the app-chrome panels
+     kept theirs.) */
+  .panel-bar .panel-note {
+    order: 2;
+    flex-basis: 100%;
+    margin-left: 18px;
   }
-  /* The product panels show sample sessions, so they keep their tag. */
   .app-tabs .panel-note {
     display: block;
   }

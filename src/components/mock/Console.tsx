@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { PanelBar } from "./PanelBar";
 import { useInView } from "../useInView";
@@ -25,10 +26,23 @@ function highlight(text: string): ReactNode[] {
 
 function Line({ line }: { line: string }) {
   if (line.startsWith("$")) {
+    /* Each space-separated token is an unbreakable unit (.tok): line
+       breaking may only happen at the spaces, never inside a token —
+       "anywhere"/break-word wrapping still split "--offline" after its
+       hyphens at phone width (round 9). The longest command token in
+       the panels is 16 chars, far inside the narrowest panel line. */
     return (
       <span className="cmd">
         <span className="prompt">$</span>
-        {line.slice(1)}
+        {line
+          .slice(1)
+          .split(" ")
+          .map((tok, i) => (
+            <Fragment key={i}>
+              {i > 0 ? " " : null}
+              <span className="tok">{tok}</span>
+            </Fragment>
+          ))}
       </span>
     );
   }
