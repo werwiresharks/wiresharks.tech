@@ -14,6 +14,7 @@ import { REVIEW, REVIEW_AGENTS } from "../components/mock/demos";
 import { Compare } from "../components/mock/Compare";
 import { StaticOrb } from "../raptor/react/RaptorStage";
 import { HomeJourney } from "../raptor/react/HomeJourney";
+import { RELEASE_LONG } from "../site";
 
 const FAQ: [string, string][] = [
   [
@@ -22,7 +23,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "What is talon-1?",
-    "talon-1 is the open-weight security model that powers raptor. It is a 27B model, fine-tuned for offensive and defensive security work. It runs on your machine. It ships with its evaluations on December 25, 2026.",
+    `talon-1 is the open-weight security model that powers raptor. It is a 27B model, fine-tuned for offensive and defensive security work. It runs on your machine. It ships with its evaluations on ${RELEASE_LONG}.`,
   ],
   [
     "Does the model refuse security questions?",
@@ -171,7 +172,7 @@ export function Home() {
             stats={[
               ["27B", "Parameters"],
               ["128k", "Context"],
-              ["Off", "Network"],
+              ["off", "Network"],
             ]}
             specs={[
               ["Inference", "llama.cpp · vLLM · Apple Silicon"],
@@ -264,7 +265,7 @@ export function Home() {
         <span className="home-section-landing" data-home-stop="closing" aria-hidden="true" />
         <Closing
           title="No cloud. No refusals."
-          text="talon-1 weights, its evaluations, raptor and Harness ship together on December 25, 2026."
+          text={`talon-1 weights, its evaluations, raptor and Harness ship together on ${RELEASE_LONG}.`}
         />
       </div>
     </div>

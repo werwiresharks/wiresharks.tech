@@ -9,6 +9,7 @@ import { Registry } from "../components/mock/Registry";
 import { Session } from "../components/mock/Session";
 import { TRIAGE, TRIAGE_AGENTS } from "../components/mock/demos";
 import { REVIEW_STEPS } from "../content";
+import { RELEASE_LONG } from "../site";
 
 export function Raptor() {
   return (
@@ -179,7 +180,7 @@ export function Raptor() {
 
       <Closing
         title="raptor runs talon-1 by default."
-        text="Both ship together on December 25, 2026."
+        text={`Both ship together on ${RELEASE_LONG}.`}
         mark={<RaptorMarkDrawn />}
       />
     </>

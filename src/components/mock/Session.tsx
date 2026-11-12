@@ -72,7 +72,7 @@ export function Session({
                     <span className="app-agent-orb" />
                     <span className="app-agent-text">
                       <b>{agent.name}</b>
-                      <span>{agent.task}</span>
+                      <span title={agent.task}>{agent.task}</span>
                     </span>
                   </li>
                 ))}
@@ -99,7 +99,7 @@ export function Session({
                         {agent.name}
                         <i>{state}</i>
                       </b>
-                      <span>{agent.activity[state] ?? agent.task}</span>
+                      <span title={agent.activity[state] ?? agent.task}>{agent.activity[state] ?? agent.task}</span>
                     </span>
                     <span className="app-timer">{elapsed(beats, index, i)}</span>
                   </li>
@@ -134,14 +134,15 @@ function Thread({ prompt, reply, children }: { prompt: string; reply: string; ch
   );
 }
 
-/** The app's composer status section: "N Subagents" over its rows. */
+/** The app's composer status section: "N Workers" over its rows — the
+    site's copy calls them workers ("Each one runs as its own worker"). */
 function Roster({ count, children }: { count: number; children: ReactNode }) {
   return (
     <div className="app-stack">
       <div className="app-stack-head">
         <TreeStructure aria-hidden="true" />
         <b>
-          {count} Subagent{count === 1 ? "" : "s"}
+          {count} Worker{count === 1 ? "" : "s"}
         </b>
         <CaretDown aria-hidden="true" />
       </div>

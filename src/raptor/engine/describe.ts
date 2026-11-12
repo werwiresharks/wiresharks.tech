@@ -37,7 +37,7 @@ export function describeModel(model: RaptorModel): string {
   const kids = childrenOf(model, root.id);
   if (kids.length)
     parts.push(
-      `${kids.length} parallel subagent${kids.length === 1 ? "" : "s"}`,
+      `${kids.length} parallel worker${kids.length === 1 ? "" : "s"}`,
     );
   if (root.generation > 1) parts.push(`generation ${root.generation}`);
   const actions = liveActions(model);

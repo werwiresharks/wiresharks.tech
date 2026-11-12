@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RELEASE } from "../site";
+import { RELEASE, RELEASE_SHORT } from "../site";
 import { useInView } from "./useInView";
 
 const UNITS = [
@@ -10,6 +10,9 @@ const UNITS = [
 ] as const;
 
 const ROLL_MS = 1400;
+
+/** The release date, read from the single source in site.ts (C-4). */
+const RELEASE_ISO = RELEASE.toISOString().slice(0, 10);
 
 function useNow() {
   const [now, setNow] = useState(Date.now);
@@ -52,7 +55,7 @@ export function Countdown({ className = "", mega = false }: { className?: string
     <div ref={ref} className={`countdown${mega ? " countdown-mega" : ""} ${className}`}>
       <p className="countdown-label">
         <i aria-hidden="true" />
-        Release / <time dateTime="2026-12-25">Dec 25, 2026</time>
+        Release / <time dateTime={RELEASE_ISO}>{RELEASE_SHORT}</time>
       </p>
       {left === 0 ? (
         <p className="countdown-live">Available now.</p>

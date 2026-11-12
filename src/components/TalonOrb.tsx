@@ -46,7 +46,7 @@ export function TalonOrb() {
         cy="150"
         r="120"
         fill="none"
-        stroke="var(--bronze-deep)"
+        stroke="var(--line-strong)"
         strokeWidth="1"
       />
     </svg>

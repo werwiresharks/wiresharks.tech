@@ -23,9 +23,9 @@ npm run preview
 
 ## Structure
 
-- `src/pages/` route pages (Home, raptor, talon-1).
-- `src/components/` page sections (Swarm, Shipped, Platform, Faq, Closing, ProductBlock, Stats, Countdown, ...), the raptor® wordmark (RaptorWordmark),
-  shared hooks (useInView, usePanelGlow), and `mock/` product panels (Console, Compare, Registry, TaskGraph).
+- `src/pages/` route pages (Home, raptor, talon-1, LiveConsole).
+- `src/components/` page sections (Faq, Closing, ProductBlock, Feature, Stats, Countdown, ...), the raptor® wordmark (RaptorWordmark),
+  shared hooks (useInView, usePanelGlow), and `mock/` product panels (Session, Approval, Console, Compare, Registry).
 - `src/raptor/engine/` the raptor particle engine:
   - `events.ts` typed event vocabulary.
   - `model.ts` validated state reducer (ordering, hierarchy, authorization transitions).

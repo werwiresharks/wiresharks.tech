@@ -162,7 +162,7 @@ export class DemoDirector implements RaptorEventSource {
         const count = Math.min(3, 6 - existing);
         this.emit({ type: "checkpoint.created", checkpointId: this.id("cp") });
         this.emit({ type: "agent.state", agentId: root.id, state: "running" });
-        this.say("raptor", `Starting ${count} subagents in parallel.`);
+        this.say("raptor", `Starting ${count} workers in parallel.`);
         for (let i = 0; i < count; i++) {
           const agentId = this.id("sub");
           const label = SUBAGENT_LABELS[(existing + i) % SUBAGENT_LABELS.length];

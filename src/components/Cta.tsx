@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Arrow } from "./Arrow";
 
 /**
  * The site's one button shape. Internal routes render a router <Link> so
@@ -26,7 +27,7 @@ export function Cta({
       )}
       <span className="cta-label">{children}</span>
       <span className="cta-arrow" aria-hidden="true">
-        →
+        <Arrow />
       </span>
     </Link>
   );

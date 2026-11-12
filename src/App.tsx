@@ -7,6 +7,7 @@ import { Raptor } from "./pages/Raptor";
 import { Talon } from "./pages/Talon";
 import { LiveConsole } from "./pages/LiveConsole";
 import { usePanelGlow } from "./components/usePanelGlow";
+import { Arrow } from "./components/Arrow";
 
 function NotFound() {
   return (
@@ -17,7 +18,7 @@ function NotFound() {
       <h1>This page does not exist.</h1>
       <Link className="cta cta-primary" to="/">
         Back to Wiresharks
-        <span className="cta-arrow" aria-hidden="true">→</span>
+        <span className="cta-arrow" aria-hidden="true"><Arrow /></span>
       </Link>
     </section>
   );

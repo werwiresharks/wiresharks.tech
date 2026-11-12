@@ -30,17 +30,33 @@
   --ok: #1f7a45;
   --run: #c01812; /* "running" reads as live red, not blue */
   --review: #9a6b1f; /* held-for-review stays a neutral amber, never brand red */
-  --link-accent: var(--red);
 
   /* Section depth + material (overridden per tone) */
   --section-depth: none;
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-blur: 18px;
+  /* Liquid Glass — the closed v2 token set (DESIGN-SYSTEM-V2 §2.1). Only these
+     values are legal glass; any other blur/saturate/background recipe is a
+     violation. Roles: masthead = bg-1 + blur-md + shadow-md; card = bg-2 +
+     blur-sm + shadow-md; dialog = bg-2 + blur-lg + shadow-lg; chip = bg-3 +
+     blur-sm + shadow-sm. Every glass surface carries --glass-highlight as its
+     top edge, and degrades to --glass-fallback-solid with no blur. */
+  --glass-bg-1: color-mix(in srgb, #ffffff 76%, transparent);
+  --glass-bg-2: color-mix(in srgb, #ffffff 60%, transparent);
+  --glass-bg-3: color-mix(in srgb, #ffffff 45%, transparent);
+  --glass-blur-sm: 8px;
+  --glass-blur-md: 16px;
+  --glass-blur-lg: 24px;
+  --glass-saturate: 150%;
   --glass-border: rgba(17, 18, 20, 0.08);
+  --glass-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+  --glass-shadow-sm: 0 1px 2px rgba(17, 18, 20, 0.06);
+  --glass-shadow-md: 0 8px 24px rgba(17, 18, 20, 0.10);
+  --glass-shadow-lg: 0 24px 64px rgba(17, 18, 20, 0.16);
+  --glass-fallback-solid: #ffffff;
+  --focus-ring: #c41f1f;
 
   /* Kept for the particle engine's static fallback */
   --ink: var(--fg);
-  --bronze-deep: var(--red); /* retired bronze → the single accent */
+
 
   /* Type */
   --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -107,7 +123,10 @@
   --bg: var(--soft);
   --muted: #666664; /* 5:1 on --soft */
   --muted-2: #6e6e6b;
-  --glass-bg: rgba(245, 245, 242, 0.72);
+  --glass-bg-1: color-mix(in srgb, #f5f5f2 76%, transparent);
+  --glass-bg-2: color-mix(in srgb, #f5f5f2 60%, transparent);
+  --glass-bg-3: color-mix(in srgb, #f5f5f2 45%, transparent);
+  --glass-fallback-solid: #f5f5f2;
 }
 .tone-dark {
   --bg: var(--charcoal);
@@ -130,8 +149,16 @@
   /* Depth: a faint top light and a low red ember, so the void is not flat */
   --section-depth: radial-gradient(90% 60% at 85% -5%, #1e1f23, transparent 70%),
     radial-gradient(60% 55% at 8% 105%, rgba(229, 37, 27, 0.07), transparent 70%);
-  --glass-bg: rgba(20, 21, 23, 0.68);
+  --glass-bg-1: color-mix(in srgb, #111214 72%, transparent);
+  --glass-bg-2: color-mix(in srgb, #111214 56%, transparent);
+  --glass-bg-3: color-mix(in srgb, #111214 40%, transparent);
   --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+  --glass-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --glass-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.40);
+  --glass-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --glass-fallback-solid: #1c1d20;
+  --focus-ring: #ff5a52;
   color-scheme: dark;
 }
 .tone-soft,
@@ -181,6 +208,17 @@ body {
   background: var(--bg);
   overflow-x: clip;
 }
+/* The app is a full-height column: on short pages (the 404 above all)
+   main grows so the footer closes the viewport instead of stranding a
+   white band beneath it. */
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+#root > main {
+  flex: 1 0 auto;
+}
 h1,
 h2,
 h3,
@@ -229,12 +267,12 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 :focus-visible {
-  outline: 2px solid var(--red);
-  outline-offset: 3px;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
   border-radius: inherit;
 }
 ::selection {
-  background: var(--red);
+  background: var(--red-text);
   color: #fff;
 }
 .sr-only {
@@ -466,17 +504,18 @@ main:focus {
   padding: 0 clamp(14px, 2vw, 22px);
   border-color: var(--glass-border);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--bg) 94%, transparent);
-  box-shadow: 0 12px 32px -12px rgba(18, 18, 18, 0.18);
+  /* Glass, masthead recipe (G-2): bg-1 + blur-md + shadow-md. Without
+     backdrop-filter support the bar degrades to the solid fallback (G-6). */
+  background: var(--glass-fallback-solid);
+  background-image: var(--glass-highlight);
+  box-shadow: var(--glass-shadow-md);
 }
 /* Over a dark section the bar takes the dark tokens (the .tone-dark class comes from Header.tsx). */
 .masthead-bar.tone-dark {
   color: var(--fg);
 }
-.masthead.scrolled .masthead-bar.tone-dark {
-  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
-}
-/* Reading progress: a hairline of red along the bar's bottom edge. */
+/* Reading progress: a hairline along the bar's bottom edge. Ink, not red:
+   red is brand and refusal only (§1.1); progress is wayfinding. */
 .masthead-bar::after {
   content: "";
   position: absolute;
@@ -484,7 +523,7 @@ main:focus {
   right: var(--radius-lg);
   bottom: -1px;
   height: 1px;
-  background: var(--red);
+  background: var(--ink);
   transform: scaleX(var(--p, 0));
   transform-origin: left;
   opacity: 0;
@@ -497,17 +536,32 @@ main:focus {
   opacity: 0;
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .masthead.scrolled .masthead-bar,
   .masthead.menu-open .masthead-bar {
-    background: color-mix(in srgb, var(--bg) 76%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    backdrop-filter: blur(18px) saturate(160%);
+    background: var(--glass-bg-1);
+    background-image: var(--glass-highlight);
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
   }
+}
+/* The SCROLLED bar stays solid (--glass-fallback-solid, tone-aware) even
+   where backdrop-filter exists: three council rounds measured page text
+   ghosting legibly through the translucent bar over mixed light/dark
+   backdrops — a G-4 failure that blur alone did not cure at either step.
+   G-6 sanctions the solid degradation exactly for uncontrolled
+   backdrops; a scrolling page is one. Glass remains where the backdrop
+   is controlled: the hero card, secondary CTAs, the open menu at rest. */
+.masthead.scrolled .masthead-bar {
+  background: var(--glass-fallback-solid);
+  background-image: var(--glass-highlight);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .brand-link {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  /* The wordmark is a link like any other: a 44px hit height (R-2). */
+  padding-block: 7px;
   color: var(--fg);
 }
 .logo-mark {
@@ -543,7 +597,7 @@ main:focus {
 }
 .nav > a {
   position: relative;
-  padding: 8px 12px;
+  padding: 12px;
   border-radius: var(--radius-sm);
   color: var(--fg-2);
   transition:
@@ -571,13 +625,13 @@ main:focus {
   width: 4px;
   height: 4px;
   margin-left: -2px;
-  background: var(--red);
+  background: var(--red-text);
 }
 .nav > .nav-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 34px;
+  height: 44px;
   margin-left: 10px;
   padding: 0 12px;
   border: 1px solid var(--line-strong);
@@ -587,7 +641,7 @@ main:focus {
     background-color var(--fast) var(--ease-out);
 }
 .nav > .nav-cta svg {
-  color: var(--red);
+  color: var(--red-text);
 }
 .menu-toggle {
   display: none;
@@ -620,9 +674,19 @@ main:focus {
     box-shadow var(--fast) var(--ease-out);
 }
 .cta-arrow {
-  color: var(--red);
-  font-size: 1.0625rem;
+  display: inline-flex;
+  color: var(--red-text);
   transition: transform var(--fast) var(--ease);
+}
+/* The red arrow belongs to the single primary action (§1.1); secondary
+   actions keep the arrow shape in their own ink. */
+.cta-secondary .cta-arrow {
+  color: inherit;
+}
+.cta-arrow svg {
+  display: block;
+  width: 17px;
+  height: 17px;
 }
 /* A product mark before the label: tighter padding keeps the button close to its plain width. */
 .cta-has-icon {
@@ -647,7 +711,7 @@ main:focus {
     transform: translateX(3px);
   }
   .cta-primary:hover {
-    background: #262626;
+    background: var(--charcoal-2);
   }
   /* A red filament draws along the base of the primary button on hover. */
   .cta-primary:hover::after {
@@ -676,24 +740,27 @@ main:focus {
   transform-origin: left;
   transition: transform var(--dur-2) var(--ease-out);
 }
+/* Secondary actions are glass (R-3), chip recipe (G-2): bg-3 + blur-sm +
+   shadow-sm over the hero canvas; solid fallback where blur is unsupported. */
 .cta-secondary {
-  background: rgba(255, 255, 255, 0.45);
-  border-color: rgba(18, 18, 18, 0.16);
+  background: var(--glass-fallback-solid);
+  background-image: var(--glass-highlight);
+  border-color: var(--line-strong);
   color: var(--fg);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  box-shadow: var(--glass-shadow-sm);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cta-secondary {
+    background: var(--glass-bg-3);
+    background-image: var(--glass-highlight);
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+  }
 }
 .cta-secondary:hover {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(18, 18, 18, 0.36);
-}
-.tone-dark .cta-secondary {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.22);
-}
-.tone-dark .cta-secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--glass-bg-2);
+  background-image: var(--glass-highlight);
+  border-color: var(--fg);
 }
 .cta-inverse {
   background: #fff;
@@ -707,6 +774,9 @@ main:focus {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  /* A link like any other: a 44px hit height (R-2). The bare row
+     measured 23px on desktop (round-6 DOM audit). */
+  min-height: 44px;
   font-size: var(--fs-ui);
   font-weight: 500;
   color: var(--fg);
@@ -716,8 +786,16 @@ main:focus {
   transition: background-size var(--dur-2) var(--ease-out);
 }
 .text-link span[aria-hidden] {
-  color: var(--red);
+  display: inline-flex;
+  /* Ink: the red arrow belongs to the primary action alone (§1.1); the
+     link keeps its red underline-grow on hover. */
+  color: inherit;
   transition: transform var(--fast) var(--ease);
+}
+.text-link span[aria-hidden] svg {
+  display: block;
+  width: 15px;
+  height: 15px;
 }
 @media (hover: hover) {
   .text-link:hover .text-link-label {
@@ -750,7 +828,7 @@ main:focus {
 .countdown-label i {
   width: 6px;
   height: 6px;
-  background: var(--red);
+  background: var(--red-text);
   animation: live 2.4s ease-in-out infinite;
 }
 @keyframes live {
@@ -863,15 +941,21 @@ main:focus {
   max-width: min(34rem, 100%);
   margin-top: 40px;
   padding: 18px 22px 16px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.26));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 0 0 0.5px rgba(18, 18, 18, 0.05),
-    0 18px 40px -28px rgba(18, 18, 18, 0.22);
-  -webkit-backdrop-filter: blur(2.5px) saturate(140%);
-  backdrop-filter: blur(2.5px) saturate(140%);
+  /* Glass, card recipe (G-2): bg-2 + blur-sm + shadow-md over the particle
+     canvas. Without backdrop-filter support it degrades to solid (G-6). */
+  background: var(--glass-fallback-solid);
+  background-image: var(--glass-highlight);
+  box-shadow: var(--glass-shadow-md);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hero-glass {
+    background: var(--glass-bg-2);
+    background-image: var(--glass-highlight);
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+  }
 }
 .hero-glass > p:first-child {
   font-size: var(--fs-lead);
@@ -982,7 +1066,7 @@ main:focus {
   margin-left: auto;
   padding: 2px 7px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--fs-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -993,7 +1077,7 @@ main:focus {
   width: fit-content;
   padding: 3px 8px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: var(--fs-micro);
   letter-spacing: 0.06em;
@@ -1104,11 +1188,12 @@ main:focus {
   left: 0;
   color: var(--ok);
 }
-.compare-grid > .compare-refused {
-  background: color-mix(in srgb, var(--red) 5%, var(--panel-bar));
-}
+/* The tint belongs on the refusal word alone (§1.1: --red-tint highlights
+   emphasised words), never as a wash over the whole column. */
 .compare-refused .refused {
   padding-left: 14px;
+  padding-right: 8px;
+  background: var(--red-tint);
   border-left: 2px solid var(--red);
   font-size: 1.5rem;
   font-weight: var(--w-h);
@@ -1186,7 +1271,7 @@ main:focus {
   flex: none;
   width: 6px;
   height: 6px;
-  border-radius: 1px;
+  border-radius: 0;
   background: var(--line-strong);
 }
 .app-tab i[data-tab="busy"] {
@@ -1320,6 +1405,28 @@ main:focus {
   font-weight: 400;
   font-size: var(--fs-micro);
   color: var(--muted);
+}
+/* Status is a word + a square LED (S-5), in the console LED's colours:
+   red while the agent works, green when it has completed, graphite
+   while it waits. The agent orb beside the name keeps its own state. */
+.app-agent-text b i::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  background: var(--muted-2);
+}
+.app-agents li[data-state="working"] .app-agent-text b i::before,
+.app-agents li[data-state="solving"] .app-agent-text b i::before,
+.app-agents li[data-state="searching"] .app-agent-text b i::before,
+.app-agents li[data-state="returning"] .app-agent-text b i::before {
+  background: var(--run);
+}
+.app-agents li[data-state="done"] .app-agent-text b i::before,
+.app-agents li[data-state="complete"] .app-agent-text b i::before,
+.app-agents li[data-state="completed"] .app-agent-text b i::before {
+  background: var(--ok);
 }
 .app-agent-text span {
   font-size: var(--fs-micro);
@@ -1491,7 +1598,8 @@ main:focus {
   height: 12px;
 }
 .approval-reject {
-  color: var(--muted);
+  color: var(--red-text);
+  font-weight: 500;
 }
 .approval-always {
   background: color-mix(in srgb, var(--fg) 7%, transparent);
@@ -1536,7 +1644,10 @@ main:focus {
 }
 .registry li {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) auto;
+  /* Four tracks: key, name, state, meta. With three, an active row's meta
+     wrapped into a second row inside the key track, one word per line.
+     The key track fits the longest key ("security-audit") on one line. */
+  grid-template-columns: 116px minmax(0, 1fr) auto auto;
   gap: 14px;
   align-items: center;
   padding: 13px 20px;
@@ -1548,16 +1659,23 @@ main:focus {
 .registry li > .mono:last-child {
   text-align: right;
 }
-.registry .is-active b::after {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 8px;
-  border-radius: 50%;
-  background: var(--ok);
-  vertical-align: middle;
+.registry-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
 }
+.registry-state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--ok);
+}
+
 
 /* A technical frame around product interfaces: grid field, corner ticks. */
 .product-visual,
@@ -1615,7 +1733,7 @@ main:focus {
 .product h3 {
   margin-top: 20px;
   font-size: var(--fs-product);
-  font-weight: 500;
+  font-weight: var(--w-display);
   line-height: 0.92;
   letter-spacing: -0.06em;
 }
@@ -1669,75 +1787,7 @@ main:focus {
   background: var(--line);
 }
 .product-link .label:nth-child(3) {
-  color: var(--red-text);
-}
-
-/* ==========================================================================
-   Platform
-   ========================================================================== */
-.tiers {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-.tier {
-  position: relative;
-  padding: clamp(24px, 3vw, 40px);
-}
-.tier + .tier {
-  border-left: 1px solid var(--line);
-}
-.tier + .tier::before {
-  content: "→";
-  position: absolute;
-  top: 50%;
-  left: -15px;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  margin-top: -14px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--bg);
-  font-size: 0.8125rem;
-  color: var(--red);
-}
-.tier-id {
-  display: flex;
-  justify-content: space-between;
-}
-.tier-id span:first-child {
-  color: var(--red-text);
-}
-.tier h3 {
-  margin-top: 40px;
-  font-size: clamp(1.5rem, 2.2vw, 2rem);
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-}
-.tier-role {
-  margin-top: 6px;
-  font-size: 0.9375rem;
-  color: var(--fg-2);
-}
-.tier-text {
-  margin-top: 16px;
-  font-size: 0.9375rem;
-  line-height: 1.6;
   color: var(--muted);
-}
-.tier-facts {
-  margin-top: 28px;
-  border-top: 1px solid var(--line);
-}
-.tier-facts li {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--fg-2);
 }
 
 /* ==========================================================================
@@ -2231,9 +2281,6 @@ main:focus {
   padding-top: 20px;
   border-top: 1px solid var(--line-strong);
 }
-.pipeline li:first-child {
-  border-top-color: var(--red);
-}
 .pipeline h3 {
   margin-top: 24px;
   font-size: var(--fs-h3);
@@ -2337,12 +2384,14 @@ main:focus {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 5px 0;
 }
 .footer-col a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* The hit box is the target (R-2): 12px of padding makes each footer
+     link ~45px tall at every pointer type, not only coarse ones. */
+  padding-block: 12px;
   font-size: var(--fs-small);
   color: var(--fg-2);
   transition: color var(--fast) var(--ease-out);
@@ -2365,7 +2414,7 @@ main:focus {
   }
 }
 .footer-col a svg {
-  color: var(--red);
+  color: inherit;
 }
 .footer-col li .label {
   font-size: var(--fs-micro);
@@ -2384,8 +2433,211 @@ main:focus {
   color: var(--muted);
 }
 
+/* ==========================================================================
+   Live console page (/console) — on-system: token spacing, token colours,
+   .wrap rhythm (C-6). Product-surface density per S-2 where it shows data.
+   ========================================================================== */
+.console-page {
+  padding-top: calc(var(--header-height) + 48px);
+  /* Data surface: the page ends closer under its panels than a marketing
+     section would (S-2); the standard section step left a void. */
+  padding-bottom: 96px;
+}
+.console-page h1 {
+  margin-top: 16px;
+  font-size: var(--fs-h1);
+  font-weight: var(--w-display);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+/* The console is a data surface (S-1/S-2): a bounded stage panel beside a
+   rail of one-job panels — never a full-viewport decorative canvas. The
+   stage clips its canvas, so the orb can never cross text or controls. */
+.console-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+@media (min-width: 1024px) {
+  .console-grid {
+    grid-template-columns: minmax(0, 13fr) minmax(0, 11fr);
+    align-items: start;
+  }
+}
+.console-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: min(52vh, 440px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+/* The engine sizes its boundary ring from the host's width; a wide, short
+   host cropped the ring at the frame's top and bottom. A square host —
+   the panel stays full width, the canvas sits centred in it — keeps the
+   whole orb and ring inside the frame at every viewport. */
+.console-stage .rpe-stage {
+  width: min(100%, 408px);
+  aspect-ratio: 1 / 1;
+  height: auto;
+}
+@media (max-width: 767px) {
+  /* Shorter stage on phone: the status panel's first line enters the
+     first viewport instead of starting below it. */
+  .console-stage {
+    height: 264px;
+  }
+  .console-stage .rpe-stage {
+    width: min(100%, 232px);
+  }
+}
+.console-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
+}
+.console-status-panel,
+.console-log-panel,
+.console-waitlist {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+/* The visible session log: the same narration lines the screen-reader
+   region voices, set as data rows (S-3). */
+.console-log {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  /* One casing rule for the log (product names included, §1.4): the
+     engine's narration capitalises freely; the panel renders lowercase.
+     Presentation only — the screen-reader log keeps the original text. */
+  text-transform: lowercase;
+  color: var(--fg-2);
+}
+.console-log li {
+  overflow-wrap: anywhere;
+}
+.console-field-label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.console-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.console-led {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  /* Sit on the first line of the status text; the word wraps in its own
+     span, so shape and word never split across lines (S-5). */
+  margin-top: 4px;
+  background: var(--muted-2);
+}
+.console-status > span {
+  flex: 1;
+  min-width: 0;
+}
+.console-status-detail {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* No shadows inside the data surface (S-4): the primary button keeps
+   its hairline and fill, not the marketing elevation. */
+.console-page .cta {
+  box-shadow: none;
+}
+@media (max-width: 767px) {
+  /* Data first on phone: the rail (status, log, waitlist) precedes the
+     stage, so the live facts open the page. */
+  .console-rail {
+    order: -1;
+  }
+  /* The console head compresses on phone: the lede's sentence is the
+     status panel's own content once the session is live, and the fold
+     belongs to the data. */
+  .console-page {
+    padding-top: calc(var(--header-height) + 24px);
+  }
+  .console-page .page-lede {
+    display: none;
+  }
+  .console-page h1 {
+    margin-top: 8px;
+  }
+}
+.console-led[data-state="running"] {
+  background: var(--run);
+}
+.console-led[data-state="done"] {
+  background: var(--ok);
+}
+.console-waitlist {
+  max-width: 448px;
+}
+.console-rail .console-waitlist {
+  max-width: none;
+}
+.console-waitlist-row {
+  display: flex;
+  gap: 8px;
+}
+.console-input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+.console-waitlist-status {
+  margin-top: 12px;
+}
+
 .not-found {
-  padding-block: clamp(120px, 18vw, 220px);
+  padding-block: calc(var(--header-height) + 64px) var(--section-y);
+}
+.not-found .label {
+  position: relative;
+}
+.not-found .label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -11px;
+  width: 28px;
+  height: 1px;
+  background: var(--red);
 }
 .not-found h1 {
   margin: 24px 0 40px;
@@ -2434,26 +2686,21 @@ main:focus {
   .split.is-flipped .split-copy {
     order: 0;
   }
-  .tiers {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .tier + .tier {
-    border-left: 0;
-    border-top: 1px solid var(--line);
-  }
-  .tier + .tier::before {
-    content: "↓";
-    top: -15px;
-    left: clamp(24px, 3vw, 40px);
-    margin-top: 0;
-  }
-  .tier h3 {
-    margin-top: 24px;
-  }
+
+
+
+
   .page-mark {
     order: -1;
     justify-self: start;
     width: clamp(88px, 24vw, 140px);
+  }
+  /* The talon orb is a dot field: at 88px it dissolves into noise. On
+     phone it takes a centred 176px frame — the proportion the home
+     orb keeps — while the claw mark stays small. */
+  .page-mark:has(.talon-frame) {
+    justify-self: center;
+    width: 176px;
   }
   .page-head-launch {
     width: fit-content;
@@ -2516,8 +2763,10 @@ main:focus {
     padding: 8px;
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    background: var(--bg);
-    box-shadow: 0 24px 48px -16px rgba(18, 18, 18, 0.24);
+    /* Nested under the glass masthead bar, so the panel itself stays solid
+       (G-5, no glass-on-glass), with the dialog shadow. */
+    background: var(--glass-fallback-solid);
+    box-shadow: var(--glass-shadow-lg);
     font-size: 1.0625rem;
     animation: menu-in var(--base) var(--ease);
   }
@@ -2622,17 +2871,89 @@ main:focus {
   }
   .app-pill-quiet,
   .app-icon-quiet,
-  .app-statusbar .app-statusbar-end,
-  .app-agent-text b i {
+  .app-statusbar .app-statusbar-end {
     display: none;
   }
+  /* The agent status word + LED stay visible on phone (S-5 holds at
+     every breakpoint); the row's task line wraps beneath them. */
+  /* The status stacks under the worker name on phone: inline, the
+     name + LED + word outgrew the row and the word ellipsised
+     mid-token ("sol…") — a clipped status word is no word. */
+  .app-agent-text b {
+    display: grid;
+    white-space: normal;
+  }
+  .app-agent-text b i {
+    margin-left: 0;
+    margin-top: 1px;
+  }
+  /* Panel bars wrap at phone width so titles never truncate mid-token;
+     the Illustrative note drops to its own line instead. */
+  .panel-bar {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  /* One row structure for every registry row at phone width: a single
+     column stack — name, state, key, meta, each on its own line. (The
+     two-line variant collapsed: the hermes meta's max-content is 252px,
+     which crushed the name track to 0px and overprinted the row. A
+     stack cannot collide.) Inactive rows simply omit the state line. */
   .registry li {
+    display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
+    grid-template-areas:
+      "name"
+      "state"
+      "key"
+      "meta";
+    row-gap: 2px;
     padding-inline: 16px;
   }
+  .registry li > b {
+    grid-area: name;
+  }
+  .registry li > .registry-state {
+    grid-area: state;
+  }
+  .registry li > .mono:first-child {
+    grid-area: key;
+  }
   .registry li > .mono:last-child {
+    grid-area: meta;
     text-align: left;
+  }
+  /* The approval action row stacks as a deliberate full-width group on
+     phone instead of wrapping into a broken row. */
+  .approval-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .approval-actions > span {
+    justify-content: flex-start;
+  }
+  /* App tab strips wrap too: the title takes the full row and the
+     Illustrative note drops below it — no mid-token truncation (R-5). */
+  .app-tabs {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding-right: 14px;
+    padding-bottom: 6px;
+  }
+  .app-tab {
+    flex: 1 1 auto;
+  }
+  .app-tabs .panel-note {
+    order: 2;
+    flex-basis: 100%;
+    padding-left: 14px;
+  }
+  /* Agent task lines wrap on phone instead of clipping mid-token; the
+     full value is one wrapped row away, and the title stays for hover. */
+  .app-agent-text > span {
+    white-space: normal;
+  }
+  .app-placeholder {
+    flex: none;
   }
   .steps li,
   .spec-list > div {
@@ -2783,9 +3104,9 @@ main:focus {
   height: 72px;
 }
 .home-page:not([data-journey="ready"]) .home-local-landing {
-  border: 1px solid var(--bronze-deep);
+  border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--bronze-deep) 35%, transparent), transparent 70%);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--red) 15%, transparent), transparent 70%);
 }
 .mini-orb[data-yield] {
   transition: opacity var(--dur-2) var(--ease-out);
@@ -2797,9 +3118,10 @@ main:focus {
 .principle-number i {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--bronze-deep) 40%, transparent);
-  background: radial-gradient(circle at 35% 30%, var(--bronze-deep), transparent 70%);
+  /* Square tile (§1.3 motif); the radial shading keeps the orb palette. */
+  border-radius: 0;
+  border: 1px solid var(--line-strong);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--red) 15%, var(--fg-2)), var(--charcoal) 78%);
 }
 .home-page[data-journey="ready"] .principle-number i { visibility: hidden; }
 .home-platform,
@@ -3013,298 +3335,25 @@ main:focus {
   }
 }
 
-/* ==========================================================================
-   Raptor Swarm: one task splits into jobs for agents whose results combine, pinned while scroll steps through it
-   ========================================================================== */
-.swarm-label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 16px;
-}
-.swarm-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 8px;
-  border: 1px solid color-mix(in srgb, var(--red) 35%, transparent);
-  border-radius: 4px;
-  font-size: var(--fs-micro);
-  letter-spacing: 0.06em;
-  color: var(--red-text);
-}
-.swarm-status::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  background: var(--red);
-}
-.swarm-track {
-  --swarm-pin: calc(100svh - var(--header-height));
-  position: relative;
-  height: calc(var(--swarm-pin) + 150svh);
-}
-.swarm-pin {
-  position: sticky;
-  top: var(--header-height);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(216px, 22vw, 320px);
-  gap: clamp(32px, 4.4vw, 72px);
-  align-items: center;
-  align-content: center;
-  height: var(--swarm-pin);
-}
-.swarm-figure {
-  height: min(600px, calc(var(--swarm-pin) - 64px));
-}
-.swarm-figure .panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-.swarm-canvas {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--line) 55%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--line) 55%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: -1px -1px;
-}
-.swarm-canvas::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 35%, var(--panel-bg) 95%);
-  pointer-events: none;
-}
-.swarm-canvas svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.swarm-canvas text {
-  font-family: var(--mono);
-  font-size: var(--fs-micro);
-  letter-spacing: 0.02em;
-  fill: var(--fg);
-}
-.swarm-canvas .swarm-caption {
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  fill: var(--muted);
-}
-.swarm-canvas .swarm-title {
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-.swarm-frame {
-  fill: var(--panel-bg);
-  stroke: var(--line-strong);
-}
-.swarm-card-done {
-  fill: none;
-  stroke: var(--fg);
-  stroke-opacity: 0.7;
-}
-.swarm-trail,
-.swarm-finding {
-  fill: none;
-  stroke: var(--fg);
-  stroke-opacity: 0.32;
-  stroke-width: 1;
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: 1;
-}
-.swarm-track-line {
-  stroke: var(--line);
-}
-.swarm-work-fill,
-.swarm-row-fill,
-.swarm-hub {
-  fill: var(--fg);
-}
-.swarm-row {
-  --on: 0;
-}
-.swarm-row-marker {
-  fill: var(--fg);
-  fill-opacity: var(--on);
-  stroke: var(--line-strong);
-}
-.swarm-canvas .swarm-row text {
-  opacity: calc(0.45 + 0.55 * var(--on));
-}
-.swarm-signal,
-.swarm-claw {
-  fill: var(--red);
-}
-.swarm-agent {
-  color: var(--fg);
-}
 /* The stage legend: the stage in progress is marked in red, stages still to come are dimmed. */
-.swarm-steps li {
-  --fill: 0;
-  position: relative;
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  align-content: start;
-  gap: 4px 12px;
-  padding: 16px 0;
-  border-top: 1px solid var(--line-strong);
-  transition: opacity 0.3s ease;
-}
-.swarm-steps li::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--fg);
-  transform: scaleX(var(--fill));
-  transform-origin: left;
-}
-.swarm-steps .label {
-  grid-row: span 2;
-  align-self: start;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  line-height: 1.6;
-}
-.swarm-steps .label::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-}
-.swarm-steps b {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-weight: 500;
-  color: var(--fg);
-}
-.swarm-steps li > span:last-child {
-  font-size: var(--fs-small);
-  line-height: 1.5;
-  color: var(--muted);
-}
-.swarm-steps li[data-state="next"] {
-  opacity: 0.5;
-}
-.swarm-steps li[data-state="active"] .label {
-  color: var(--red-text);
-}
-.swarm-steps li[data-state="active"] .label::before {
-  background: var(--red);
-}
-.swarm-steps li[data-state="active"] > span:last-child {
-  color: var(--fg-2);
-}
-@media (max-width: 1023px) {
-  .swarm-pin {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-  }
-  .swarm-figure {
-    height: min(560px, calc(var(--swarm-pin) - 200px));
-  }
-  .swarm-steps {
-    order: -1;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-  }
-}
+
 @media (max-width: 767px) {
-  .swarm-track {
-    height: calc(var(--swarm-pin) + 140svh);
-  }
-  .swarm-pin {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-    gap: 14px;
-    padding-block: 12px;
-  }
-  .swarm-figure {
-    flex: 1 1 auto;
-    min-height: 400px;
-    max-height: 600px;
-    height: auto;
-  }
-  .swarm-steps {
-    gap: 10px;
-  }
+
+
+
+
   /* Panels drop their note on phones; this one says the figure is planned, so it stays. */
-  .swarm-figure .panel-note {
-    display: block;
-  }
+
 }
 /* Phones, and short tablets that pin the figure, list each stage by number and name only. On a
    short tablet the descriptions leave the canvas shorter than its six agent rows need. */
-@media (max-width: 767px), (prefers-reduced-motion: no-preference) and (max-width: 1023px) and (min-height: 541px) and (max-height: 649px) {
-  .swarm-steps li {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    padding: 10px 0 0;
-  }
-  .swarm-steps .label {
-    align-self: center;
-  }
-  .swarm-steps .label::before {
-    display: none;
-  }
-  .swarm-steps li > span:last-child {
-    display: none;
-  }
-}
+
 /* At 320px a third of the legend is narrower than "03 Combine" at body size. */
-@media (max-width: 359px) {
-  .swarm-steps b {
-    font-size: var(--fs-small);
-  }
-}
+
 /* The room the short legend frees goes to the figure, so at 541px tall the canvas still fits two 20px pads and six 48px rows. */
-@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (max-width: 1023px) and (min-height: 541px) and (max-height: 649px) {
-  .swarm-figure {
-    height: calc(var(--swarm-pin) - 88px);
-  }
-}
-@media (max-width: 767px) and (max-height: 700px) {
-  .swarm-pin {
-    gap: 10px;
-    padding-block: 6px;
-  }
-}
+
 /* No room to pin, or no motion wanted: the finished figure sits in the flow. */
-@media (prefers-reduced-motion: reduce), (max-height: 540px) {
-  .swarm-track {
-    height: auto;
-  }
-  .swarm-pin {
-    position: relative;
-    top: auto;
-    height: auto;
-    padding-block: 0;
-  }
-  .swarm-figure {
-    flex: none;
-    height: clamp(460px, 130vw, 600px);
-  }
-}
-@media (max-height: 540px) {
-  .swarm-figure {
-    height: 440px;
-  }
-}
+
 /* Landscape phones: the title opens the page; the stacked mark would push it below the fold. */
 @media (max-width: 1023px) and (max-height: 540px) {
   .page-head {
@@ -3315,21 +3364,6 @@ main:focus {
   }
 }
 /* Unpinned phones have room to list each stage with its description. */
-@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
-  .swarm-steps {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
-  .swarm-steps li {
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 4px 12px;
-    padding: 12px 0;
-  }
-  .swarm-steps li > span:last-child {
-    display: block;
-  }
-}
 
 /* ==========================================================================
    Brand names
@@ -3371,6 +3405,11 @@ main:focus {
 .raptor-reg {
   display: inline-block;
   margin-left: 0.04em;
+}
+/* In display headlines the raised mark leaves a visible slot before a
+   following comma; pull the comma back under the mark. */
+h1 .raptor-reg {
+  margin-right: -0.24em;
   /* 0.36em reads in display type; text sizes need the floor to stay legible. */
   font-size: max(0.36em, 0.62rem);
   font-weight: 500;
@@ -3432,10 +3471,12 @@ main:focus {
 }
 
 /* A short red strike draws under each section label as the section enters. */
-.section-head > .label.reveal {
+.section-head > .label.reveal,
+.split-copy .label.reveal {
   position: relative;
 }
-.section-head > .label.reveal::after {
+.section-head > .label.reveal::after,
+.split-copy .label.reveal::after {
   content: "";
   position: absolute;
   left: 0;
@@ -3447,7 +3488,8 @@ main:focus {
   transform-origin: left;
   transition: transform var(--dur-3) var(--ease-out) 240ms;
 }
-.section-head > .label.reveal.in::after {
+.section-head > .label.reveal.in::after,
+.split-copy .label.reveal.in::after {
   transform: scaleX(1);
 }
 
@@ -3463,7 +3505,23 @@ p > code {
   .page-lockup .raptor-wordmark {
     animation: none;
   }
-  .section-head > .label.reveal::after {
+  .section-head > .label.reveal::after,
+  .split-copy .label.reveal::after {
     transform: none;
+  }
+}
+
+/* Liquid Glass degradation (G-6): under reduced motion, glass surfaces fall
+   back to the solid token with the hairline border — same layout, zero blur.
+   Placed last so it wins over the @supports glass rules above. */
+@media (prefers-reduced-motion: reduce) {
+  .masthead.scrolled .masthead-bar,
+  .masthead.menu-open .masthead-bar,
+  .hero-glass,
+  .cta-secondary {
+    background: var(--glass-fallback-solid);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }

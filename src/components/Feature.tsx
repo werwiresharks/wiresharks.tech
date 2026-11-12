@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Reveal, Words } from "./Reveal";
+import { Arrow } from "./Arrow";
 
 /**
  * An editorial two-column section: an indexed title and copy on one side,
@@ -46,7 +47,7 @@ export function Feature({
             <Reveal delay={180}>
               <Link className="text-link" to={cta.to}>
                 <span className="text-link-label">{cta.label}</span>
-                <span aria-hidden="true">→</span>
+                <span aria-hidden="true"><Arrow /></span>
               </Link>
             </Reveal>
           )}

@@ -8,6 +8,7 @@ import { RaptorReg } from "../components/RaptorWordmark";
 import { Compare } from "../components/mock/Compare";
 import { Console } from "../components/mock/Console";
 import { Registry } from "../components/mock/Registry";
+import { RELEASE_DAY, RELEASE_LONG, RELEASE_SHORT } from "../site";
 
 const PIPELINE = [
   ["Foundation", "A strong open-weight base. talon-1 builds on Qwen3.8-27B. We check its provenance and its license."],
@@ -20,7 +21,7 @@ const PIPELINE = [
 const STATS: [string, string][] = [
   ["27B", "Parameters"],
   ["128k", "Context"],
-  ["Off", "Network"],
+  ["off", "Network"],
 ];
 
 const SPEC = [
@@ -30,7 +31,7 @@ const SPEC = [
   ["Inference", "llama.cpp, vLLM, Apple Silicon"],
   ["Platforms", "macOS, Windows, Linux"],
   ["Weights", "Open"],
-  ["Release", "December 25, 2026"],
+  ["Release", RELEASE_LONG],
 ];
 
 export function Talon() {
@@ -168,7 +169,7 @@ export function Talon() {
         panel={
           <Console
             title="talon-1 / eval"
-            note="Illustrative · results ship Dec 25, 2026"
+            note="Illustrative"
             lines={[
               "$ raptor eval talon-1 --suite cyber-bench --compare base,no-refusals",
               "running 1,200 tasks · vuln-id, re, secure-coding, soc",
@@ -177,7 +178,7 @@ export function Talon() {
               "no-refusals    ░░░░░░░░░░░░░░░░░░░  pending",
               "base model     ░░░░░░░░░░░░░░░░░░░  pending",
               "",
-              "reproducible suite",
+              `reproducible suite · results ship ${RELEASE_SHORT}`,
             ]}
           />
         }
@@ -214,7 +215,7 @@ export function Talon() {
       </section>
 
       <Closing
-        title="Open weights. December 25."
+        title={`Open weights. ${RELEASE_DAY}.`}
         text="talon-1 ships with its evaluations, raptor and Harness."
         mark={<TalonOrb />}
       />

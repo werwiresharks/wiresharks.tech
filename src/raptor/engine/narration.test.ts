@@ -63,7 +63,7 @@ test("a real session voices each accepted event in plain language", () => {
     "x1 approved by policy layer",
   ]);
   // The action was approved by the last event, so it is no longer held.
-  assert.equal(summary, "Primary agent running, 1 parallel subagent.");
+  assert.equal(summary, "Primary agent running, 1 parallel worker.");
 })
 
 test("the summary reports actions held at the authority boundary", () => {

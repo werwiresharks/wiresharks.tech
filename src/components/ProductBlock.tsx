@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Reveal } from "./Reveal";
 import { Stats } from "./Stats";
 import { withRaptorReg } from "./RaptorWordmark";
+import { Arrow } from "./Arrow";
 
 /**
  * An editorial product section: a technical identifier, the product name set
@@ -69,7 +70,7 @@ export function ProductBlock({
         <Reveal delay={240}>
           <Link className="text-link" to={to}>
             <span className="text-link-label">{withRaptorReg(linkLabel)}</span>
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true"><Arrow /></span>
           </Link>
         </Reveal>
       </div>

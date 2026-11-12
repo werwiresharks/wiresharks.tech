@@ -6,7 +6,7 @@ export function PanelBar({ title, note = "Illustrative" }: { title: string; note
   return (
     <div className="panel-bar">
       <span className="panel-dots" aria-hidden="true" />
-      <span>{title}</span>
+      <span title={title}>{title}</span>
       <span className="panel-note">{note}</span>
     </div>
   );

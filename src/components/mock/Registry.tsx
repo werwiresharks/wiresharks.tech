@@ -16,6 +16,7 @@ export function Registry({
           <li key={r.key} className={r.active ? "is-active" : undefined}>
             <span className="mono">{r.key}</span>
             <b>{r.name}</b>
+            {r.active && <span className="registry-state">active</span>}
             <span className="mono">{r.meta}</span>
           </li>
         ))}
