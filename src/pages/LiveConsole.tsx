@@ -26,11 +26,14 @@ const centreFrame = (width: number, height: number): Framing => ({
 
 type Submit = "idle" | "sending" | "added" | "duplicate" | "error";
 
-/** The status LED state, read from the narration summary's own words (S-5:
-    the word is the signal; the LED only accents it). */
-function ledState(summary: string): "running" | "done" | "idle" {
-  if (/running/i.test(summary)) return "running";
-  if (/completed|complete/i.test(summary)) return "done";
+/** The status LED state, read from the status head's own words (S-5:
+    the word is the signal; the LED only accents it). The LED must be
+    parsed from the head it sits beside — parsing the full summary let
+    a "running" in the detail clause colour a "completed" head red
+    (round-10 council finding, both HIG and Palantir seats). */
+function ledState(head: string): "running" | "done" | "idle" {
+  if (/running/i.test(head)) return "running";
+  if (/completed|complete/i.test(head)) return "done";
   return "idle";
 }
 
@@ -91,7 +94,7 @@ export function LiveConsole() {
           <div className="console-status-panel">
             <p className="label">Session status</p>
             <p className="console-status" role="status" aria-live="polite">
-              <i className="console-led" data-state={ledState(summary)} aria-hidden="true" />
+              <i className="console-led" data-state={ledState(statusHead)} aria-hidden="true" />
               <span>{statusHead}</span>
             </p>
             {statusDetail && <p className="console-status-detail">{statusDetail}</p>}
