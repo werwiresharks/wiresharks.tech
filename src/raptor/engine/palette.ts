@@ -58,8 +58,22 @@ export const ON_DARK = { base: hex(0xd4d4d2), accent: COLORS.red };
 /** The gutter stream crosses light and dark sections, so it takes a mid grey that reads on both. */
 export const STREAM = { base: hex(0x8a8f93), accent: COLORS.red };
 
-/** Portion of particles in every cluster that carry the accent colour. */
-export const ACCENT_RATIO = 0.16;
+/**
+ * Portion of particles in every cluster that carry the accent colour.
+ * Round 15: 0.16 -> 0.08. The round-14 U-4 census (WebGL readback,
+ * §1.1's "graphite with ~15% red. No more.") measured the console
+ * stage's rendered share at a 17.81% mean with 4 of 6 frames over the
+ * ceiling — accent particles render larger and brighter in the action
+ * tones a live session accrues, so the rendered share runs above the
+ * population ratio, and its tail is phase-driven (the peak lands when
+ * several action clusters and result trains coincide; the in-flight
+ * glow strength in substrate.ts is the other half of this retune).
+ * Tuned against the phase-aware census (round-15 §M: 36 frames across
+ * the session, three phase windows, repeated runs — see CLIMB-LOG
+ * round 15 for the run table). The census, not this constant, is the
+ * enforcement instrument.
+ */
+export const ACCENT_RATIO = 0.08;
 
 /** The ground an engine view draws on. The site is light; product surfaces may be dark. */
 export type Surface = "light" | "dark";

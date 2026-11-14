@@ -19,8 +19,8 @@ export function TalonOrb() {
           key={i}
           cx={150 + Math.cos(a) * r}
           cy={150 + Math.sin(a) * r * 0.98}
-          r={1.15}
-          opacity={0.25 + (ring / 9) * 0.55}
+          r={1.5}
+          opacity={0.35 + (ring / 9) * 0.6}
         />,
       );
     }

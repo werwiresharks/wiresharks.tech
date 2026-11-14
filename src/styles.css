@@ -35,15 +35,18 @@
   --section-depth: none;
   /* Liquid Glass — the closed v2 token set (DESIGN-SYSTEM-V2 §2.1). Only these
      values are legal glass; any other blur/saturate/background recipe is a
-     violation. Roles: masthead = bg-1 + blur-md + shadow-md; card = bg-2 +
-     blur-sm + shadow-md; dialog = bg-2 + blur-lg + shadow-lg; chip = bg-3 +
-     blur-sm + shadow-sm. Every glass surface carries --glass-highlight as its
-     top edge, and degrades to --glass-fallback-solid with no blur. */
+     violation. Roles: the masthead has three shipped states (at-rest
+     transparent; scrolled = --glass-fallback-solid + highlight + shadow-md,
+     deliberate per G-4; menu-open = bg-1 + blur-lg + shadow-md, §5(s));
+     card = bg-2 + blur-sm + shadow-md; dialog = bg-2 + blur-lg + shadow-lg;
+     chip = bg-3 + blur-sm + shadow-sm. Every glass surface carries
+     --glass-highlight as its top edge, and degrades to
+     --glass-fallback-solid with no blur. (--glass-blur-md was retired in
+     round 15, §5(u): it had no live instance in any shipped state.) */
   --glass-bg-1: color-mix(in srgb, #ffffff 76%, transparent);
   --glass-bg-2: color-mix(in srgb, #ffffff 60%, transparent);
   --glass-bg-3: color-mix(in srgb, #ffffff 45%, transparent);
   --glass-blur-sm: 8px;
-  --glass-blur-md: 16px;
   --glass-blur-lg: 24px;
   --glass-saturate: 150%;
   --glass-border: rgba(17, 18, 20, 0.08);
@@ -103,13 +106,21 @@
   --dur-1: 160ms;
   --dur-2: 320ms;
   --dur-3: 700ms;
-  /* Named duration exceptions (§5(r), round 13): pre-existing caret and
-     product-mark draw-on animations sit outside the 160/320/700 family.
-     They are tokenised here, not retimed — the values are the shipped
-     ones, now resolvable to tokens per C-3. */
+  /* Named duration exceptions (§5(r), round 13; extended §5(v), round 15):
+     pre-existing caret and product-mark draw-on animations sit outside the
+     160/320/700 family, and so do the ambient loops — the live status pulse
+     and the talon orb's ring rotation. None of them is a transition, a
+     reveal, or a state change; retiming them would change shipped artwork
+     and state signalling, not polish. They are tokenised here, not retimed
+     — the values are the shipped ones, now resolvable to tokens per C-3.
+     These seven tokens close the exception set. */
   --dur-caret: 1100ms;
   --dur-claw-stroke: 1100ms;
   --dur-talon-draw: 1300ms;
+  --dur-live-pulse: 2400ms;
+  --dur-talon-spin: 72s;
+  --dur-talon-spin-slow: 96s;
+  --dur-talon-spin-fast: 60s;
   --ease: var(--ease-out); /* legacy alias */
   --fast: var(--dur-1); /* legacy alias */
   --base: var(--dur-2); /* legacy alias */
@@ -463,7 +474,10 @@ main:focus {
 .masthead {
   --bar-inset: 12px;
   --bar-height: 56px;
-  --bar-motion: 420ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* The bar's morph is a glass state change: G-7 pins it to the ratified
+     320ms and the one easing family (round 15; it shipped at 420ms on a
+     foreign easing, outside both). */
+  --bar-motion: var(--dur-2) var(--ease-out);
   position: fixed;
   top: 0;
   left: 0;
@@ -508,8 +522,11 @@ main:focus {
   padding: 0 clamp(14px, 2vw, 22px);
   border-color: var(--glass-border);
   border-radius: var(--radius-lg);
-  /* Glass, masthead recipe (G-2): bg-1 + blur-md + shadow-md. Without
-     backdrop-filter support the bar degrades to the solid fallback (G-6). */
+  /* Masthead, scrolled + menu-open shared base: the solid fallback with the
+     highlight edge and shadow-md. The menu-open state alone takes glass
+     (bg-1 + blur-lg, §5(s)) inside the @supports block below; the scrolled
+     state stays solid by the G-4 ruling in the next comment. Without
+     backdrop-filter support every state is this solid (G-6). */
   background: var(--glass-fallback-solid);
   background-image: var(--glass-highlight);
   box-shadow: var(--glass-shadow-md);
@@ -833,7 +850,7 @@ main:focus {
   width: 6px;
   height: 6px;
   background: var(--red-text);
-  animation: live 2.4s ease-in-out infinite;
+  animation: live var(--dur-live-pulse) ease-in-out infinite;
 }
 @keyframes live {
   50% {
@@ -912,7 +929,7 @@ main:focus {
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 900ms ease;
+  transition: opacity var(--dur-3) var(--ease-out);
 }
 .rpe-stage.is-ready .rpe-canvas {
   opacity: 1;
@@ -2244,16 +2261,16 @@ main:focus {
 .talon-orb-ring {
   transform-box: fill-box;
   transform-origin: center;
-  animation: talon-spin 72s linear infinite;
+  animation: talon-spin var(--dur-talon-spin) linear infinite;
 }
 .talon-orb-ring:nth-child(even) {
   animation-direction: reverse;
 }
 .talon-orb-ring:nth-child(3n + 1) {
-  animation-duration: 96s;
+  animation-duration: var(--dur-talon-spin-slow);
 }
 .talon-orb-ring:nth-child(3n + 2) {
-  animation-duration: 60s;
+  animation-duration: var(--dur-talon-spin-fast);
 }
 @keyframes talon-spin {
   to {
@@ -2751,10 +2768,20 @@ main:focus {
      At 176 the stacked mark plus the desktop head rhythm pushed the
      head's one primary CTA 36px below the phone fold (round-12 J1
      F-1); 144 keeps the field legible and returns the CTA to the
-     first viewport with the tightened phone rhythm below. */
+     first viewport with the tightened phone rhythm below.
+     Round 15: 144px -> 132px and the frame's padding 12% -> 10%, on
+     the round-14 J1 space-to-signal finding — the stacked frame was
+     the head's largest block carrying its least signal. The block
+     shrinks 12px while the orb inside it grows (76% -> 80% of the
+     frame), and the orb's dots themselves are larger and denser in
+     TalonOrb.tsx. Order untouched (kept ruling-4 pattern); the CTA
+     only moves up. */
   .page-mark:has(.talon-frame) {
     justify-self: center;
-    width: 144px;
+    width: 132px;
+  }
+  .talon-frame {
+    padding: 10%;
   }
   .page-head-launch {
     width: fit-content;
@@ -2867,6 +2894,16 @@ main:focus {
   .page-head-launch {
     margin-top: 32px;
     padding-top: 16px;
+    /* Round 15 (round-14 J1 fix 3): the launch stack is one composed
+       block, not a wrap accident. The countdown's label + units
+       (~396px of verbatim content) cannot share a 320px measure, so
+       the tiers are set deliberately on one fixed 8px rhythm — the
+       countdown's internal tier gap and the step down to the CTA are
+       the same 8px. Copy and values untouched (C-4). */
+    gap: 8px 32px;
+  }
+  .page-head-launch .countdown {
+    row-gap: 8px;
   }
 
   /* Phone terminals (round 13): the home talon panel breaks out of the
@@ -3421,8 +3458,8 @@ main:focus {
 @media (prefers-reduced-motion: reduce) {
   .claw-seal {
     visibility: visible;
-    transition: opacity 500ms ease;
-    transition-duration: 500ms !important;
+    transition: opacity var(--dur-2) var(--ease-out);
+    transition-duration: var(--dur-2) !important;
   }
   .claw[data-torn="true"] .claw-seal {
     opacity: 0;

@@ -28,7 +28,6 @@
   --glass-bg-2: color-mix(in srgb, #ffffff 60%, transparent);
   --glass-bg-3: color-mix(in srgb, #ffffff 45%, transparent);
   --glass-blur-sm: 8px;
-  --glass-blur-md: 16px;
   --glass-blur-lg: 24px;
   --glass-saturate: 150%;
   --glass-border: rgba(17, 18, 20, 0.08);
@@ -78,6 +77,10 @@
   --dur-caret: 1100ms;
   --dur-claw-stroke: 1100ms;
   --dur-talon-draw: 1300ms;
+  --dur-live-pulse: 2400ms;
+  --dur-talon-spin: 72s;
+  --dur-talon-spin-slow: 96s;
+  --dur-talon-spin-fast: 60s;
   --ease: var(--ease-out);
   --fast: var(--dur-1);
   --base: var(--dur-2);

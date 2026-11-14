@@ -973,7 +973,12 @@ export class Substrate {
     const resting = sample[4] * q + sample[13] * u;
     sample[4] = resting + (Math.max(0.8, resting) * 1.3 - resting) * Math.sin(Math.PI * u);
     const tint = this.tint(flight.kind, this.lattice.accentMask[i] === 1);
-    const glow = Math.sin(Math.PI * u) * (tint ? 0.85 : 0);
+    // Round 15 (U-4): the in-flight glow strength is part of the colour
+    // mix §1.1 caps — at 0.85 a whole result train saturates to the glow
+    // colour mid-flight and the stage's rendered red share spikes past
+    // the ceiling whenever several trains coincide. 0.6 keeps the read
+    // (results and peer messages glow red in the air) inside the mix.
+    const glow = Math.sin(Math.PI * u) * (tint ? 0.6 : 0);
     for (let k = 0; k < 3; k++) {
       const tone = sample[5 + k] * q + sample[14 + k] * u;
       sample[5 + k] = tint ? tone + (tint[k] - tone) * glow : tone;
