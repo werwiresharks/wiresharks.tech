@@ -3290,7 +3290,14 @@ main:focus {
     padding-top: calc(var(--header-height) + 24px);
     padding-bottom: clamp(40px, 12vw, 64px);
   }
-  .home-page .hero-glass, .home-page .hero-ctas { margin-top: 24px; }
+  /* Round 16 (J1 #5): phone fold tier — the countdown's top edge sat
+     exactly on the 800px fold line (top 800 reduced-motion / 814 live
+     at 360px), so the phone fold carried none of it. The hero stack's
+     four phone margins tighten ~25% (24->18, slot clamp and launch
+     clamp scaled likewise), lifting .hero-launch ~26px: the label and
+     the digit tops now sit inside the fold. Phone-only; desktop
+     geometry is untouched. */
+  .home-page .hero-glass, .home-page .hero-ctas { margin-top: 18px; }
   /* Centre on the viewport: the negative margin cancels the wrap's wider right gutter. */
   .home-page .hero-orb-group {
     display: flex;
@@ -3304,7 +3311,7 @@ main:focus {
     position: relative;
     width: min(46vw, 220px);
     aspect-ratio: 1;
-    margin-top: clamp(36px, 11vw, 56px);
+    margin-top: clamp(28px, 9vw, 48px);
   }
   .home-page .hero-orb-slot .rpe-static {
     inset: 0;
@@ -3313,7 +3320,7 @@ main:focus {
   }
   .home-page[data-journey="ready"] .hero-orb-slot .rpe-static { visibility: hidden; }
   .home-page .hero-backdrop .rpe-static { display: none; }
-  .home-page .hero-launch { margin-top: clamp(28px, 8vw, 40px); }
+  .home-page .hero-launch { margin-top: clamp(20px, 6vw, 32px); }
   .home-page .hero-launch .countdown { justify-content: center; text-align: center; }
   .home-page .hero-backdrop::after { background: none; }
   .home-page .section-head { padding-right: 0; }
