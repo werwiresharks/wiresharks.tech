@@ -103,6 +103,13 @@
   --dur-1: 160ms;
   --dur-2: 320ms;
   --dur-3: 700ms;
+  /* Named duration exceptions (§5(r), round 13): pre-existing caret and
+     product-mark draw-on animations sit outside the 160/320/700 family.
+     They are tokenised here, not retimed — the values are the shipped
+     ones, now resolvable to tokens per C-3. */
+  --dur-caret: 1100ms;
+  --dur-claw-stroke: 1100ms;
+  --dur-talon-draw: 1300ms;
   --ease: var(--ease-out); /* legacy alias */
   --fast: var(--dur-1); /* legacy alias */
   --base: var(--dur-2); /* legacy alias */
@@ -944,7 +951,13 @@ main:focus {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   /* Glass, card recipe (G-2): bg-2 + blur-sm + shadow-md over the particle
-     canvas. Without backdrop-filter support it degrades to solid (G-6). */
+     canvas. Without backdrop-filter support it degrades to solid (G-6).
+     G-4 constraint, stated per §2.1: this card sits ONLY over the hero's
+     controlled light backdrop (soft ground + particle canvas). Its text
+     is AA-verified against that ground and the white worst case
+     (round-13 live panel: lede 11.37:1, key labels 5.33:1); composited
+     over charcoal the muted key labels would fail (2.04:1), so this
+     card must never be reused over a dark or uncontrolled backdrop. */
   background: var(--glass-fallback-solid);
   background-image: var(--glass-highlight);
   box-shadow: var(--glass-shadow-md);
@@ -1137,7 +1150,7 @@ main:focus {
   margin-left: 0.4em;
   vertical-align: -0.2em;
   background: var(--red);
-  animation: caret 1.1s steps(1) infinite;
+  animation: caret var(--dur-caret) steps(1) infinite;
 }
 @keyframes caret {
   50% {
@@ -2154,7 +2167,7 @@ main:focus {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation:
-    claw-stroke 1.1s var(--ease-io) forwards,
+    claw-stroke var(--dur-claw-stroke) var(--ease-io) forwards,
     claw-fill var(--dur-3) var(--ease-out) forwards;
 }
 .mark-draw path:nth-child(1) {
@@ -2253,7 +2266,7 @@ main:focus {
 .talon-orb-boundary {
   stroke-dasharray: 754;
   stroke-dashoffset: 754;
-  animation: talon-draw 1.3s var(--ease-io) forwards;
+  animation: talon-draw var(--dur-talon-draw) var(--ease-io) forwards;
 }
 @keyframes talon-draw {
   to {
@@ -2484,7 +2497,10 @@ main:focus {
 }
 @media (min-width: 1024px) {
   .console-grid {
-    grid-template-columns: minmax(0, 13fr) minmax(0, 11fr);
+    /* Round 13: 13fr -> 12fr. The retained stage's fold share is the
+       surface's density floor (round-12 F-C2b / J1 F-4); the rail —
+       where the readouts live — takes a larger share of the fold. */
+    grid-template-columns: minmax(0, 12fr) minmax(0, 11fr);
     align-items: start;
   }
 }
@@ -2493,7 +2509,9 @@ main:focus {
   display: grid;
   place-items: center;
   width: 100%;
-  height: min(52vh, 440px);
+  /* Round 13: the 440px stage ended ~110px below the rail's last panel;
+     400px floor (canvas + slack) rising to 440px only on tall screens. */
+  height: clamp(400px, 46vh, 440px);
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -2503,7 +2521,7 @@ main:focus {
    the panel stays full width, the canvas sits centred in it — keeps the
    whole orb and ring inside the frame at every viewport. */
 .console-stage .rpe-stage {
-  width: min(100%, 408px);
+  width: min(100%, 368px);
   aspect-ratio: 1 / 1;
   height: auto;
 }
@@ -2530,7 +2548,9 @@ main:focus {
 .console-waitlist {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 16px;
+  /* S-2 band floor (round 13): at one-line states the 16px padding was
+     the panels' slack (round-12 F-C2b); 12px is the band's dense end. */
+  padding: 12px;
 }
 /* The visible session log: the same narration lines the screen-reader
    region voices, set as data rows (S-3). */
@@ -2719,11 +2739,15 @@ main:focus {
     width: clamp(88px, 24vw, 140px);
   }
   /* The talon orb is a dot field: at 88px it dissolves into noise. On
-     phone it takes a centred 176px frame — the proportion the home
-     orb keeps — while the claw mark stays small. */
+     phone it takes a centred frame — the proportion the home orb
+     keeps — while the claw mark stays small. Round 13: 176px -> 144px.
+     At 176 the stacked mark plus the desktop head rhythm pushed the
+     head's one primary CTA 36px below the phone fold (round-12 J1
+     F-1); 144 keeps the field legible and returns the CTA to the
+     first viewport with the tightened phone rhythm below. */
   .page-mark:has(.talon-frame) {
     justify-self: center;
-    width: 176px;
+    width: 144px;
   }
   .page-head-launch {
     width: fit-content;
@@ -2814,6 +2838,49 @@ main:focus {
       opacity: 0;
       transform: translateY(-6px);
     }
+  }
+
+  /* Product heads tighten on phone (round 13): the desktop rhythm plus
+     the stacked mark left talon's one primary CTA below the fold
+     (round-12 J1 F-1) and priced raptor's head stack as dense (F-3).
+     Same order, same elements — the stack's total weight drops. */
+  .page-head {
+    padding-top: calc(var(--header-height) + 56px);
+  }
+  .page-head h1 {
+    margin-top: 16px;
+  }
+  .page-lede {
+    margin-top: 24px;
+  }
+  .page-head-launch {
+    margin-top: 40px;
+    padding-top: 16px;
+  }
+
+  /* Phone terminals (round 13): the home talon panel breaks out of the
+     product column's inset to a 12px screen margin and the pre padding
+     trims, so the depicted readout lines keep the desktop
+     one-line-per-fact form at phone width (round-12 J2 F-H2, third
+     consecutive round). Lines that still exceed the measure — the ask
+     command, the finding rows — wrap as indented continuations under a
+     hanging indent, never as loose re-flow; token integrity (R-5) is
+     unchanged. The breakout constants are the panel's measured phone
+     geometry: inset 31px left / 45px right at 360px. */
+  .home-console .console {
+    width: calc(100% + 52px);
+    margin-left: -19px;
+  }
+  .console pre {
+    padding: 16px 14px;
+  }
+  .console .line {
+    display: inline-block;
+    width: 100%;
+    min-height: 1lh;
+    padding-left: 2ch;
+    text-indent: -2ch;
+    vertical-align: top;
   }
 
   .hero {
