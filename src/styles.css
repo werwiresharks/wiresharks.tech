@@ -326,9 +326,6 @@ main:focus {
 .section {
   padding-block: var(--section-y);
 }
-.section-compact {
-  padding-block: clamp(72px, 8vw, 112px);
-}
 .section-head {
   max-width: 760px;
   margin-bottom: var(--head-gap);
@@ -2688,6 +2685,16 @@ main:focus {
   line-height: 1;
   letter-spacing: -0.05em;
 }
+/* Desktop (round 14): the 404's single message sat 140px below the
+   masthead with a full section-y of air under its CTA — a void the
+   phone fold does not have (round-13 J1, fix item 4). The statement
+   rises: top offset to the 24px step, bottom padding to the 96px
+   step. Phone composition is unchanged. */
+@media (min-width: 768px) {
+  .not-found {
+    padding-block: calc(var(--header-height) + 24px) 96px;
+  }
+}
 
 /* ==========================================================================
    Responsive
@@ -2843,9 +2850,13 @@ main:focus {
   /* Product heads tighten on phone (round 13): the desktop rhythm plus
      the stacked mark left talon's one primary CTA below the fold
      (round-12 J1 F-1) and priced raptor's head stack as dense (F-3).
-     Same order, same elements — the stack's total weight drops. */
+     Same order, same elements — the stack's total weight drops.
+     Round 14: the top offset and the launch margin each drop one more
+     step (56 -> 32, 40 -> 32; both land on ratified fixed steps) for
+     the head-stack weight J1 still priced on raptor (F-3). Talon's
+     order is untouched; its CTA stays inside the fold. */
   .page-head {
-    padding-top: calc(var(--header-height) + 56px);
+    padding-top: calc(var(--header-height) + 32px);
   }
   .page-head h1 {
     margin-top: 16px;
@@ -2854,7 +2865,7 @@ main:focus {
     margin-top: 24px;
   }
   .page-head-launch {
-    margin-top: 40px;
+    margin-top: 32px;
     padding-top: 16px;
   }
 
@@ -3222,7 +3233,6 @@ main:focus {
   background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--red) 15%, var(--fg-2)), var(--charcoal) 78%);
 }
 .home-page[data-journey="ready"] .principle-number i { visibility: hidden; }
-.home-platform,
 .home-closing { position: relative; }
 .home-section-landing {
   position: absolute;

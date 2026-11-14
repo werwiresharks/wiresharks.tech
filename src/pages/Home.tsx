@@ -72,7 +72,7 @@ export function Home() {
             </span>
           </Reveal>
           <Reveal delay={120} className="hero-glass">
-            <p>An autonomous cybersecurity agent, and the local, open&#8209;weight model that powers it.</p>
+            <p>An autonomous cybersecurity agent, and the local, open-weight model that powers it.</p>
             <p className="hero-key label">
               <span>
                 <b>
