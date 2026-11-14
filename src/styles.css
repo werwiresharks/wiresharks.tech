@@ -2275,7 +2275,10 @@ main:focus {
   color: var(--fg-2);
 }
 .page-head-launch {
-  width: fit-content;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
   max-width: 100%;
   margin-top: 48px;
   padding-top: 20px;
@@ -2448,17 +2451,27 @@ main:focus {
    .wrap rhythm (C-6). Product-surface density per S-2 where it shows data.
    ========================================================================== */
 .console-page {
-  padding-top: calc(var(--header-height) + 48px);
+  padding-top: calc(var(--header-height) + 24px);
   /* Data surface: the page ends closer under its panels than a marketing
      section would (S-2); the standard section step left a void. */
-  padding-bottom: 96px;
+  padding-bottom: 64px;
 }
-.console-page h1 {
-  margin-top: 16px;
-  font-size: var(--fs-h1);
-  font-weight: var(--w-display);
-  line-height: 1;
-  letter-spacing: -0.05em;
+/* Data-surface head (§5 addendum ruling 1): the title sits at data scale,
+   not display scale, and the product sentence runs as a compact surface
+   note — no marketing hero opens a data region (S-1). */
+.console-title {
+  margin-top: 10px;
+  font-size: var(--fs-h3);
+  font-weight: var(--w-h);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.console-note {
+  margin-top: 8px;
+  max-width: 72ch;
+  font-size: var(--fs-small);
+  line-height: 1.55;
+  color: var(--fg-2);
 }
 /* The console is a data surface (S-1/S-2): a bounded stage panel beside a
    rail of one-job panels — never a full-viewport decorative canvas. The
@@ -2466,8 +2479,8 @@ main:focus {
 .console-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  margin-top: 24px;
+  gap: 16px;
+  margin-top: 16px;
 }
 @media (min-width: 1024px) {
   .console-grid {
@@ -2507,7 +2520,8 @@ main:focus {
 .console-rail {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  /* S-2 compact system: one-job panels step at 8px, not editorial gaps. */
+  gap: 8px;
   align-content: start;
   min-width: 0;
 }
@@ -2592,13 +2606,14 @@ main:focus {
      and the waitlist form all preceded the engine canvas — and the lede
      is a ratified verbatim sentence that appears nowhere else on the
      surface, so hiding it deleted the authorization disclaimer at
-     exactly the narrowest width. The head still compresses: tighter top
-     padding and headline margin, nothing removed. */
+     exactly the narrowest width. The sentence still ships on phone —
+     as the compact surface note (§5 addendum ruling 1). The head
+     compresses further here: tighter top padding and title margin. */
   .console-page {
-    padding-top: calc(var(--header-height) + 24px);
+    padding-top: calc(var(--header-height) + 16px);
   }
-  .console-page h1 {
-    margin-top: 8px;
+  .console-title {
+    margin-top: 6px;
   }
 }
 .console-led[data-state="running"] {

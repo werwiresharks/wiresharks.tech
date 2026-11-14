@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Countdown } from "./Countdown";
+import { Cta } from "./Cta";
 import { Reveal, Words } from "./Reveal";
 
 /** Opening block for a product page: identifier, title, lede, release, and the product's mark. */
@@ -19,6 +20,9 @@ export function PageHead({ label, title, mark, children }: { label: ReactNode; t
           </Reveal>
           <Reveal delay={180} className="page-head-launch">
             <Countdown />
+            {/* §5(g) decided Nov 13: the head's one primary CTA (R-3) is
+                the /console waitlist, now that §5(c) links /console. */}
+            <Cta to="/console">Join the waitlist</Cta>
           </Reveal>
         </div>
         <div className="page-mark" aria-hidden="true">

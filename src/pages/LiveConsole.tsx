@@ -80,8 +80,12 @@ export function LiveConsole() {
       <title>Live console | Wiresharks</title>
       <meta name="robots" content="noindex" />
       <p className="label">Live / Session</p>
-      <h1>raptor<RaptorReg />, live.</h1>
-      <p className="page-lede">
+      {/* Data-surface head (§5 addendum ruling 1, Nov 13): the display
+          headline and standfirst are stripped — the title sits at data
+          scale and the verbatim product sentence runs as a surface note,
+          so the panels open the page. */}
+      <h1 className="console-title">raptor<RaptorReg />, live.</h1>
+      <p className="console-note">
         A live raptor session from the session server. The raptor particle
         engine visualizes agent authorization state. It never makes decisions.
       </p>

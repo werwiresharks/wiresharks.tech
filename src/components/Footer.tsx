@@ -8,6 +8,9 @@ import { RaptorWordmark } from "./RaptorWordmark";
 const PRODUCTS = [
   { to: "/raptor", label: <RaptorWordmark />, note: "Agent" },
   { to: "/talon", label: "talon-1", note: "Model" },
+  /* §5(c) decided Nov 13: /console is reachable from the footer as
+     "Live console"; the waitlist stays on /console. */
+  { to: "/console", label: "Live console", note: "Session" },
   { to: "/#faq", label: "FAQ", note: "Answers" },
 ];
 
